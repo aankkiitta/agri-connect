@@ -1,0 +1,639 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriConnect Hub - Expert Agricultural Insights</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap');
+        
+        :root {
+            --primary: #0f3b2c;
+            --primary-light: #1b5e3f;
+            --primary-soft: #e8f5e9;
+            --accent-gold: #d4a373;
+            --accent-gold-light: #fae5c3;
+            --dark: #1e2926;
+            --slate: #5a6e66;
+            --gray-bg: #fefcf7;
+            --border-light: #e9e5da;
+            --shadow-sm: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-md: 0 20px 35px -12px rgba(0,0,0,0.1);
+            --radius-lg: 28px;
+            --radius-md: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--gray-bg); 
+            color: var(--dark); 
+            line-height: 1.6; 
+            scroll-behavior: smooth;
+        }
+
+        /* Modern Header */
+        header {
+            background: rgba(15, 59, 44, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 14px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+            letter-spacing: -0.3px;
+        }
+        .logo-icon {
+            background: var(--accent-gold);
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        .nav-home {
+            background: rgba(255,255,255,0.12);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .nav-home:hover { background: var(--accent-gold); color: var(--primary); }
+
+        main { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+
+        /* Hero Article Card — Premium */
+        .article-hero {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 60px;
+            transition: transform 0.2s;
+        }
+        .hero-img {
+            width: 100%;
+            height: 420px;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+        .hero-content { padding: 40px 44px; }
+        
+        .badge {
+            background: var(--primary-soft);
+            color: var(--primary-light);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
+            border: 1px solid rgba(27,94,63,0.15);
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+            color: #14261f;
+        }
+        
+        /* Meta with enhanced style */
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+            color: var(--slate);
+        }
+        .meta span { display: flex; align-items: center; gap: 8px; }
+        .meta i { font-size: 0.9rem; color: var(--accent-gold); width: 18px; }
+        .print-btn {
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--primary-light);
+        }
+        .print-btn:hover { color: var(--accent-gold); transform: translateY(-2px); }
+
+        .content-body {
+            font-size: 1.08rem;
+            color: #2c3e32;
+        }
+        .content-body p {
+            margin-bottom: 1.6rem;
+            line-height: 1.7;
+        }
+        .content-body h2, .content-body h3 {
+            margin: 2rem 0 1rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+        .content-body blockquote {
+            border-left: 4px solid var(--accent-gold);
+            background: #fef6e8;
+            padding: 1rem 1.8rem;
+            margin: 1.8rem 0;
+            font-style: italic;
+            border-radius: 16px;
+            color: #3a5a4b;
+        }
+
+        /* Enhance Discover section */
+        .discover-header {
+            margin-bottom: 28px;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .discover-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(135deg, #0f3b2c, #2a6e4b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .discover-sub {
+            color: var(--slate);
+            font-size: 0.9rem;
+        }
+        .discover-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+            margin-bottom: 50px;
+        }
+        
+        .premium-card {
+            position: relative;
+            height: 280px;
+            border-radius: 24px;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            align-items: flex-end;
+            transition: all 0.35s cubic-bezier(0.2, 0, 0, 1);
+            box-shadow: var(--shadow-sm);
+            background: #000;
+        }
+        .premium-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.2) 60%, transparent 100%);
+            z-index: 1;
+        }
+        .premium-card img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .premium-card:hover img { transform: scale(1.08); }
+        .premium-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 35px -12px rgba(15, 59, 44, 0.35);
+        }
+        .premium-info {
+            position: relative;
+            z-index: 2;
+            padding: 28px;
+            width: 100%;
+        }
+        .premium-info h4 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.3;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .premium-info .card-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(212,163,115,0.9);
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 40px;
+            margin-bottom: 12px;
+            color: #1e2926;
+            font-weight: 700;
+        }
+
+        /* Footer button enhanced */
+        .footer-navigation {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0 70px;
+        }
+        .btn-main-hub {
+            background: var(--primary);
+            color: white;
+            padding: 15px 38px;
+            text-decoration: none;
+            border-radius: 60px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.25s;
+            box-shadow: 0 8px 18px rgba(15,59,44,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(2px);
+        }
+        .btn-main-hub:hover {
+            background: var(--accent-gold);
+            color: var(--dark);
+            transform: translateY(-3px);
+            box-shadow: 0 18px 28px -10px rgba(212,163,115,0.4);
+            gap: 18px;
+        }
+
+        /* Floating voice button — modern and accessible */
+        .fab-listen {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: var(--accent-gold);
+            color: #1e2926;
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 28px rgba(212, 163, 115, 0.45);
+            cursor: pointer;
+            border: none;
+            font-size: 28px;
+            transition: 0.25s ease;
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+        }
+        .fab-listen.speaking {
+            background: var(--primary-light);
+            color: white;
+            animation: pulse-nature 1.8s infinite;
+        }
+        @keyframes pulse-nature {
+            0% { box-shadow: 0 0 0 0 rgba(27,94,63,0.5); transform: scale(1);}
+            70% { box-shadow: 0 0 0 18px rgba(27,94,63,0); transform: scale(1.02);}
+            100% { box-shadow: 0 0 0 0 rgba(27,94,63,0); transform: scale(1);}
+        }
+
+        /* Loading and toast messages */
+        .toast-msg {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            background: var(--dark);
+            color: white;
+            padding: 12px 22px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 2100;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+
+        /* print optimization */
+        @media print {
+            header, .fab-listen, .footer-navigation, .discover-more, .meta .print-btn, .toast-msg {
+                display: none !important;
+            }
+            .article-hero { box-shadow: none; border: 1px solid #ddd; margin: 0; }
+            body { background: white; padding: 0; margin: 0; }
+            .hero-img { height: 300px; }
+        }
+
+        @media (max-width: 700px) {
+            .hero-content { padding: 28px 24px; }
+            h1 { font-size: 1.9rem; }
+            .hero-img { height: 260px; }
+            .discover-grid { grid-template-columns: 1fr; gap: 20px; }
+            .premium-card { height: 240px; }
+            .meta { gap: 16px; }
+        }
+        /* scroll reveal subtle */
+        .fade-up {
+            animation: fadeUp 0.5s ease-out;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="agri2.html">
+        <span class="logo-icon"><i class="fas fa-seedling"></i></span>
+        AgriConnect Hub
+    </a>
+    <a href="agri2.html" class="nav-home"><i class="fas fa-home"></i> Home</a>
+</header>
+
+<main>
+    <div id="articleWrapper"></div>
+
+    <section class="discover-more">
+        <div class="discover-header">
+            <h2>🌾 Cultivate your curiosity</h2>
+            <span class="discover-sub"><i class="fas fa-leaf"></i> handpicked insights</span>
+        </div>
+        <div id="recommendedGrid" class="discover-grid"></div>
+    </section>
+
+    <div class="footer-navigation">
+        <a href="agri2.html#articles" class="btn-main-hub">
+            Explore Full Library <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+</main>
+
+<button class="fab-listen" id="voiceBtn" aria-label="Listen to article">
+    <i class="fas fa-headphones" id="voiceIcon"></i>
+</button>
+<div id="toastMsg" class="toast-msg">🔊 Playing article...</div>
+
+<script>
+    // ---------- Professional speech with fallback ----------
+    let synth = window.speechSynthesis;
+    let isSpeaking = false;
+    let currentUtterance = null;
+
+    function showToast(message, duration = 1800) {
+        const toast = document.getElementById('toastMsg');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    function handleSpeech() {
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceIcon = document.getElementById('voiceIcon');
+        const articleBodyElem = document.querySelector('.content-body');
+        if (!articleBodyElem) return;
+
+        // Cancel ongoing speech if any
+        if (synth.speaking || isSpeaking) {
+            synth.cancel();
+            if (currentUtterance) {
+                currentUtterance.onend = null;
+                currentUtterance.onerror = null;
+            }
+            isSpeaking = false;
+            voiceBtn.classList.remove('speaking');
+            voiceIcon.className = 'fas fa-headphones';
+            showToast('⏹️ Speech stopped', 1200);
+            return;
+        }
+
+        // Extract clean text from paragraphs, headings etc.
+        let textToRead = "";
+        const contentClone = articleBodyElem.cloneNode(true);
+        // remove any interactive elements inside but keep text
+        textToRead = contentClone.innerText.trim();
+        if (!textToRead) {
+            showToast('📄 No readable content', 1000);
+            return;
+        }
+
+        currentUtterance = new SpeechSynthesisUtterance(textToRead);
+        currentUtterance.rate = 0.95;
+        currentUtterance.pitch = 1.05;
+        currentUtterance.lang = 'en-US';
+
+        // try to get a natural voice
+        if (window.speechSynthesis.getVoices) {
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Female'));
+            if (preferredVoice) currentUtterance.voice = preferredVoice;
+        }
+
+        currentUtterance.onstart = () => {
+            isSpeaking = true;
+            voiceBtn.classList.add('speaking');
+            voiceIcon.className = 'fas fa-stop';
+            showToast('🎙️ Reading aloud...', 1500);
+        };
+        currentUtterance.onend = () => {
+            isSpeaking = false;
+            voiceBtn.classList.remove('speaking');
+            voiceIcon.className = 'fas fa-headphones';
+            showToast('✅ Finished reading', 1300);
+            currentUtterance = null;
+        };
+        currentUtterance.onerror = (e) => {
+            console.warn('Speech error', e);
+            isSpeaking = false;
+            voiceBtn.classList.remove('speaking');
+            voiceIcon.className = 'fas fa-headphones';
+            showToast('⚠️ Voice interrupted', 1200);
+            currentUtterance = null;
+        };
+        synth.speak(currentUtterance);
+    }
+
+    // Function to format date with robust parsing (avoid 1901 issues)
+    function formatArticleDate(dateString) {
+        let d = new Date(dateString);
+        if (isNaN(d.getTime())) d = new Date(); // fallback if invalid
+        const formatted = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return { formatted, time };
+    }
+
+    // Helper: calculate read time based on actual words
+    function calcReadTime(contentText) {
+        const wordsPerMin = 210;
+        const wordCount = contentText.trim().split(/\s+/).length;
+        const mins = Math.max(1, Math.ceil(wordCount / wordsPerMin));
+        return mins;
+    }
+
+    // Helper to render content paragraphs with smart formatting for better readability
+    function renderBody(contentText) {
+        if (!contentText) return '<p>Content unavailable.</p>';
+        // split by line breaks and also convert double newlines into paragraphs
+        const paragraphs = contentText.split(/\n+/);
+        let html = '';
+        for (let para of paragraphs) {
+            para = para.trim();
+            if (!para) continue;
+            // detect if line starts with # or heading like pattern (quick enhancements)
+            if (para.startsWith('## ')) {
+                html += `<h3>${para.replace('## ', '')}</h3>`;
+            } else if (para.startsWith('# ')) {
+                html += `<h2>${para.replace('# ', '')}</h2>`;
+            } else if (para.startsWith('> ')) {
+                html += `<blockquote>${para.replace('> ', '')}</blockquote>`;
+            } else {
+                html += `<p>${para}</p>`;
+            }
+        }
+        return html || `<p>${contentText}</p>`;
+    }
+
+    // Fetch data and hydrate page dynamically
+    document.addEventListener("DOMContentLoaded", async () => {
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('id');
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/articles`);
+            if (!res.ok) throw new Error('Network response failed');
+            let articles = await res.json();
+            if (!Array.isArray(articles) || articles.length === 0) throw new Error('No articles');
+
+            // Find target article or fallback to first article (avoid errors)
+            let currentArticle = articles.find(a => a.id == articleId);
+            if (!currentArticle && articleId) {
+                console.warn('Article not found, using latest');
+                currentArticle = articles[0];
+            } else if (!currentArticle) {
+                currentArticle = articles[0];
+            }
+
+            // Date and meta
+            const { formatted, time } = formatArticleDate(currentArticle.date);
+            const readMins = calcReadTime(currentArticle.content || "");
+            // fallback images if needed
+            const articleImage = currentArticle.image_url && currentArticle.image_url.trim() !== "" 
+                ? currentArticle.image_url 
+                : "https://images.unsplash.com/photo-1523348837708-15f4ad4f8af6?w=1200&h=600&fit=crop";
+
+            // Build main article
+            const articleWrapper = document.getElementById("articleWrapper");
+            articleWrapper.innerHTML = `
+                <article class="article-hero fade-up">
+                    <img src="${articleImage}" alt="${escapeHtml(currentArticle.title)}" class="hero-img" onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fee74a62?w=1200&h=600&fit=crop'">
+                    <div class="hero-content">
+                        <span class="badge"><i class="fas fa-tag"></i> ${escapeHtml(currentArticle.category || 'Agriculture')}</span>
+                        <h1>${escapeHtml(currentArticle.title)}</h1>
+                        <div class="meta">
+                            <span><i class="far fa-calendar-alt"></i> ${formatted}</span>
+                            <span><i class="far fa-clock"></i> ${time}</span>
+                            <span><i class="fas fa-hourglass-half"></i> ${readMins} min read</span>
+                            <button class="print-btn" id="inlinePrintBtn" aria-label="Print article"><i class="fas fa-print"></i> Print</button>
+                        </div>
+                        <div class="content-body" id="articleBody">
+                            ${renderBody(currentArticle.content || "This insightful piece explores modern regenerative agriculture techniques, soil health, and sustainable yield improvement.")}
+                        </div>
+                    </div>
+                </article>
+            `;
+            // attach print event for inline button
+            const printBtn = document.getElementById('inlinePrintBtn');
+            if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+            // Exactly TWO recommended cards from other articles (skip current)
+            let otherArticles = articles.filter(a => a.id != currentArticle.id);
+            // randomize or keep order? Show latest two for professional UX
+            otherArticles = otherArticles.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 2);
+            if (otherArticles.length < 2 && articles.length > 1) {
+                // fallback: fill with any other different article
+                const extra = articles.find(a => a.id !== currentArticle.id && !otherArticles.includes(a));
+                if (extra && otherArticles.length === 1) otherArticles.push(extra);
+                else if (otherArticles.length === 0 && articles.length > 1) otherArticles = articles.slice(0,2);
+            }
+            const recommendedGrid = document.getElementById("recommendedGrid");
+            if (otherArticles.length === 0) {
+                recommendedGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;">🌟 More articles coming soon</div>`;
+            } else {
+                recommendedGrid.innerHTML = otherArticles.map(art => {
+                    const cardImg = art.image_url && art.image_url.trim() !== "" ? art.image_url : "https://images.unsplash.com/photo-1592982537447-2f2c6a0a7cc1?w=600&h=400&fit=crop";
+                    return `
+                        <a href="article.html?id=${art.id}" class="premium-card">
+                            <img src="${cardImg}" alt="${escapeHtml(art.title)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fee74a62?w=600&h=400&fit=crop'">
+                            <div class="premium-info">
+                                <div class="card-category"><i class="fas fa-seedling"></i> ${escapeHtml(art.category || 'Insight')}</div>
+                                <h4>${escapeHtml(art.title)}</h4>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            }
+
+            // after load ensure speech synthesis voices loaded (optional)
+            if (synth.getVoices) {
+                synth.getVoices(); // preload voices
+            }
+        } catch (err) {
+            console.error('Fetch Error:', err);
+            const wrapper = document.getElementById("articleWrapper");
+            wrapper.innerHTML = `
+                <div class="article-hero" style="padding: 40px; text-align: center;">
+                    <i class="fas fa-tree" style="font-size: 48px; color: var(--accent-gold);"></i>
+                    <h2>Unable to load article</h2>
+                    <p>Please ensure the backend is running at localhost:3000 or refresh later.</p>
+                    <button onclick="location.reload()" style="background: var(--primary); color:white; border:none; padding:8px 20px; border-radius:40px; margin-top:15px;">↻ Retry</button>
+                </div>
+            `;
+            document.getElementById("recommendedGrid").innerHTML = `<div style="grid-column:1/-1; text-align:center;">📡 Connection issue — please check API</div>`;
+        }
+    });
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // Attach voice button listener
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (voiceBtn) {
+        voiceBtn.addEventListener('click', handleSpeech);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "college-project",
+  "version": "1.0.0",
+  "description": "AgriConnect Hub Servers",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "chat": "nodemon index.js",
+    "mandi": "node mandi_server.js",
+"start-all": "concurrently \"npm run start\" \"npm run chat\""  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.12",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.10"
+  }
+}

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expert Profile - AgriConnect Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981; /* Fresher Emerald Green */
+            --primary-dark: #059669;
+            --dark: #0f172a;
+            --slate: #475569;
+            --bg: #f1f5f9;
+            --header-height: 80px;
+        }
+
+        /* 1. Page Setup */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 2. Enhanced Header */
+     /* 2. Professional Green Header */
+        .site-header {
+            height: var(--header-height);
+            background: var(--primary-dark); /* Solid Green */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffffff; /* White Logo Text */
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Ensuring the icon inside the logo is also white */
+        .logo i {
+            color: #ffffff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9); /* Off-white for better readability */
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff; /* Pure white on hover */
+            transform: translateY(-1px);
+        }
+        /* 3. Main Content - Larger Card */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .profile-viewer-card {
+            width: 100%;
+            max-width: 540px; /* Increased width */
+            background: #ffffff;
+            border-radius: 32px; /* Smoother corners */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            animation: reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 4. Refined Card Sections */
+        .card-banner {
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); /* Lush gradient */
+            height: 120px; /* Taller banner */
+        }
+
+        .profile-main {
+            text-align: center;
+            margin-top: -60px; /* Adjusted for larger pic */
+            padding: 0 2rem 1.5rem;
+        }
+
+        #profilePicViewer {
+            width: 120px; /* Bigger profile pic */
+            height: 120px;
+            border-radius: 35% 65% 63% 37% / 41% 35% 65% 59%; /* Organic blob-ish shape */
+            border: 6px solid white;
+            object-fit: cover;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        #profilePicViewer:hover {
+            transform: rotate(3deg) scale(1.05);
+        }
+
+        #profileName {
+            margin: 15px 0 6px;
+            font-size: 1.8rem; /* Larger text */
+            font-weight: 800;
+            color: var(--dark);
+            letter-spacing: -0.02em;
+        }
+
+        .expert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #ecfdf5;
+            color: #059669;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            border: 1px solid #d1fae5;
+        }
+
+        /* Elevated Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            padding: 1.5rem;
+            background: #f8fafc;
+            margin: 0 20px;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .stat {
+            text-align: center;
+            position: relative;
+        }
+
+        .stat:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 1px;
+            background: #e2e8f0;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--slate);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-weight: 800;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        /* Detailed Content */
+        .card-body {
+            padding: 2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--slate);
+            font-size: 0.9rem;
+            border: 1px solid #f1f5f9;
+        }
+
+        .info-item i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        /* Modern Action Buttons */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 16px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-wa { 
+            background: #128C7E; 
+            color: white;
+            box-shadow: 0 4px 14px rgba(18, 140, 126, 0.3);
+        }
+
+        .btn-mail { 
+            background: var(--dark); 
+            color: white; 
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+        }
+
+        .btn:hover { 
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        <a href="agri2.html" class="logo">
+            <i class="fas fa-leaf"></i> AgriConnect
+        </a>
+        <nav class="nav-links">
+            <a href="agri2.html">Home</a>
+            <a href="#">Experts</a>
+            <a href="#">Resources</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="profile-viewer-card">
+            <div class="card-banner"></div>
+
+            <div class="profile-main" id="profileHeader">
+                </div>
+
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value"><i class="fas fa-award" style="color:#fbbf24"></i> Pro</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Rating</span>
+                    <span class="stat-value">4.9</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Status</span>
+                    <span class="stat-value" style="color:var(--primary)">Online</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div id="profileDetails" class="info-grid">
+                    </div>
+                
+                <div id="actionButtons" class="btn-group">
+                    </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            
+            const data = {
+                name: params.get('name') || 'Dr. Sarah Jenkins',
+                pic: params.get('pic') || 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=300',
+                email: params.get('email') || 'sarah.j@agrihub.com',
+                contact: params.get('contact') || 'Not Listed',
+                experience: params.get('experience') || '12',
+                location: params.get('location') || 'California, USA',
+                isExpert: params.get('isExpert') === 'true' || true
+            };
+
+            let contactCleaned = data.contact.replace(/[^0-9]/g, '');
+            if (contactCleaned.length === 10) contactCleaned = '91' + contactCleaned;
+
+            // Render Header
+            document.getElementById('profileHeader').innerHTML = `
+                <img id="profilePicViewer" src="${data.pic}" alt="Profile">
+                <h2 id="profileName">${data.name}</h2>
+                ${data.isExpert ? '<span class="expert-badge"><i class="fas fa-check-circle"></i> Verified Expert</span>' : ''}
+            `;
+
+            // Render Info Grid
+            document.getElementById('profileDetails').innerHTML = `
+                <div class="info-item">
+                    <i class="fas fa-map-pin"></i>
+                    <span>${data.location}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>${data.experience}+ Years</span>
+                </div>
+            `;
+
+            // Render Buttons
+            document.getElementById('actionButtons').innerHTML = `
+                <a href="mailto:${data.email}" class="btn btn-mail">
+                    <i class="far fa-envelope"></i> Email
+                </a>
+                ${data.contact !== 'Not Listed' ? `
+                    <a href="https://wa.me/${contactCleaned}" target="_blank" class="btn btn-wa">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                ` : ''}
+            `;
+        });
+
+
+        function openDetailedProfile(element) {
+    // Collect data attributes from the clicked username
+    const userProfile = {
+        name: element.dataset.name,
+        email: element.dataset.email,
+        contact: element.dataset.contact,
+        pic: element.dataset.pic,
+        experience: element.dataset.experience,
+        location: element.dataset.location,
+        isExpert: element.dataset.isExpert === 'true'
+    };
+
+    // Construct URL with parameters and redirect
+    const params = new URLSearchParams(userProfile);
+    window.open(`profile-viewer.html?${params.toString()}`, "_blank");
+}
+
+// Make it globally accessible
+window.openDetailedProfile = openDetailedProfile;
+    </script>
+</body>
+</html>

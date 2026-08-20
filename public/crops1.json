@@ -1,0 +1,141 @@
+[
+  {
+    "name": "Sugarcane",
+    "weekly_plan": [
+      {
+        "week": 5,
+        "stage": "Land Preparation",
+        "what_to_do": [
+          "Deep ploughing of field",
+          "Remove weeds and residues",
+          "Add 10-15 tons FYM per acre",
+          "Level the field properly"
+        ],
+        "fertilizer": "Apply FYM + SSP",
+        "irrigation": "Light irrigation after preparation",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 6,
+        "stage": "Planting",
+        "what_to_do": [
+          "Cut healthy sugarcane setts",
+          "Treat setts with fungicide",
+          "Plant in furrows (row spacing 90cm)",
+          "Cover with soil properly"
+        ],
+        "fertilizer": "Apply NPK basal dose",
+        "irrigation": "Immediate irrigation after planting",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 8,
+        "stage": "Germination",
+        "what_to_do": [
+          "Check germination percentage",
+          "Fill gaps where plants missing",
+          "Remove early weeds"
+        ],
+        "fertilizer": "No major fertilizer",
+        "irrigation": "Maintain soil moisture",
+        "pest_alert": "Early shoot borer risk"
+      },
+      {
+        "week": 12,
+        "stage": "Tillering",
+        "what_to_do": [
+          "Earthing up soil around roots",
+          "Remove weeds manually",
+          "Inspect crop health"
+        ],
+        "fertilizer": "Apply Nitrogen (Urea)",
+        "irrigation": "Regular irrigation every 7 days",
+        "pest_alert": "Medium"
+      }
+    ]
+  },
+
+  {
+    "name": "Rice",
+    "weekly_plan": [
+      {
+        "week": 23,
+        "stage": "Land Prep",
+        "what_to_do": [
+          "Plough and puddle field",
+          "Maintain water level",
+          "Prepare nursery bed"
+        ],
+        "fertilizer": "Apply compost",
+        "irrigation": "Flood field lightly",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 24,
+        "stage": "Sowing",
+        "what_to_do": [
+          "Soak seeds overnight",
+          "Sow in nursery",
+          "Protect from birds"
+        ],
+        "fertilizer": "DAP",
+        "irrigation": "Maintain standing water",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 28,
+        "stage": "Transplanting",
+        "what_to_do": [
+          "Transplant seedlings",
+          "Maintain spacing",
+          "Start irrigation cycle"
+        ],
+        "fertilizer": "Urea first dose",
+        "irrigation": "Maintain 2-3 cm water",
+        "pest_alert": "Stem borer risk"
+      }
+    ]
+  },
+
+  {
+    "name": "Wheat",
+    "weekly_plan": [
+      {
+        "week": 44,
+        "stage": "Sowing",
+        "what_to_do": [
+          "Prepare fine seedbed",
+          "Seed drilling",
+          "Apply basal fertilizer"
+        ],
+        "fertilizer": "DAP",
+        "irrigation": "Light irrigation after sowing",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 48,
+        "stage": "Germination",
+        "what_to_do": [
+          "Check plant density",
+          "Remove weeds",
+          "Monitor crop"
+        ],
+        "fertilizer": "Urea",
+        "irrigation": "Irrigate after 20 days",
+        "pest_alert": "Low"
+      },
+      {
+        "week": 52,
+        "stage": "Vegetative",
+        "what_to_do": [
+          "Irrigation",
+          "Weed control",
+          "Check pests"
+        ],
+        "fertilizer": "Top dressing nitrogen",
+        "irrigation": "Regular irrigation",
+        "pest_alert": "Aphids risk"
+      }
+    ]
+  }
+]

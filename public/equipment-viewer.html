@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Details - AgriConnect Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #064e3b;
+            --dark: #0f172a;
+            --slate: #64748b;
+            --bg: #f8fafc;
+        }
+
+        /* 1. Page Setup - No Scrolling */
+        html, body {
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 2. Compact Header */
+        .site-header {
+            height: 60px;
+            background: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        /* 3. Main Display Area */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .compact-card {
+            width: 100%;
+            max-width: 450px; /* Slimmer card */
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Image Box */
+        .img-box {
+            height: 250px;
+            background: #eee;
+        }
+
+        #equipmentImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Content Area */
+        .card-body {
+            padding: 24px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .price { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+        .tag { background: #f1f5f9; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; color: var(--slate); text-transform: uppercase; }
+
+        .title { font-size: 1.4rem; font-weight: 800; margin-bottom: 15px; color: var(--dark); }
+
+        .seller-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .seller-info div { margin-bottom: 5px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .seller-info i { color: var(--primary); width: 14px; }
+
+        /* Buttons */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .btn-wa { background: #25D366; color: white; }
+        .btn-mail { background: var(--dark); color: white; }
+        .btn:hover { opacity: 0.85; }
+
+        .back-btn { display: block; text-align: center; margin-top: 15px; color: var(--slate); text-decoration: none; font-size: 0.75rem; font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        <h3 onclick="history.back()" style="cursor: pointer;"><i class="fas fa-leaf"></i> AgriConnect</h3>
+    </header>
+
+    <main>
+        <div class="compact-card" id="renderZone">
+            <div style="padding: 50px; text-align: center;">Loading...</div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const nameParam = params.get('name');
+            const target = document.getElementById('renderZone');
+
+            const FALLBACK = "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800";
+
+            try {
+                const response = await fetch('/api/equipment/all');
+                const data = await response.json();
+                const item = data.find(e => e.name === decodeURIComponent(nameParam));
+
+                if (!item) {
+                    target.innerHTML = "<div style='padding:40px'>Not found</div>";
+                    return;
+                }
+
+                const sellerPhone = "8097627902";
+                let wa = sellerPhone.replace(/[^0-9]/g, '');
+                if (wa.length === 10) wa = '91' + wa;
+
+                target.innerHTML = `
+                    <div class="img-box">
+                        <img id="equipmentImg" src="${item.image_url || FALLBACK}" onerror="this.src='${FALLBACK}'">
+                    </div>
+                    <div class="card-body">
+                        <div class="price-row">
+                            <span class="price">$${parseFloat(item.price || 0.08).toFixed(2)}</span>
+                            <span class="tag">${item.category || 'Tractor'}</span>
+                        </div>
+                        <h1 class="title">${item.name}</h1>
+                        
+                        <div class="seller-info">
+                            <div><i class="fas fa-user"></i> ankita</div>
+                            <div><i class="fas fa-envelope"></i> ankitachauhan1@gmail.com</div>
+                            <div><i class="fas fa-phone"></i> ${sellerPhone}</div>
+                        </div>
+
+                        <div class="btn-group">
+                            <a href="https://wa.me/${wa}" target="_blank" class="btn btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                            <a href="mailto:ankitachauhan1@gmail.com" class="btn btn-mail"><i class="fas fa-envelope"></i> Email</a>
+                        </div>
+                        <a href="javascript:history.back()" class="back-btn">Back to Marketplace</a>
+                    </div>
+                `;
+            } catch (err) {
+                target.innerHTML = "<div style='padding:40px'>Error loading data</div>";
+            }
+        });
+    </script>
+</body>
+</html>

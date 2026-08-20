@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>India Weather Map - 3 Day Forecast</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", "Segoe UI", sans-serif;
+      background: #121212;
+      color: white;
+      scroll-behavior: smooth;
+    }
+    #title {
+      padding: 15px 30px; /* Adjusted padding */
+      font-size: 1.5rem;
+      font-weight: 600;
+      background: #1e1e1e;
+      /* Made title bar a flex container */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; /* Allow wrapping on small screens */
+      gap: 15px;
+    }
+    
+    /* Search Bar Styles */
+    .search-container {
+      display: flex;
+    }
+    #citySearch {
+      font-family: "Poppins", "Segoe UI", sans-serif;
+      font-size: 1rem;
+      padding: 8px 12px;
+      border: 1px solid #444;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      background: #333;
+      color: #fff;
+    }
+    #citySearch:focus {
+      outline: none;
+      border-color: #00bfff;
+    }
+    #searchBtn {
+      font-family: "Poppins", "Segoe UI", sans-serif;
+      font-size: 1rem;
+      padding: 8px 15px;
+      border: 1px solid #00bfff;
+      border-radius: 0 8px 8px 0;
+      background: #00bfff;
+      color: #121212;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #searchBtn:hover {
+      background: #009acd;
+    }
+    /* End Search Styles */
+
+    #map {
+      height: 75vh;
+      width: 100%;
+    }
+    
+    /* Animated Map Marker */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 191, 255, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 15px rgba(0, 191, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 191, 255, 0);
+      }
+    }
+    
+    /* Blue marker for Geolocation/Click */
+    .map-marker-geo {
+      background-color: #00bfff;
+      border: 2px solid #ffffff;
+      animation: pulse 2s infinite;
+    }
+    
+    /* Red marker for other cities */
+    .map-marker-city {
+      background-color: #f33;
+      border: 2px solid #ffffff;
+      opacity: 0.7;
+    }
+    
+    .map-marker-geo, .map-marker-city {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+
+    .weather-card {
+      max-width: 400px;
+      margin: 20px auto 40px;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      display: block; 
+    }
+    .weather-card h2 {
+      margin: 0 0 8px;
+      color: #00bfff;
+    }
+    .temp {
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+    .desc {
+      margin: 10px 0;
+      text-transform: capitalize;
+    }
+    
+    /* ✨ NEW: Sunrise/Sunset Styles */
+    .sun-times {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 10px 0;
+      border-top: 1px solid #333;
+      border-bottom: 1px solid #333;
+      font-weight: 600;
+    }
+    .sun-times div {
+      color: #ddd;
+    }
+    .sun-times span {
+      color: #fff;
+      font-weight: 700;
+    }
+    
+    .advice {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .advice div {
+      flex: 1;
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .good {
+      color: #4CAF50; /* Green */
+    }
+    .bad {
+      color: #F44336; /* Red */
+    }
+
+    .forecast {
+      margin-top: 20px;
+      border-top: 1px solid #333;
+      padding-top: 15px;
+    }
+    .forecast-day {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0;
+      background: #2a2a2a;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+    .forecast-day img {
+      width: 40px;
+    }
+    
+    .loader {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+      font-style: italic;
+      color: #888;
+    }
+    .weather-card.error {
+      background: #4a1c1c;
+      border: 1px solid #f33;
+    }
+    .weather-card.error h2 {
+      color: #f33;
+    }
+
+    /* Style for the Layer Control */
+    .leaflet-control-layers {
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid #444;
+    }
+    .leaflet-control-layers-base label,
+    .leaflet-control-layers-overlays label {
+      color: #fff;
+    }
+    .leaflet-control-layers-separator {
+      border-top: 1px solid #444;
+    }
+
+  </style>
+</head>
+<body>
+
+<div id="title">
+  <span>India Weather Map</span>
+  <div class="search-container">
+    <input type="text" id="citySearch" placeholder="Search for a city...">
+    <button id="searchBtn">Search</button>
+  </div>
+</div>
+
+<div id="map"></div>
+<div class="weather-card" id="weatherCard">
+  <div class="loader">Requesting your location...</div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+// --- API Key & Elements ---
+const apiKey = '831278baa7f0423d67c09c1715434eb2';
+const weatherCard = document.getElementById('weatherCard');
+const citySearchInput = document.getElementById('citySearch');
+const searchBtn = document.getElementById('searchBtn');
+
+
+// --- Define Base Map Layers ---
+const lightMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+});
+
+const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+});
+
+// --- Define Weather Overlay Layers ---
+const precipitationLayer = L.tileLayer(
+  `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+  { opacity: 0.7 }
+);
+const cloudsLayer = L.tileLayer(
+  `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+  { opacity: 0.7 }
+);
+const tempLayer = L.tileLayer(
+  `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${apiKey}`,
+  { opacity: 0.7 }
+);
+
+
+// --- Map Setup ---
+const map = L.map('map', {
+  center: [23.5937, 80.9629],
+  zoom: 5,
+  layers: [darkMap], // Set dark map as default
+  attributionControl: false // This removes the "Leaflet" logo
+});
+
+// --- Add Layer Control to Map ---
+const baseLayers = {
+  "Light": lightMap,
+  "Dark": darkMap
+};
+const overlayMaps = {
+  "Precipitation": precipitationLayer,
+  "Clouds": cloudsLayer,
+  "Temperature": tempLayer
+};
+L.control.layers(baseLayers, overlayMaps).addTo(map);
+
+
+// --- Icons ---
+const geoIcon = L.divIcon({ className: 'map-marker-geo', iconSize: [12, 12] });
+const cityIcon = L.divIcon({ className: 'map-marker-city', iconSize: [12, 12] });
+
+// --- All City Locations ---
+const locations = [
+  { name: 'Andhra Pradesh', city: 'Amaravati', lat: 16.5062, lon: 80.6480 },
+  { name: 'Arunachal Pradesh', city: 'Itanagar', lat: 27.0844, lon: 93.6053 },
+  { name: 'Assam', city: 'Dispur', lat: 26.1433, lon: 91.7898 },
+  { name: 'Bihar', city: 'Patna', lat: 25.5941, lon: 85.1376 },
+  { name: 'Chhattisgarh', city: 'Raipur', lat: 21.2514, lon: 81.6296 },
+  { name: 'Goa', city: 'Panaji', lat: 15.4909, lon: 73.8278 },
+  { name: 'Gujarat', city: 'Gandhinagar', lat: 23.2156, lon: 72.6369 },
+  { name: 'Haryana', city: 'Chandigarh', lat: 30.7333, lon: 76.7794 },
+  { name: 'Himachal Pradesh', city: 'Shimla', lat: 31.1048, lon: 77.1734 },
+  { name: 'Jharkhand', city: 'Ranchi', lat: 23.3441, lon: 85.3096 },
+  { name: 'Karnataka', city: 'Bengaluru', lat: 12.9716, lon: 77.5946 },
+  { name: 'Kerala', city: 'Thiruvananthapuram', lat: 8.5241, lon: 76.9366 },
+  { name: 'Madhya Pradesh', city: 'Bhopal', lat: 23.2599, lon: 77.4126 },
+  { name: 'Maharashtra', city: 'Mumbai', lat: 19.0760, lon: 72.8777 },
+  { name: 'Manipur', city: 'Imphal', lat: 24.8170, lon: 93.9368 },
+  { name: 'Meghalaya', city: 'Shillong', lat: 25.5788, lon: 91.8933 },
+  { name: 'Mizoram', city: 'Aizawl', lat: 23.7271, lon: 92.7176 },
+  { name: 'Nagaland', city: 'Kohima', lat: 25.6701, lon: 94.1077 },
+  { name: 'Odisha', city: 'Bhubaneswar', lat: 20.2961, lon: 85.8245 },
+  { name: 'Punjab', city: 'Chandigarh', lat: 30.7333, lon: 76.7794 },
+  { name: 'Rajasthan', city: 'Jaipur', lat: 26.9124, lon: 75.7873 },
+  { name: 'Sikkim', city: 'Gangtok', lat: 27.3314, lon: 88.6138 },
+  { name: 'Tamil Nadu', city: 'Chennai', lat: 13.0827, lon: 80.2707 },
+  { name: 'Telangana', city: 'Hyderabad', lat: 17.3850, lon: 78.4867 },
+  { name: 'Tripura', city: 'Agartala', lat: 23.8315, lon: 91.2868 },
+  { name: 'Uttar Pradesh', city: 'Lucknow', lat: 26.8467, lon: 80.9462 },
+  { name: 'Uttarakhand', city: 'Dehradun', lat: 30.3165, lon: 78.0322 },
+  { name: 'West Bengal', city: 'Kolkata', lat: 22.5726, lon: 88.3639 },
+  { name: 'Andaman and Nicobar Islands', city: 'Port Blair', lat: 11.6234, lon: 92.7265 },
+  { name: 'Chandigarh', city: 'Chandigarh', lat: 30.7333, lon: 76.7794 },
+  { name: 'Dadra and Nagar Haveli and Daman and Diu', city: 'Daman', lat: 20.3974, lon: 72.8328 },
+  { name: 'Delhi (NCT)', city: 'New Delhi', lat: 28.6139, lon: 77.2090 },
+  { name: 'Jammu and Kashmir', city: 'Srinagar', lat: 34.0837, lon: 74.7973 },
+  { name: 'Ladakh', city: 'Leh', lat: 34.1526, lon: 77.5770 },
+  { name: 'Lakshadweep', city: 'Kavaratti', lat: 10.5667, lon: 72.6417 },
+  { name: 'Puducherry', city: 'Puducherry', lat: 11.9139, lon: 79.8145 },
+  { name: 'Bihar', city: 'Gaya', lat: 24.7955, lon: 85.0002 },
+  { name: 'Madhya Pradesh', city: 'Jabalpur', lat: 23.1815, lon: 79.9864 },
+  { name: 'Uttar Pradesh', city: 'Varanasi', lat: 25.3176, lon: 82.9739 },
+  { name: 'Maharashtra', city: 'Pune', lat: 18.5204, lon: 73.8567 },
+  { name: 'Gujarat', city: 'Ahmedabad', lat: 23.0225, lon: 72.5714 },
+  { name: 'Tamil Nadu', city: 'Coimbatore', lat: 11.0168, lon: 76.9558 },
+  { name: 'Rajasthan', city: 'Udaipur', lat: 24.5854, lon: 73.7125 },
+  { name: 'Telangana', city: 'Warangal', lat: 17.9784, lon: 79.5941 },
+  { name: 'Karnataka', city: 'Mysuru', lat: 12.2958, lon: 76.6394 },
+  { name: 'Odisha', city: 'Cuttack', lat: 20.4625, lon: 85.8828 },
+  { name: 'Punjab', city: 'Ludhiana', lat: 30.9000, lon: 75.8573 },
+  { name: 'West Bengal', city: 'Durgapur', lat: 23.5204, lon: 87.3119 },
+  { name: 'Uttarakhand', city: 'Haridwar', lat: 29.9457, lon: 78.1642 },
+  { name: 'Jharkhand', city: 'Dhanbad', lat: 23.7957, lon: 86.4304 },
+  { name: 'Haryana', city: 'Faridabad', lat: 28.4089, lon: 77.3178 },
+  { name: 'Assam', city: 'Silchar', lat: 24.8333, lon: 92.7789 },
+  { name: 'Chhattisgarh', city: 'Bilaspur', lat: 22.0797, lon: 82.1409 },
+  { name: 'Maharashtra', city: 'Nagpur', lat: 21.1458, lon: 79.0882 },
+  { name: 'Maharashtra', city: 'Nashik', lat: 19.9975, lon: 73.7898 },
+  { name: 'Uttar Pradesh', city: 'Kanpur', lat: 26.4499, lon: 80.3319 },
+  { name: 'Uttar Pradesh', city: 'Noida', lat: 28.5355, lon: 77.3910 },
+  { name: 'Gujarat', city: 'Surat', lat: 21.1702, lon: 72.8311 },
+  { name: 'Gujarat', city: 'Vadodara', lat: 22.3072, lon: 73.1812 },
+  { name: 'Tamil Nadu', city: 'Madurai', lat: 9.9252, lon: 78.1198 },
+  { name: 'Tamil Nadu', city: 'Tiruchirappalli', lat: 10.7905, lon: 78.7047 },
+  { name: 'Rajasthan', city: 'Jodhpur', lat: 26.2389, lon: 73.0243 },
+  { name: 'Rajasthan', city: 'Kota', lat: 25.2138, lon: 75.8648 },
+  { name: 'Karnataka', city: 'Hubli', lat: 15.3647, lon: 75.1240 },
+  { name: 'West Bengal', city: 'Asansol', lat: 23.6739, lon: 86.9524 },
+  { name: 'Madhya Pradesh', city: 'Indore', lat: 22.7196, lon: 75.8577 },
+  { name: 'Madhya Pradesh', city: 'Gwalior', lat: 26.2183, lon: 78.1828 },
+  { name: 'Bihar', city: 'Muzaffarpur', lat: 26.1225, lon: 85.3906 },
+  { name: 'Punjab', city: 'Amritsar', lat: 31.6340, lon: 74.8723 },
+  { name: 'Andhra Pradesh', city: 'Vijayawada', lat: 16.5062, lon: 80.6480 },
+  { name: 'Telangana', city: 'Nizamabad', lat: 18.6725, lon: 78.0941 },
+  { name: 'Kerala', city: 'Kochi', lat: 9.9312, lon: 76.2673 },
+  { name: 'Odisha', city: 'Rourkela', lat: 22.2604, lon: 84.8536 },
+  { name: 'Andhra Pradesh', city: 'Visakhapatnam', lat: 17.6868, lon: 83.2185 },
+  { name: 'Bihar', city: 'Bhagalpur', lat: 25.2424, lon: 86.9846 },
+  { name: 'Uttar Pradesh', city: 'Agra', lat: 27.1767, lon: 78.0081 },
+  { name: 'Uttar Pradesh', city: 'Meerut', lat: 28.9845, lon: 77.7064 },
+  { name: 'Rajasthan', city: 'Bikaner', lat: 28.0229, lon: 73.3119 },
+  { name: 'Punjab', city: 'Jalandhar', lat: 31.3260, lon: 75.5762 },
+  { name: 'Jammu and Kashmir', city: 'Jammu', lat: 32.7266, lon: 74.8570 },
+  { name: 'Kerala', city: 'Kozhikode', lat: 11.2588, lon: 75.7804 },
+  { name: 'Assam', city: 'Guwahati', lat: 26.1445, lon: 91.7362 },
+  { name: 'Haryana', city: 'Gurugram', lat: 28.4595, lon: 77.0266 }
+];
+
+// --- Global marker for clicked location ---
+let clickedMarker = null;
+
+// --- ✨ NEW: Helper function to format time ---
+function formatTime(timestamp) {
+  // Multiply by 1000 because JS Date uses milliseconds
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+// === Main Functionality ===
+
+// 1. This function runs on page load
+function initializeMap() {
+  // Add markers for all cities (RED)
+  locations.forEach(loc => {
+    L.marker([loc.lat, loc.lon], { icon: cityIcon })
+      .addTo(map)
+      .bindPopup(loc.city)
+      .on('click', () => {
+        getWeatherByCity(loc.city, loc.city); 
+        // ✨ FIXED THE BUG HERE
+        map.flyTo([loc.lat, loc.lon], 10);
+      });
+  });
+
+  // Try to get user's location
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(handleGeoSuccess, handleGeoError);
+  } else {
+    handleGeoError();
+  }
+  
+  // Search Event Listeners
+  searchBtn.addEventListener('click', handleSearch);
+  citySearchInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  });
+  
+  // Click anywhere on map
+  map.on('click', handleMapClick);
+}
+
+// 2. Called if user ALLOWS location
+function handleGeoSuccess(position) {
+  const lat = position.coords.latitude;
+  const lon = position.coords.longitude;
+  map.setView([lat, lon], 10);
+  
+  // Remove previous temp marker if it exists
+  if (clickedMarker) {
+    map.removeLayer(clickedMarker);
+  }
+  
+  L.marker([lat, lon], { icon: geoIcon })
+    .addTo(map)
+    .bindPopup('Your Location')
+    .openPopup();
+  getWeatherByCoords(lat, lon);
+}
+
+// 3. Called if user BLOCKS location
+function handleGeoError() {
+  console.warn("Geolocation error. Defaulting to New Delhi.");
+  const DELHI_LAT = 28.6139;
+  const DELHI_LON = 77.2090;
+  map.setView([DELHI_LAT, DELHI_LON], 6); 
+  getWeatherByCity('New Delhi', 'New Delhi');
+}
+
+// 4. Fetches weather by coordinates (used for geolocation AND map click)
+function getWeatherByCoords(lat, lon) {
+  const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+  fetchAndDisplayWeather(weatherUrl, forecastUrl, "Clicked Location");
+}
+
+// 5. Fetches weather by city name (used for markers AND SEARCH)
+function getWeatherByCity(cityName, locationName) {
+  const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric`;
+  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${apiKey}&units=metric`;
+  fetchAndDisplayWeather(weatherUrl, forecastUrl, locationName);
+}
+
+// Handle Search Function
+function handleSearch() {
+  const cityName = citySearchInput.value.trim();
+  if (cityName) {
+    getWeatherByCity(cityName, cityName);
+    citySearchInput.value = ''; // Clear input
+  }
+}
+
+// Handle Click on Map
+function handleMapClick(e) {
+  const { lat, lng } = e.latlng;
+  
+  // Remove the previous clicked marker if it exists
+  if (clickedMarker) {
+    map.removeLayer(clickedMarker);
+  }
+  
+  // Add a new marker (blue, pulsing)
+  clickedMarker = L.marker([lat, lng], { icon: geoIcon })
+    .addTo(map)
+    .bindPopup('Clicked Location')
+    .openPopup();
+    
+  // Pan to the new marker
+  map.flyTo([lat, lng], map.getZoom()); // Keep current zoom level
+  
+  // Fetch weather for these coords
+  getWeatherByCoords(lat, lng);
+}
+
+
+// 6. Main function to fetch and build the card
+function fetchAndDisplayWeather(weatherUrl, forecastUrl, locationName) {
+  weatherCard.innerHTML = '<div class="loader">Loading weather...</div>';
+  weatherCard.classList.remove('error');
+
+  let weatherData = {};
+
+  // First, get the current weather
+  fetch(weatherUrl)
+    .then(res => {
+      if (!res.ok) throw new Error(`Weather data not found (${res.status})`);
+      return res.json();
+    })
+    .then(data => {
+      weatherData = data; // Save current weather data
+      
+      // Fly map to searched location (if it's not a map click)
+      if (locationName !== "Clicked Location") {
+         const { lat, lon } = data.coord;
+         map.flyTo([lat, lon], 10);
+      }
+
+      const { temp, humidity } = data.main;
+      const { sunrise, sunset } = data.sys; // ✨ NEW: Get sunrise/sunset data
+      const desc = data.weather[0].description;
+      const icon = data.weather[0].icon;
+      const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
+      
+      const displayName = (locationName === "Your Location" || locationName === "Clicked Location") ? data.name : locationName;
+
+      // Farmer's Advice
+      const rain = desc.includes("rain") || desc.includes("storm");
+      const outdoor = (humidity > 85 || temp > 38 || temp < 10);
+      const rainAdvice = rain ? "Needed" : "Not Needed";
+      const outdoorAdvice = outdoor ? "Poor" : "Good";
+      const rainClass = rain ? "bad" : "good";
+      const outdoorClass = outdoor ? "good" : "bad";
+      const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+      // ✨ UPDATED: Card HTML now includes sun-times div
+      weatherCard.innerHTML = `
+        <h2>${displayName}</h2>
+        <small>As of ${now} GMT+5:30</small>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+          <img src="${iconUrl}" width="50" alt="${desc}">
+          <div class="temp">${Math.round(temp)}°C</div>
+        </div>
+        <div class="desc">${desc}</div>
+        
+        <div class="sun-times">
+          <div>🌅 Sunrise: <span>${formatTime(sunrise)}</span></div>
+          <div>🌇 Sunset: <span>${formatTime(sunset)}</span></div>
+        </div>
+        
+        <div class="advice">
+          <div><span class="${rainClass}">☔ Rain Gear<br>${rainAdvice}</span></div>
+          <div><span class="${outdoorClass}">🧑‍🌾 Field Work<br>${outdoorAdvice}</span></div>
+        </div>
+        <div class="forecast">
+          <strong>3-Day Forecast:</strong>
+          <div id="forecastDays">
+            <div class="loader">Loading forecast...</div>
+          </div>
+        </div>
+      `;
+
+      // Now, chain the fetch for the forecast
+      return fetch(forecastUrl);
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`Forecast data not found (${res.status})`);
+      return res.json();
+    })
+    .then(forecastData => {
+      const forecastContainer = document.getElementById('forecastDays');
+      forecastContainer.innerHTML = '';
+      
+      const filtered = forecastData.list.filter(item => item.dt_txt.includes("12:00:00")).slice(0, 3);
+
+      if(filtered.length === 0) {
+        forecastContainer.innerHTML = "Forecast data not available.";
+        return;
+      }
+
+      filtered.forEach(item => {
+        const date = new Date(item.dt_txt);
+        const day = date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const temp = item.main.temp.toFixed(1);
+        const icon = item.weather[0].icon;
+        const desc = item.weather[0].description;
+        const iconUrl = `https://openweathermap.org/img/wn/${icon}.png`;
+
+        forecastContainer.innerHTML += `
+          <div class="forecast-day">
+            <div>${day}</div>
+            <img src="${iconUrl}" alt="${desc}">
+            <div>${temp}°C</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('weatherCard').scrollIntoView();
+    })
+    .catch(err => {
+      console.error(err);
+      weatherCard.classList.add('error');
+      weatherCard.innerHTML = `
+        <h2>Error</h2>
+        <p>Could not find weather for that location.</p>
+        <p><small>${err.message}</small></p>
+      `;
+    });
+}
+
+// Start the app!
+initializeMap();
+
+</script>
+
+</body>
+</html>

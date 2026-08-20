@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - AgriConnect Hub</title>
+    <link rel="stylesheet" href="agri.css">
+<style>
+    /* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Segoe UI", system-ui, sans-serif;
+}
+
+/* PAGE */
+body{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:url("https://images.unsplash.com/photo-1523741543316-beb7fc7023d8")
+  no-repeat center/cover;
+  overflow:hidden;
+}
+
+/* AUTH / LOGIN CARD (SMALL) */
+.auth-container,
+.login-container{
+  width:100%;
+  max-width:460px;          /* smaller width */
+  padding:20px 22px;        /* smaller height */
+
+  background:#ffffff;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.1);
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+}
+
+/* HEADINGS */
+.auth-container h2,
+.login-container h2{
+  text-align:center;
+  font-size:1.35rem;
+  color:#2e7d32;
+  margin-bottom:2px;
+}
+
+.auth-container p,
+.login-container p{
+  text-align:center;
+  font-size:.8rem;
+  color:#555;
+  margin-bottom:12px;
+}
+
+/* FORM */
+.form-group{
+  margin-bottom:8px;
+}
+
+.form-group label{
+  display:block;
+  font-size:.7rem;
+  font-weight:600;
+  color:#333;
+  margin-bottom:2px;
+}
+
+.search-input,
+input{
+  width:100%;
+  padding:7px 9px;
+  font-size:.8rem;
+  border-radius:6px;
+  border:1px solid #d1d5db;
+  background:#fff;
+}
+
+.search-input:focus,
+input:focus{
+  outline:none;
+  border-color:#2e7d32;
+}
+
+/* BUTTON */
+.btn-apply,
+.login-btn{
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  font-size:.85rem;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(135deg,#2e7d32,#4caf50);
+  color:#fff;
+  cursor:pointer;
+}
+
+.btn-apply:disabled,
+.login-btn:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+/* MESSAGE */
+#signupMessage,
+#loginMessage{
+  margin-top:6px;
+  font-size:.75rem;
+  font-weight:600;
+  text-align:center;
+}
+
+/* LINKS */
+.auth-container a,
+.login-container a{
+  color:#2e7d32;
+  font-weight:600;
+  font-size:.75rem;
+  text-decoration:none;
+}
+
+.auth-container a:hover,
+.login-container a:hover{
+  text-decoration:underline;
+}
+
+/* MOBILE */
+@media(max-width:480px){
+  .auth-container,
+  .login-container{
+    max-width:340px;
+    padding:16px 18px;
+    border-radius:12px;
+  }
+}
+</style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2 style="text-align: center; color: var(--dark-green); margin-top: 0;">Create Account</h2>
+        <p style="text-align: center; color: var(--text-light); margin-bottom: 2rem;">Join the AgriConnect Hub community!</p>
+        
+        <form action="/signup" method="POST" id="signupForm">
+            <div class="form-group">
+                <label for="signupName">Full Name</label>
+                <input type="text" id="signupName" class="search-input" placeholder="Ankita Chauhan" required>
+            </div>
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" class="search-input" placeholder="ankita@example.com" required>
+            </div>
+             <div class="form-group">
+                <label for="signupLocation">Location (e.g., Pune)</label>
+                <input type="text" id="signupLocation" class="search-input" placeholder="Kalyan, Maharashtra">
+            </div>
+            <div class="form-group">
+                <label for="signupContact">Contact Number (for WhatsApp/Calls)</label>
+                <input type="tel" id="signupContact" class="search-input" placeholder="e.g., 9876543210">
+            </div>
+            <div class="form-group">
+                <label for="signupExperience">Farming Experience (Years)</label>
+                <input type="number" id="signupExperience" class="search-input" placeholder="e.g., 5" min="0" value="0" required>
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" class="search-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" id="signupButton" class="btn-apply" style="width: 100%; margin-top: 1rem; font-size: 1.1rem;">Create Account</button>
+            <p id="signupMessage" style="text-align: center; margin-top: 1rem;"></p>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1.5rem;">
+            Already have an account? <a href="login.html" style="color: var(--primary-green); font-weight: 600;">Login</a>
+        </p>
+         <p style="text-align: center; margin-top: 1rem;">
+            <a href="agri2.html" style="color: var(--text-light); font-size: 0.9rem;">&larr; Back to Home</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const location = document.getElementById('signupLocation').value;
+            const contact_number = document.getElementById('signupContact').value;
+            const years_experience = document.getElementById('signupExperience').value; // NEW FIELD
+            const password = document.getElementById('signupPassword').value;
+            const messageEl = document.getElementById('signupMessage');
+            const button = document.getElementById('signupButton');
+
+            button.disabled = true;
+            messageEl.textContent = 'Creating account...';
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, location, contact_number, years_experience, password }) 
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageEl.style.color = 'var(--dark-green)';
+                    messageEl.textContent = data.message + ' Logging you in...';
+                    
+                    localStorage.setItem('agriUser', JSON.stringify(data.user));
+                    
+                    setTimeout(() => {
+                        window.location.href = '/agri2.html';
+                    }, 2000);
+                } else {
+                    messageEl.style.color = 'red';
+                    messageEl.textContent = data.message;
+                    button.disabled = false;
+                }
+            } catch (err) {
+                messageEl.style.color = 'red';
+                messageEl.textContent = 'An error occurred. Please try again.';
+                button.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
+
+
+
+
+

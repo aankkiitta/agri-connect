@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌾 Agri News Hub | Crop & Market Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1b4332; --accent: #2d6a4f; --gold: #ffb703; --blue: #4b89dc; 
+    --bg: #f4f7f6; --red: #e63946; --green: #2a9d8f; --border: #edf2f7;
+  }
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+  
+  body { 
+    /* Lowered opacity to 0.4 (40%) to make the background image clearly visible */
+    background: linear-gradient(rgba(244, 247, 246, 0.4), rgba(244, 247, 246, 0.4)), 
+                url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=2000');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #334155; 
+    min-height: 100vh; 
+}
+
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    padding: 40px 20px; color: white; text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+
+  /* WEATHER DASHBOARD */
+  /* Replace these in your <style> section */
+#weatherWidget {
+    background: rgba(255, 255, 255, 0.12); /* Glass effect */
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border-radius: 20px;
+    padding: 20px 40px;
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+#weatherWidget:hover {
+    transform: translateY(-5px); /* Interaction feel */
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.weather-item { 
+    text-align: center; 
+    position: relative;
+}
+
+/* Add a small separator line between items */
+.weather-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -25px;
+    top: 20%;
+    height: 60%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.weather-val { 
+    font-size: 26px; 
+    font-weight: 800; 
+    display: block; 
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    letter-spacing: -0.5px;
+}
+
+.weather-label { 
+    font-size: 11px; 
+    text-transform: uppercase; 
+    color: rgba(255, 255, 255, 0.85); 
+    letter-spacing: 2px; 
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
+}
+  .container {
+    max-width: 1250px; margin: -30px auto 50px auto;
+    padding: 0 20px; display: grid; grid-template-columns: 1fr 320px; gap: 30px;
+  }
+
+  .control-panel {
+    grid-column: 1 / -1; background: white; padding: 25px; border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+  }
+
+  #categoryTabs { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .tab { padding: 8px 20px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; background: white; }
+  .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+  #searchInput { width: 100%; max-width: 550px; padding: 14px 22px; border-radius: 12px; border: 1px solid #e2e8f0; outline: none; font-size: 14px; }
+
+  #newsList { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; list-style: none; margin-top: 20px; }
+ #newsList li { 
+    background: white; 
+    border-radius: 16px; 
+    overflow: hidden; 
+    border: 1px solid var(--border); 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    transition: 0.3s;
+    /* Added this shadow to make cards pop against the visible background */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+}
+  #newsList li:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+  #newsList li img { width: 100%; height: 180px; object-fit: cover; }
+
+  .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+  .card-body a { font-size: 16px; font-weight: 700; color: var(--primary); text-decoration: none; line-height: 1.4; margin-bottom: 8px; display: block; }
+
+  .news-meta { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  .description { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .card-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .source-info { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--blue); font-weight: 700; }
+  
+  .icon-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+  .icon-btn:hover { background: var(--blue); color: white; }
+  .icon-btn.saved { color: var(--red); background: #fee2e2; }
+
+  /* Update your sidebar CSS to this */
+.sidebar {
+  position: sticky;
+  top: 20px; /* This keeps it 20px from the top when scrolling */
+  height: fit-content;
+}
+  .sidebar-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid var(--border); }
+  .sidebar-card h3 { font-size: 15px; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; }
+  .price-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .price-table td { padding: 12px 0; border-bottom: 1px solid #f8fafc; font-weight: 600; }
+  .price-up { color: var(--green); } .price-down { color: var(--red); }
+
+  .tag { background: #f1f5f9; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; margin: 4px; display: inline-block; }
+  #loadMoreBtn { display: none; margin: 40px auto; padding: 14px 45px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; }
+
+.home-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    padding: 12px 24px;
+    /* Frosted glass effect */
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(15px) saturate(160%);
+    -webkit-backdrop-filter: blur(15px) saturate(160%);
+    
+    /* White text and border to pop against the dark farm background */
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    
+    /* Soft shadow instead of a harsh blocky one */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    
+    z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    display: none;
+}
+
+.home-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Add a subtle "shimmer" icon effect */
+.home-btn::before {
+    
+    margin-right: 8px;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+}
+
+
+
+
+/* Sentiment Glow Styles */
+.card-positive {
+    border-left: 5px solid #2a9d8f !important;
+    box-shadow: 0 4px 20px rgba(42, 157, 143, 0.2) !important;
+}
+
+.card-negative {
+    border-left: 5px solid #e63946 !important;
+    box-shadow: 0 4px 20px rgba(230, 57, 70, 0.2) !important;
+}
+
+.card-neutral {
+    border-left: 5px solid transparent;
+}
+  @media(max-width: 950px) { .container { grid-template-columns: 1fr; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚜 Agri News Hub</h1>
+  <div id="weatherWidget">
+    <div class="weather-item">
+        <span class="weather-label">Location</span>
+        <span id="locName" class="weather-val">--</span>
+    </div>
+    <div class="weather-item">
+        <span class="weather-label">Temp</span>
+        <span id="tempVal" class="weather-val">--°C</span>
+    </div>
+    <div class="weather-item">
+        <span class="weather-label">Conditions</span>
+        <span id="condVal" class="weather-val">--</span>
+    </div>
+  </div>
+</header>
+
+<a href="../index.html" style="text-decoration: none;">
+    <button id="backToHome" class="home-btn">
+        🏠 Home
+    </button>
+</a>
+<div class="container">
+  <div class="control-panel">
+    <div id="categoryTabs">
+      <button class="tab active" data-keywords="crop market prices">Crops</button>
+      <button class="tab" data-keywords="soil farming fertilizer">Farming</button>
+      <button class="tab" data-keywords="livestock dairy">Livestock</button>
+      <button class="tab" data-keywords="agriculture weather climate monsoon rainfall">🌦️ Weather News</button>
+      <button class="tab" data-keywords="saved">❤️ Saved</button>
+    </div>
+    <input type="text" id="searchInput" placeholder="Search crop trends, soil health, or market alerts..." />
+  </div>
+
+  <main>
+    <p id="loader" style="display:none; text-align: center; padding: 20px; font-weight: 600;">🔄 Syncing Field Data...</p>
+   <div id="sentimentDashboard" style="background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none;">
+    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 8px;">
+        <span>📉 Market Stress</span>
+        <span id="sentimentLabel">Analyzing Pulse...</span>
+        <span>📈 Market Growth</span>
+    </div>
+    <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: flex;">
+        <div id="negBar" style="width: 0%; background: #e63946; transition: 0.5s;"></div>
+        <div id="neuBar" style="width: 100%; background: #cbd5e1; transition: 0.5s;"></div>
+        <div id="posBar" style="width: 0%; background: #2a9d8f; transition: 0.5s;"></div>
+    </div>
+</div>
+    <ul id="newsList"></ul>
+    
+    <button id="loadMoreBtn">LOAD MORE AGRI-NEWS</button>
+  </main>
+
+  <aside class="sidebar">
+    <div class="sidebar-card">
+      <h3>📊 Live Prices <span onclick="updateCommodityPrices()" style="cursor:pointer; font-size: 14px;">🔄</span></h3>
+      <table class="price-table"><tbody id="priceBody"></tbody></table>
+      <div id="priceTimestamp" style="font-size: 10px; color: #94a3b8; margin-top: 12px;"></div>
+    </div>
+
+    <div class="sidebar-card">
+      <h3>🔥 Agri Trends</h3>
+      <div id="trendingBox"></div>
+    </div>
+
+    <div id="marketCard" class="sidebar-card" style="border-left: 5px solid var(--blue);">
+      <h3>Market Alert</h3>
+      <div style="display: flex; align-items: start; gap: 12px; margin-top: 12px;">
+        <span id="trendIndicator" style="font-size: 24px;">📊</span>
+        <span id="marketAlertText" style="font-size: 13px; line-height: 1.5; font-weight: 500;">Scanning headlines...</span>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+let currentPage = 1;
+let currentKeywords = "crop market prices";
+const weatherKey = "831278baa7f0423d67c09c1715434eb2";
+
+// 1. WEATHER INITIALIZATION
+// 1. WEATHER INITIALIZATION (Updated with Icons and Better Formatting)
+async function initWeather() {
+    // REPLACE your old updateUI function with this one:
+    const updateUI = (data) => {
+        document.getElementById('locName').innerText = data.name;
+        
+        // Adds a thermometer icon and the rounded temperature
+        document.getElementById('tempVal').innerHTML = `🌡️ ${Math.round(data.main.temp)}°C`;
+        
+        // Logic for dynamic icons based on conditions
+        const condition = data.weather[0].main;
+        let icon = "🌦️"; // Default icon
+        if (condition === "Clouds") icon = "☁️";
+        if (condition === "Clear") icon = "☀️";
+        if (condition === "Rain") icon = "🌧️";
+        if (condition === "Thunderstorm") icon = "⛈️";
+
+        document.getElementById('condVal').innerText = `${icon} ${condition}`;
+    };
+
+    // This part stays the same to fetch the data
+    navigator.geolocation.getCurrentPosition(
+        async (p) => { 
+            const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${p.coords.latitude}&lon=${p.coords.longitude}&units=metric&appid=${weatherKey}`); 
+            updateUI(await res.json()); 
+        },
+        async () => { 
+            const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Mumbai&units=metric&appid=${weatherKey}`); 
+            updateUI(await res.json()); 
+        }
+    );
+}
+
+// 2. TIME AGO LOGIC
+function timeAgo(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    let interval = Math.floor(seconds / 31536000);
+    if (interval >= 1) return interval + "y ago";
+    interval = Math.floor(seconds / 2592000);
+    if (interval >= 1) return interval + "mo ago";
+    interval = Math.floor(seconds / 86400);
+    if (interval >= 1) return interval + "d ago";
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1) return interval + "h ago";
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) return interval + "m ago";
+    return "Just now";
+}
+
+// 3. COMMODITY PRICES
+async function updateCommodityPrices() {
+    try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await response.json();
+        const rate = data.rates.INR || 83;
+        const commodities = [
+            { name: "Wheat (MT)", price: (rate * 3.48).toFixed(0), change: "+1.4%", up: true },
+            { name: "Corn (MT)", price: (rate * 2.35).toFixed(0), change: "-0.6%", up: false },
+            { name: "Soybeans", price: (rate * 6.50).toFixed(0), change: "+0.9%", up: true },
+            { name: "Basmati", price: (rate * 1.35).toFixed(0), change: "+3.2%", up: true }
+        ];
+        document.getElementById('priceBody').innerHTML = commodities.map(c => `<tr><td>${c.name}</td><td>₹${c.price}</td><td class="${c.up ? 'price-up' : 'price-down'}">${c.up ? '▲' : '▼'} ${c.change}</td></tr>`).join('');
+        document.getElementById('priceTimestamp').innerText = `Updated: ${new Date().toLocaleTimeString()}`;
+    } catch (e) { document.getElementById('priceBody').innerHTML = "<tr><td colspan='3'>Offline</td></tr>"; }
+}
+
+// 4. NEWS LOGIC
+function getSaved() { return JSON.parse(localStorage.getItem("agriSaved") || "[]"); }
+
+function toggleSave(article, btn) {
+    let saved = getSaved();
+    const idx = saved.findIndex(a => a.url === article.url);
+    if (idx > -1) { saved.splice(idx, 1); btn.classList.remove("saved"); if(currentKeywords === "saved") btn.closest('li').remove(); }
+    else { saved.push(article); btn.classList.add("saved"); }
+    localStorage.setItem("agriSaved", JSON.stringify(saved));
+}
+
+async function fetchNews(keywords, loadMore = false) {
+    const list = document.getElementById('newsList');
+    if (!loadMore) { list.innerHTML = ""; currentPage = 1; } else { currentPage++; }
+    currentKeywords = keywords;
+    
+    if (keywords === "saved") {
+        document.getElementById('loadMoreBtn').style.display = "none";
+        getSaved().forEach(a => list.appendChild(createCard(a)));
+        return;
+    }
+
+    document.getElementById('loader').style.display = "block";
+    try {
+        const res = await fetch(`http://localhost:3000/news?q=${encodeURIComponent(keywords)}&page=${currentPage}`);
+        const data = await res.json();
+        document.getElementById('loader').style.display = "none";
+        if (data.articles) {
+            data.articles.forEach(a => { if(a.title !== "[Removed]") list.appendChild(createCard(a)); });
+            document.getElementById('loadMoreBtn').style.display = "block";
+            updateTrending();
+            updateAlert(data.articles);
+            updateSentimentMeter();
+        }
+    } catch (e) { document.getElementById('loader').innerText = "Backend Offline: Run server.js"; }
+}
+
+function createCard(a) {
+    const li = document.createElement('li');
+    const isSaved = getSaved().some(s => s.url === a.url);
+    const domain = new URL(a.url).hostname;
+    const postTime = timeAgo(a.publishedAt);
+    const safeData = JSON.stringify(a).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+
+    // SENTIMENT SCANNER LOGIC
+    const text = (a.title + " " + (a.description || "")).toLowerCase();
+    const positiveWords = ['rise', 'growth', 'harvest', 'profit', 'surplus', 'up', 'increase', 'boom'];
+    const negativeWords = ['fall', 'crash', 'drought', 'loss', 'shortage', 'down', 'decrease', 'pest', 'storm'];
+
+    let sentimentClass = 'card-neutral';
+    if (positiveWords.some(word => text.includes(word))) sentimentClass = 'card-positive';
+    if (negativeWords.some(word => text.includes(word))) sentimentClass = 'card-negative';
+
+    li.className = sentimentClass; // Apply the glow class
+
+    li.innerHTML = `
+        <img src="${a.urlToImage || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600'}" onerror="this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600'">
+        <div class="card-body">
+            <div class="news-meta">⏱️ ${postTime}</div>
+            <a href="${a.url}" target="_blank">${a.title}</a>
+            <p class="description">${a.description || "Latest agricultural insights and market trends..."}</p>
+            <div class="card-footer">
+                <div class="source-info">
+                    <img src="https://www.google.com/s2/favicons?domain=${domain}" style="width:14px; height:14px;">
+                    <span>${a.source.name}</span>
+                </div>
+                <div class="card-actions">
+                    <button class="icon-btn save-btn ${isSaved ? 'saved' : ''}" onclick='toggleSave(${safeData}, this)'>❤️</button>
+                </div>
+            </div>
+        </div>`;
+    return li;
+}
+
+function updateTrending() {
+    const words = ["Harvest", "Soil", "Prices", "Exports", "Wheat", "Rice", "Monsoon"];
+    document.getElementById('trendingBox').innerHTML = words.map(w => `<span class="tag" onclick="fetchNews('${w}')">#${w}</span>`).join('');
+}
+
+function updateAlert(articles) {
+    const market = articles.find(a => a.title.toLowerCase().match(/price|rise|fall|market/));
+    if (market) {
+        document.getElementById('marketAlertText').innerText = market.title;
+        document.getElementById('trendIndicator').innerText = market.title.toLowerCase().includes('rise') ? "📈" : "📉";
+    }
+}
+
+// 5. EVENT LISTENERS
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
+    document.querySelector('.tab.active').classList.remove('active');
+    this.classList.add('active');
+    fetchNews(this.dataset.keywords);
+}));
+
+document.getElementById('searchInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') fetchNews(e.target.value); });
+document.getElementById('loadMoreBtn').addEventListener('click', () => fetchNews(currentKeywords, true));
+
+
+function updateSentimentMeter() {
+    const total = document.querySelectorAll('#newsList li').length;
+    const pos = document.querySelectorAll('.card-positive').length;
+    const neg = document.querySelectorAll('.card-negative').length;
+    const neu = total - (pos + neg);
+
+    if (total > 0) {
+        document.getElementById('sentimentDashboard').style.display = 'block';
+        
+        // Calculate percentages
+        const posPer = (pos / total) * 100;
+        const negPer = (neg / total) * 100;
+        const neuPer = (neu / total) * 100;
+
+        document.getElementById('posBar').style.width = posPer + "%";
+        document.getElementById('negBar').style.width = negPer + "%";
+        document.getElementById('neuBar').style.width = neuPer + "%";
+
+        // Update Label
+        const mood = posPer > negPer ? "Bullish (Positive)" : negPer > posPer ? "Bearish (Alert)" : "Stable";
+        document.getElementById('sentimentLabel').innerText = `Market Pulse: ${mood}`;
+    }
+}function updateSentimentMeter() {
+    const total = document.querySelectorAll('#newsList li').length;
+    const pos = document.querySelectorAll('.card-positive').length;
+    const neg = document.querySelectorAll('.card-negative').length;
+    const neu = total - (pos + neg);
+
+    if (total > 0) {
+        document.getElementById('sentimentDashboard').style.display = 'block';
+        
+        // Calculate percentages
+        const posPer = (pos / total) * 100;
+        const negPer = (neg / total) * 100;
+        const neuPer = (neu / total) * 100;
+
+        document.getElementById('posBar').style.width = posPer + "%";
+        document.getElementById('negBar').style.width = negPer + "%";
+        document.getElementById('neuBar').style.width = neuPer + "%";
+
+        // Update Label
+        const mood = posPer > negPer ? "Bullish (Positive)" : negPer > posPer ? "Bearish (Alert)" : "Stable";
+        document.getElementById('sentimentLabel').innerText = `Market Pulse: ${mood}`;
+    }
+}
+
+
+window.addEventListener('scroll', function() {
+    const homeBtn = document.getElementById("backToHome");
+    if (window.scrollY > 400) {
+        homeBtn.style.display = "block";
+        // Small delay to allow the CSS transition to feel smoother
+        setTimeout(() => homeBtn.style.opacity = "1", 10);
+    } else {
+        homeBtn.style.opacity = "0";
+        setTimeout(() => homeBtn.style.display = "none", 300);
+    }
+});
+
+window.addEventListener('scroll', function() {
+    const btn = document.getElementById("backToHome");
+    if (window.scrollY > 400) {
+        btn.style.display = "block";
+        setTimeout(() => btn.style.opacity = "1", 10);
+    } else {
+        btn.style.opacity = "0";
+        setTimeout(() => btn.style.display = "none", 400);
+    }
+});
+// STARTUP
+initWeather(); 
+updateCommodityPrices(); 
+fetchNews(currentKeywords);
+</script>
+</body>
+</html>

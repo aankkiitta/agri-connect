@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Mandi Prices</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    h2 { text-align: center; color: green; }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: green;
+      color: white;
+    }
+
+    #loader {
+      text-align: center;
+      color: orange;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🌾 Live Mandi Prices (All States)</h2>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search commodity..." onkeyup="applyFilters()">
+  <select id="stateFilter" onchange="applyFilters()">
+    <option value="">All States</option>
+  </select>
+</div>
+
+<div id="loader">Loading data... ⏳</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Commodity</th>
+      <th>Market</th>
+      <th>State</th>
+      <th>Min Price</th>
+      <th>Max Price</th>
+    </tr>
+  </thead>
+  <tbody id="data"></tbody>
+</table>
+
+<script>
+let mandiData = [];
+
+// 🚀 Load ALL data via backend
+async function loadData() {
+  document.getElementById("loader").style.display = "block";
+
+  try {
+    let allData = [];
+    let limit = 100;
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const res = await fetch(`/api/mandi?limit=${limit}&offset=${offset}`);
+      const json = await res.json();
+
+      if (json.records && json.records.length > 0) {
+        allData = allData.concat(json.records);
+        offset += limit;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    mandiData = allData;
+
+    populateStates();
+    displayData(mandiData);
+
+    document.getElementById("loader").style.display = "none";
+
+  } catch (error) {
+    console.error(error);
+    alert("Error loading data");
+  }
+}
+
+// 📊 Display data
+function displayData(data) {
+  const table = document.getElementById("data");
+  table.innerHTML = "";
+
+  data.forEach(item => {
+    table.innerHTML += `
+      <tr>
+        <td>${item.commodity || "-"}</td>
+        <td>${item.market || "-"}</td>
+        <td>${item.state || "-"}</td>
+        <td>${item.min_price || "-"}</td>
+        <td>${item.max_price || "-"}</td>
+      </tr>
+    `;
+  });
+}
+
+// 🔍 Filter
+function applyFilters() {
+  const search = document.getElementById("search").value.toLowerCase();
+  const state = document.getElementById("stateFilter").value;
+
+  let filtered = mandiData;
+
+  if (search) {
+    filtered = filtered.filter(i =>
+      i.commodity && i.commodity.toLowerCase().includes(search)
+    );
+  }
+
+  if (state) {
+    filtered = filtered.filter(i => i.state === state);
+  }
+
+  displayData(filtered);
+}
+
+// 📍 Populate states
+function populateStates() {
+  const set = new Set();
+
+  mandiData.forEach(i => {
+    if (i.state) set.add(i.state);
+  });
+
+  const dropdown = document.getElementById("stateFilter");
+  dropdown.innerHTML = `<option value="">All States</option>`;
+
+  set.forEach(state => {
+    const opt = document.createElement("option");
+    opt.value = state;
+    opt.textContent = state;
+    dropdown.appendChild(opt);
+  });
+}
+
+// 🔄 Auto refresh
+setInterval(loadData, 60000);
+
+// Start
+loadData();
+</script>
+
+</body>
+</html>

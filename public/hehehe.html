@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Smart Farming Dashboard | Horizontal Cards</title>
+
+<!-- Google Fonts + Font Awesome -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at 20% 40%, #eef5e8, #c8e0d4);
+    min-height: 100vh;
+    padding: 2rem 2rem;
+    color: #1a2e1f;
+  }
+
+  .dashboard-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* elegant header */
+  .farm-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .farm-header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1f5e2a, #3b8b3a);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: -0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .farm-header h1 i {
+    background: none;
+    color: #3b8b3a;
+    font-size: 2.4rem;
+  }
+
+  .sub {
+    color: #2d5a2c;
+    font-weight: 500;
+    margin-top: 12px;
+    font-size: 1rem;
+    background: rgba(255,255,240,0.7);
+    display: inline-block;
+    padding: 6px 24px;
+    border-radius: 60px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* HORIZONTAL LAYOUT: two cards side by side on wide screens, equal height */
+  .horizontal-dashboard {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* each card takes flexible width but stays horizontal */
+  .smart-card {
+    flex: 1;
+    min-width: 380px;
+    max-width: 550px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(2px);
+    border-radius: 2rem;
+    padding: 1.8rem 2rem;
+    box-shadow: 0 25px 40px -12px rgba(0, 32, 0, 0.25), 0 2px 6px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(120, 180, 100, 0.3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .smart-card:hover {
+    transform: translateY(-6px);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 32px 48px -18px rgba(30, 80, 20, 0.35);
+    border-color: #9ccc7c;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px dashed #c3e0b5;
+    padding-bottom: 0.8rem;
+  }
+
+  .card-header i {
+    font-size: 2rem;
+    color: #2b7a2b;
+    background: #eef5e4;
+    padding: 8px;
+    border-radius: 50%;
+  }
+
+  .card-header h2 {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: #1b4d1b;
+    letter-spacing: -0.3px;
+  }
+
+  /* weather button */
+  .weather-btn {
+    background: linear-gradient(100deg, #f5a623, #f39c12);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+  }
+
+  .weather-btn i {
+    font-size: 1.1rem;
+  }
+
+  .weather-btn:hover {
+    background: linear-gradient(100deg, #e6951e, #e67e22);
+    transform: scale(1.02);
+    box-shadow: 0 10px 20px -6px rgba(0,0,0,0.3);
+  }
+
+  /* weather display panel */
+  .weather-panel {
+    background: #f9fff7;
+    border-radius: 1.5rem;
+    padding: 1.2rem;
+    margin-top: 0.2rem;
+    transition: all 0.2s;
+    border: 1px solid #d9f0ce;
+  }
+
+  .weather-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 8px 0;
+  }
+
+  .weather-icon-big {
+    font-size: 2.5rem;
+  }
+
+  .temp-hum {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1f5420;
+  }
+
+  .crop-list, .alert-list {
+    list-style: none;
+    margin: 12px 0 16px 0;
+  }
+
+  .crop-list li, .alert-list li {
+    background: #f3f9ef;
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 5px solid #6fbf4c;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+
+  .alert-list li {
+    border-left-color: #e6a017;
+    background: #fff7ea;
+  }
+
+  .crop-list li i, .alert-list li i {
+    width: 24px;
+    color: #3c9e2d;
+  }
+
+  .alert-list li i {
+    color: #e67e22;
+  }
+
+  .badge-season {
+    background: #d9e6cb;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 8px;
+    color: #2d5e1e;
+  }
+
+  .info-text {
+    background: #eef3ea;
+    border-radius: 1rem;
+    padding: 0.9rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #3b6e2e;
+    margin-top: 1rem;
+  }
+
+  hr {
+    margin: 1rem 0;
+    border: 0;
+    height: 2px;
+    background: linear-gradient(to right, #cfe6c2, transparent);
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: 0.8rem;
+    color: #3c6e3a;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 960px) {
+    body {
+      padding: 1.2rem;
+    }
+    .smart-card {
+      min-width: 100%;
+      max-width: 100%;
+    }
+    .horizontal-dashboard {
+      flex-direction: column;
+    }
+    .farm-header h1 {
+      font-size: 2rem;
+    }
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cfe2c2;
+    border-top: 2px solid #2e7d32;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 460px;
+    padding-right: 4px;
+  }
+
+  .scrollable-content::-webkit-scrollbar {
+    width: 5px;
+  }
+  .scrollable-content::-webkit-scrollbar-track {
+    background: #e2ecd9;
+    border-radius: 10px;
+  }
+  .scrollable-content::-webkit-scrollbar-thumb {
+    background: #86b37b;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  <div class="farm-header">
+    <h1>
+      <i class="fas fa-seedling"></i> 
+      Smart Farming Dashboard
+      <i class="fas fa-tractor"></i>
+    </h1>
+    <div class="sub">
+      <i class="fas fa-microchip"></i> AI-Powered Crop Advisor | Real-time Intelligence
+    </div>
+  </div>
+
+  <!-- HORIZONTAL LAYOUT: two cards side by side -->
+  <div class="horizontal-dashboard">
+    <!-- Weather Card (left) -->
+    <div class="smart-card">
+      <div class="card-header">
+        <i class="fas fa-cloud-sun-rain"></i>
+        <h2>AgroWeather</h2>
+      </div>
+      <button class="weather-btn" id="fetchWeatherBtn">
+        <i class="fas fa-location-dot"></i> Get Live Weather
+      </button>
+      <div id="weatherContainer" style="flex-shrink: 0;">
+        <div class="info-text">
+          <i class="fas fa-map-marker-alt"></i> Allow location & click to get live conditions
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop Intelligence Card (right) with scrollable area for long content -->
+    <div class="smart-card">
+      <div class="card-header">
+        <i class="fas fa-leaf"></i>
+        <h2>Smart Crop Plan</h2>
+      </div>
+      <div id="cropIntelligence" class="scrollable-content">
+        <div class="info-text">
+          <i class="fas fa-cloud-arrow-up"></i> Weather data will unlock crop recommendations & alerts
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <i class="fas fa-chart-line"></i> Real-time recommendations · Season smart · Pest & weather alerts
+  </footer>
+</div>
+
+<script>
+const API_KEY = "d200fbc7d6cf3b10cc4274565f695a55";
+
+// ---------- FULL CROP DATABASE ----------
+const cropDatabase = [
+  { name:"Rice", temp:[20,35], humidity:[60,100], season:["Kharif"] },
+  { name:"Wheat", temp:[10,25], humidity:[30,60], season:["Rabi"] },
+  { name:"Maize", temp:[18,30], humidity:[40,70], season:["Kharif","Rabi"] },
+  { name:"Cotton", temp:[25,40], humidity:[30,60], season:["Kharif"] },
+  { name:"Sugarcane", temp:[20,38], humidity:[50,85], season:["All"] },
+  { name:"Millet", temp:[25,40], humidity:[20,50], season:["Kharif"] },
+  { name:"Barley", temp:[10,22], humidity:[30,60], season:["Rabi"] },
+  { name:"Mustard", temp:[10,25], humidity:[20,50], season:["Rabi"] },
+  { name:"Chickpea", temp:[20,30], humidity:[20,50], season:["Rabi"] },
+  { name:"Pigeon Pea", temp:[20,35], humidity:[40,70], season:["Kharif"] },
+  { name:"Lentil", temp:[18,30], humidity:[30,60], season:["Rabi"] },
+  { name:"Black Gram", temp:[25,35], humidity:[50,80], season:["Kharif"] },
+  { name:"Green Gram", temp:[25,35], humidity:[40,70], season:["Kharif","Zaid"] },
+  { name:"Potato", temp:[15,25], humidity:[60,80], season:["Rabi"] },
+  { name:"Tomato", temp:[18,30], humidity:[50,70], season:["All"] },
+  { name:"Onion", temp:[13,25], humidity:[50,70], season:["Rabi","Kharif"] },
+  { name:"Cabbage", temp:[15,25], humidity:[60,80], season:["Rabi"] },
+  { name:"Cauliflower", temp:[15,25], humidity:[60,80], season:["Rabi"] },
+  { name:"Brinjal", temp:[20,35], humidity:[50,80], season:["All"] },
+  { name:"Chilli", temp:[20,30], humidity:[50,70], season:["All"] },
+  { name:"Mango", temp:[24,35], humidity:[50,80], season:["All"] },
+  { name:"Banana", temp:[25,35], humidity:[60,90], season:["All"] },
+  { name:"Papaya", temp:[22,35], humidity:[60,85], season:["All"] },
+  { name:"Guava", temp:[20,30], humidity:[50,70], season:["All"] },
+  { name:"Apple", temp:[5,24], humidity:[50,70], season:["Rabi"] },
+  { name:"Groundnut", temp:[25,35], humidity:[50,70], season:["Kharif"] },
+  { name:"Soybean", temp:[20,30], humidity:[60,80], season:["Kharif"] },
+  { name:"Sunflower", temp:[20,30], humidity:[40,60], season:["Rabi","Kharif"] },
+  { name:"Sesame", temp:[25,35], humidity:[40,60], season:["Kharif"] },
+  { name:"Jute", temp:[25,35], humidity:[70,90], season:["Kharif"] },
+  { name:"Tea", temp:[20,30], humidity:[70,90], season:["All"] },
+  { name:"Coffee", temp:[18,28], humidity:[60,80], season:["All"] },
+  { name:"Rubber", temp:[25,35], humidity:[75,90], season:["All"] },
+  { name:"Turmeric", temp:[20,30], humidity:[60,80], season:["Kharif"] },
+  { name:"Ginger", temp:[20,30], humidity:[60,80], season:["Kharif"] },
+  { name:"Coriander", temp:[15,25], humidity:[40,60], season:["Rabi"] }
+];
+
+function getCurrentSeason() {
+  const month = new Date().getMonth() + 1;
+  if (month >= 6 && month <= 10) return "Kharif";
+  if (month >= 11 || month <= 3) return "Rabi";
+  return "Zaid";
+}
+
+function renderWeatherUI(temp, humidity, weatherDesc) {
+  let weatherIconHtml = `<i class="fas fa-cloud-sun"></i>`;
+  const lowDesc = weatherDesc.toLowerCase();
+  if (lowDesc.includes("rain")) weatherIconHtml = `<i class="fas fa-cloud-rain"></i>`;
+  else if (lowDesc.includes("clear")) weatherIconHtml = `<i class="fas fa-sun"></i>`;
+  else if (lowDesc.includes("cloud")) weatherIconHtml = `<i class="fas fa-cloud"></i>`;
+  
+  const html = `
+    <div class="weather-panel">
+      <div class="weather-detail">
+        <span class="weather-icon-big">${weatherIconHtml}</span>
+        <span class="temp-hum"><i class="fas fa-temperature-high"></i> ${Math.round(temp)}°C</span>
+        <span class="temp-hum"><i class="fas fa-tint"></i> ${humidity}%</span>
+      </div>
+      <div style="font-size:1.2rem; font-weight:500; margin-top:8px;">
+        <i class="fas fa-cloud"></i> ${weatherDesc}
+      </div>
+      <div style="margin-top:12px; font-size:0.8rem; background:#eef3e6; border-radius:32px; padding:6px; text-align:center;">
+        <i class="fas fa-map-pin"></i> Live agro-weather data
+      </div>
+    </div>
+  `;
+  document.getElementById("weatherContainer").innerHTML = html;
+}
+
+function setWeatherLoading() {
+  document.getElementById("weatherContainer").innerHTML = `
+    <div class="info-text">
+      <span class="loading-spinner"></span> Fetching live weather & crop analysis...
+    </div>
+  `;
+}
+
+function setCropsWaiting() {
+  document.getElementById("cropIntelligence").innerHTML = `
+    <div class="info-text">
+      <i class="fas fa-cloud-sun-rain"></i> Waiting for live weather data... <br> Click "Get Live Weather"
+    </div>
+  `;
+}
+
+function generateSmartRecommendations(temp, humidity, weatherCondition) {
+  const season = getCurrentSeason();
+  let scoredCrops = cropDatabase.map(crop => {
+    let score = 0;
+    if (temp >= crop.temp[0] && temp <= crop.temp[1]) score++;
+    if (humidity >= crop.humidity[0] && humidity <= crop.humidity[1]) score++;
+    if (crop.season.includes(season) || crop.season.includes("All")) score++;
+    return { ...crop, score };
+  });
+  
+  let bestCrops = scoredCrops.filter(c => c.score >= 2).sort((a,b) => b.score - a.score);
+  const topCrops = bestCrops.slice(0, 7);
+  
+  let alerts = [];
+  const condLow = weatherCondition.toLowerCase();
+  if (condLow.includes("rain") || condLow.includes("drizzle")) alerts.push("🌧 Heavy rain expected — ensure drainage & cover crops");
+  if (humidity > 80) alerts.push("🐛 High humidity >80% — fungal risk! Apply preventive spray");
+  if (temp > 38) alerts.push("🔥 Extreme heat above 38°C — urgent irrigation & mulching required");
+  if (temp < 10) alerts.push("❄ Frost risk! Protect Rabi crops with covers");
+  if (humidity < 30 && temp > 28) alerts.push("🌵 Low humidity & heat — water stress, irrigate efficiently");
+  if (condLow.includes("clear") && temp > 32) alerts.push("☀️ Intense sunlight — consider shade nets");
+  if (humidity > 70 && temp > 24 && temp < 32) alerts.push("🦗 Pest outbreak risk (warm & humid) — scout fields");
+  
+  alerts = [...new Map(alerts.map(a => [a, a])).values()];
+  renderCropsUI(topCrops, alerts, season);
+}
+
+function renderCropsUI(crops, alerts, season) {
+  const cropHtml = crops.length > 0 
+    ? crops.map(crop => `
+        <li>
+          <i class="fas fa-seedling"></i>
+          <span><strong>${crop.name}</strong> <span class="badge-season">${crop.season.includes(season) ? season : 'flexi'}</span></span>
+          <span style="margin-left:auto; font-size:0.7rem; background:#d4e2ca; padding:2px 8px; border-radius:20px;">⭐ ${crop.score}/3</span>
+        </li>
+      `).join('')
+    : `<li style="background:#ffe6cc;"><i class="fas fa-exclamation-triangle"></i> No perfectly suited crops — adjust irrigation or try protective cultivation</li>`;
+  
+  const alertHtml = alerts.length > 0
+    ? alerts.map(alert => `<li><i class="fas fa-bell"></i> ${alert}</li>`).join('')
+    : `<li><i class="fas fa-check-circle" style="color:#4caf50;"></i> No critical alerts — conditions favorable</li>`;
+  
+  const seasonIcon = season === "Kharif" ? "🌾" : (season === "Rabi" ? "🌿" : "🌻");
+  const finalHtml = `
+    <div style="margin-top: 0rem;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom: 12px;">
+        <i class="fas fa-calendar-alt" style="color:#2e7d32;"></i>
+        <span style="font-weight:600;">Active Season: ${season} ${seasonIcon}</span>
+      </div>
+      <h4 style="display:flex; gap:6px; margin: 8px 0 6px;"><i class="fas fa-chart-simple"></i> 🌟 Top Recommended Crops</h4>
+      <ul class="crop-list">
+        ${cropHtml}
+      </ul>
+      <hr />
+      <h4 style="display:flex; gap:6px; margin: 12px 0 6px;"><i class="fas fa-triangle-exclamation"></i> Smart Alerts</h4>
+      <ul class="alert-list">
+        ${alertHtml}
+      </ul>
+      <div class="info-text" style="margin-top: 16px;">
+        <i class="fas fa-robot"></i> AI decision support based on real-time temp, humidity & season
+      </div>
+    </div>
+  `;
+  document.getElementById("cropIntelligence").innerHTML = finalHtml;
+}
+
+function getWeather() {
+  setWeatherLoading();
+  setCropsWaiting();
+  
+  if (!navigator.geolocation) {
+    document.getElementById("weatherContainer").innerHTML = `<div class="info-text"><i class="fas fa-exclamation-circle"></i> Geolocation not supported.</div>`;
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const { latitude, longitude } = position.coords;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${API_KEY}`;
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Weather API error");
+      const data = await response.json();
+      
+      const temp = data.main.temp;
+      const humidity = data.main.humidity;
+      const weatherMain = data.weather[0].main;
+      const weatherDesc = data.weather[0].description;
+      
+      renderWeatherUI(temp, humidity, weatherDesc);
+      generateSmartRecommendations(temp, humidity, weatherMain);
+      
+    } catch (error) {
+      console.error(error);
+      document.getElementById("weatherContainer").innerHTML = `<div class="info-text"><i class="fas fa-wifi"></i> Failed to fetch weather. Check connection or API key.</div>`;
+      document.getElementById("cropIntelligence").innerHTML = `<div class="info-text"><i class="fas fa-database"></i> Weather data missing. Retry.</div>`;
+    }
+  }, (err) => {
+    console.warn(err);
+    let errorMsg = "Location access denied. Please allow location to get live weather & crop insights.";
+    if (err.code === 1) errorMsg = "❌ Location permission blocked. Enable in browser settings for smart farming recommendations.";
+    document.getElementById("weatherContainer").innerHTML = `<div class="info-text"><i class="fas fa-map-marker-alt"></i> ${errorMsg}</div>`;
+    document.getElementById("cropIntelligence").innerHTML = `<div class="info-text"><i class="fas fa-lock"></i> Allow location & click again to unlock AI crop planning.</div>`;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("fetchWeatherBtn");
+  if (btn) btn.addEventListener("click", getWeather);
+  setCropsWaiting();
+  document.getElementById("weatherContainer").innerHTML = `
+    <div class="info-text">
+      <i class="fas fa-microchip"></i> Tap “Get Live Weather” — receive real-time agro advisory + crop list
+    </div>
+  `;
+});
+</script>
+</body>
+</html>

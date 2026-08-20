@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Equipment - AgriConnect Hub</title>
+    <link rel="stylesheet" href="agri.css">
+    <style>
+        .form-container {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 3rem;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+        .form-container .search-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.75rem 1rem;
+        }
+        /* Style for the new listings section */
+        #myListingsContainer {
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="agri2.html" style="color: white; text-decoration: none;">AgriConnect Hub</a></h1>
+            <nav>
+                <a href="agri2.html">Back to Marketplace</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="section-title" style="text-align: left; margin-top: 0; margin-bottom: 1.5rem;">List Your Equipment</h2>
+            <p style="color: var(--text-light); margin-bottom: 2rem;">Sell your used or new equipment easily to other farmers. You can upload an image from your computer.</p>
+
+            <form id="equipmentForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Equipment Name (e.g., John Deere 5075E Tractor)</label>
+                    <input type="text" id="name" name="name" class="search-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" class="search-input" required>
+                        <option value="">Select Category</option>
+                        <option value="Tractor">Tractor</option>
+                        <option value="Soil Preparation">Soil Preparation</option>
+                        <option value="Irrigation">Irrigation</option>
+                        <option value="Harvesting">Harvesting</option>
+                        <option value="Planting & Seeding">Planting & Seeding</option>
+                        <option value="Sprayers">Sprayers</option>
+                        <option value="Transport">Transport</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="condition">Condition of Equipment</label>
+                    <select id="condition" name="condition_status" class="search-input" required>
+                        <option value="">Select Condition</option>
+                        <option value="Excellent">Excellent (Like New)</option>
+                        <option value="Good">Good (Used, Fully Functional)</option>
+                        <option value="Fair">Fair (Needs Minor Repair)</option>
+                        <option value="Poor">Poor (For Parts Only)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="price">Price (in USD, e.g., 25000.00)</label>
+                    <input type="number" id="price" name="price" class="search-input" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Detailed Description (Include Age, Usage, and Reason for Selling)</label>
+                    <textarea id="description" name="description" class="search-input" rows="4" required placeholder="Describe the condition, age, and key features."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="equipmentImage">Upload Equipment Photo</label>
+                    <input type="file" id="equipmentImage" name="equipmentImage" accept="image/*" class="search-input">
+                </div>
+
+                <button type="submit" class="btn-apply" style="width: 100%; margin-top: 1rem; font-size: 1.1rem;">Submit Listing</button>
+                <p id="formMessage" style="text-align: center; margin-top: 1rem;"></p>
+            </form>
+        </div>
+
+        <div class="form-container" style="margin-top: 3rem; padding: 2rem;">
+            <h2 class="section-title" style="text-align: left; margin-top: 0; margin-bottom: 1.5rem;">Your Current Listings</h2>
+            <div id="myListingsContainer">
+                </div>
+            <p id="noListingsMessage" style="display: none; text-align: center; color: var(--text-light); padding: 1rem;">You have no active equipment listings.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('equipmentForm');
+            const messageEl = document.getElementById('formMessage');
+            const listingsContainer = document.getElementById('myListingsContainer');
+            const noListingsMessage = document.getElementById('noListingsMessage');
+            const userData = localStorage.getItem('agriUser');
+            let currentUser = null;
+
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                // Load the user's listings when the page loads
+                fetchMyEquipment(currentUser.id);
+            } else {
+                messageEl.style.color = 'red';
+                messageEl.textContent = 'You must be logged in to list equipment. Redirecting...';
+                setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+                return;
+            }
+
+            // --- FETCH AND RENDER LOGIC ---
+            async function fetchMyEquipment(userId) {
+                listingsContainer.innerHTML = '<p style="text-align: center;">Loading your listings...</p>';
+                noListingsMessage.style.display = 'none';
+                listingsContainer.style.cssText = ''; // Reset inline styles
+
+                try {
+                    const response = await fetch(`/api/my-equipment/${userId}`);
+                    const equipment = await response.json();
+
+                    listingsContainer.innerHTML = ''; 
+                    if (equipment.length === 0) {
+                        noListingsMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Add styling for visibility if items are present
+                    listingsContainer.style.border = '1px solid #ccc';
+                    listingsContainer.style.borderRadius = '0.5rem';
+                    listingsContainer.style.padding = '1rem';
+                    listingsContainer.style.backgroundColor = '#f9f9f9';
+
+
+                    equipment.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'my-listing-card';
+                        listItem.style.cssText = 'border-bottom: 1px dashed #ddd; padding: 0.75rem 0; display: flex; justify-content: space-between; align-items: center;';
+                        if (item !== equipment[equipment.length - 1]) { // Add border for all except the last item
+                             listItem.style.borderBottom = '1px dashed #ddd';
+                        } else {
+                            listItem.style.borderBottom = 'none'; // Remove bottom border for the last item
+                        }
+                        
+                        // Use item properties
+                        listItem.innerHTML = `
+                            <div>
+                                <strong style="color: var(--dark-green);">${item.name}</strong> 
+                                <span style="display: block; font-size: 0.9rem; color: #555;">Category: ${item.category} | Condition: ${item.condition_status}</span>
+                            </div>
+                            <p style="font-weight: bold; color: var(--text-dark); margin: 0;">
+                                $${Number(item.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </p>
+                        `;
+                        listingsContainer.appendChild(listItem);
+                    });
+                } catch (err) {
+                    listingsContainer.innerHTML = '<p style="color: red; text-align: center;">Failed to load your listings.</p>';
+                    console.error('Error fetching user equipment:', err);
+                }
+            }
+
+
+            // --- FORM SUBMISSION LOGIC ---
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                messageEl.textContent = 'Submitting...';
+                
+                const formData = new FormData(form);
+                formData.append('seller_id', currentUser.id);
+                
+                try {
+                    const response = await fetch('/api/list-equipment', { 
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Check for non-200 OK status codes (like 401 or 500)
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        
+                        messageEl.style.color = 'red';
+                        messageEl.textContent = errorData.message || 'An unknown error occurred on the server.';
+                        
+                        // If it's an authorization error (401), prompt a redirect
+                        if (response.status === 401) {
+                            messageEl.textContent += ' Please re-login.';
+                            // Clear user data as it is invalid
+                            localStorage.removeItem('agriUser');
+                            setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+                        }
+                        return; 
+                    }
+
+                    // If response is OK (200)
+                    const data = await response.json();
+
+                    if (data.success) {
+                        messageEl.style.color = 'var(--dark-green)';
+                        messageEl.textContent = data.message + ' (Listing refreshed below)'; 
+                        form.reset(); 
+                        
+                        // CRITICAL: Refresh the listings display immediately
+                        fetchMyEquipment(currentUser.id); 
+                        
+                    } else {
+                        // This block catches internal server logic errors that still returned a 200 status
+                        messageEl.style.color = 'red';
+                        messageEl.textContent = data.message;
+                    }
+                } catch (err) {
+                    messageEl.style.color = 'red';
+                    messageEl.textContent = 'An error occurred. Could not reach the server.';
+                    console.error(err);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
