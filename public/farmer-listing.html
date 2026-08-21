@@ -16,7 +16,7 @@
             --primary-light: #dcfce7;
             --secondary: #facc15;
             --secondary-dark: #eab308;
-            --bg-body: #f5f7fa;
+            --bg-body: #f0fdf4;
             --bg-light: #f8fafc;
             --bg-white: #ffffff;
             --bg-card: #ffffff;
@@ -26,9 +26,9 @@
             --border: #e2e8f0;
             --shadow-color: rgba(0, 0, 0, 0.06);
             --font-stack: 'Inter', sans-serif;
-            --card-radius: 12px;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
+            --card-radius: 16px;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
             --transition: 0.3s ease;
         }
 
@@ -154,31 +154,29 @@
            5. PAGE HEADER
            ======================================================= */
         .page-header {
-            padding: 2rem 0 1.5rem 0;
+            padding: 1.5rem 0 1rem 0;
             margin-bottom: 1.5rem;
-            text-align: center;
         }
 
         .page-header h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             color: var(--text-dark);
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 0.8rem;
-            margin: 0 0 0.3rem 0;
+            margin: 0 0 0.2rem 0;
         }
 
         .page-header h1 i {
             color: var(--secondary);
-            font-size: 2rem;
+            font-size: 1.8rem;
         }
 
         .page-header p {
             color: var(--text-muted);
-            font-size: 1rem;
-            margin: 0 0 0.8rem 0;
+            font-size: 0.95rem;
+            margin: 0 0 0.6rem 0;
         }
 
         .stats-badge {
@@ -187,7 +185,7 @@
             gap: 8px;
             background: var(--primary-light);
             color: var(--primary-dark);
-            padding: 5px 18px;
+            padding: 4px 16px;
             border-radius: 50px;
             font-weight: 600;
             font-size: 0.85rem;
@@ -296,36 +294,8 @@
             color: var(--text-dark);
         }
 
-        .view-toggle {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            margin-left: auto;
-        }
-
-        .view-toggle button {
-            padding: 6px 12px;
-            border: 1.5px solid var(--border);
-            background: var(--bg-white);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .view-toggle button.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .view-toggle button:hover:not(.active) {
-            background: var(--bg-light);
-        }
-
         /* =======================================================
-           7. FARMER GRID - 3 COLUMN RESPONSIVE
+           7. FARMER GRID - 3 COLUMN
            ======================================================= */
         .farmer-grid {
             display: grid;
@@ -334,7 +304,7 @@
         }
 
         /* =======================================================
-           8. FARMER CARD - COMPACT & PROFESSIONAL
+           8. FARMER CARD - LIKE THE IMAGE
            ======================================================= */
         .farmer-card {
             background: var(--bg-card);
@@ -349,15 +319,15 @@
         }
 
         .farmer-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-4px);
             box-shadow: var(--shadow-hover);
             border-color: var(--primary);
         }
 
-        /* Card Image - Fixed Height 150px */
+        /* Image - 140px height */
         .farmer-card .card-image {
             width: 100%;
-            height: 150px;
+            height: 140px;
             overflow: hidden;
             background: var(--bg-light);
             position: relative;
@@ -389,9 +359,9 @@
             right: 8px;
             background: #fef3c7;
             color: #d97706;
-            padding: 3px 10px;
+            padding: 2px 10px;
             border-radius: 50px;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -399,37 +369,47 @@
             z-index: 2;
         }
 
-        /* Card Content - Compact Padding */
+        /* Card Content */
         .farmer-card .card-content {
-            padding: 0.9rem 1rem 1rem;
+            padding: 0.8rem 1rem 1rem;
             flex: 1;
             display: flex;
             flex-direction: column;
         }
 
+        /* Farm Name */
         .farmer-card .card-content .card-title {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-dark);
-            margin: 0 0 0.1rem 0;
+            margin: 0 0 0.05rem 0;
             line-height: 1.3;
         }
 
+        /* Farmer Name (subtitle) */
         .farmer-card .card-content .card-subtitle {
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             margin: 0 0 0.4rem 0;
+            font-weight: 500;
         }
 
+        /* Details - Crops, Location, Experience */
         .farmer-card .card-content .card-details {
             margin: 0 0 0.3rem 0;
         }
 
         .farmer-card .card-content .card-details p {
-            margin: 0;
+            margin: 0.1rem 0;
             font-size: 0.82rem;
             color: var(--text-muted);
-            line-height: 1.4;
+            line-height: 1.5;
+        }
+
+        .farmer-card .card-content .card-details p i {
+            width: 16px;
+            color: var(--primary);
+            font-size: 0.75rem;
         }
 
         .farmer-card .card-content .card-details p strong {
@@ -442,17 +422,24 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.3rem;
-            margin: 0.2rem 0 0.5rem;
+            margin: 0.3rem 0 0.6rem;
         }
 
         .farmer-card .tag {
             background: var(--bg-light);
-            padding: 2px 10px;
+            padding: 1px 12px;
             border-radius: 50px;
             font-size: 0.65rem;
             font-weight: 500;
             color: var(--text-muted);
             border: 1px solid var(--border);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .farmer-card .tag i {
+            font-size: 0.6rem;
         }
 
         .farmer-card .tag-expert {
@@ -461,27 +448,42 @@
             border-color: #fde68a;
         }
 
+        .farmer-card .tag-expert i {
+            color: #d97706;
+        }
+
         .farmer-card .tag-experience {
             background: #dbeafe;
             color: #1d4ed8;
             border-color: #bfdbfe;
         }
 
-        /* Action Buttons */
+        .farmer-card .tag-crop {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-color: #bbf7d0;
+        }
+
+        .farmer-card .tag-crop i {
+            color: var(--primary);
+        }
+
+        /* Action Buttons - Like the image "View Profile" */
         .farmer-card .card-actions {
             display: flex;
             gap: 0.5rem;
             margin-top: auto;
             padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
         }
 
-        .farmer-card .btn-primary {
+        .farmer-card .btn-profile {
             flex: 1;
-            padding: 6px 12px;
+            padding: 6px 14px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -490,24 +492,43 @@
             justify-content: center;
             gap: 6px;
             text-decoration: none;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
         }
 
-        .farmer-card .btn-primary:hover {
+        .farmer-card .btn-profile:hover {
             background: var(--primary-dark);
             transform: scale(1.02);
         }
 
+        .farmer-card .btn-profile i {
+            font-size: 0.75rem;
+        }
+
         .farmer-card .btn-whatsapp {
+            padding: 6px 14px;
             background: #25D366;
             color: white;
             border: none;
-            flex: 0.4;
-            min-width: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            min-width: 42px;
         }
 
         .farmer-card .btn-whatsapp:hover {
             background: #1da851;
+            transform: scale(1.02);
+        }
+
+        .farmer-card .btn-whatsapp i {
+            font-size: 0.9rem;
         }
 
         /* =======================================================
@@ -635,7 +656,7 @@
         /* =======================================================
            12. RESPONSIVE - 3 COLUMN TO 2 TO 1
            ======================================================= */
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
             .farmer-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 1.2rem;
@@ -646,8 +667,8 @@
             .container { padding: 0 1rem; }
             .logo { font-size: 1.2rem; }
             .back-link { font-size: 0.75rem; padding: 0.3rem 0.8rem; }
-            .page-header h1 { font-size: 1.6rem; }
-            .page-header p { font-size: 0.9rem; }
+            .page-header h1 { font-size: 1.5rem; }
+            .page-header p { font-size: 0.85rem; }
 
             .controls-bar {
                 flex-direction: column;
@@ -663,12 +684,6 @@
             .search-input { width: 100%; }
             .search-btn { width: 100%; justify-content: center; }
             .filter-select { width: 100%; }
-            .view-toggle {
-                margin-left: 0;
-                justify-content: center;
-                width: 100%;
-            }
-            .view-toggle button { flex: 1; text-align: center; }
 
             .farmer-grid {
                 grid-template-columns: 1fr;
@@ -681,11 +696,12 @@
         }
 
         @media (max-width: 480px) {
-            .page-header h1 { font-size: 1.3rem; }
-            .page-header h1 i { font-size: 1.3rem; }
-            .farmer-card .card-content .card-title { font-size: 0.95rem; }
-            .farmer-card .card-content .card-details p { font-size: 0.75rem; }
-            .farmer-card .btn-primary { font-size: 0.75rem; padding: 5px 10px; }
+            .page-header h1 { font-size: 1.2rem; }
+            .page-header h1 i { font-size: 1.2rem; }
+            .farmer-card .card-content .card-title { font-size: 1rem; }
+            .farmer-card .card-content .card-details p { font-size: 0.78rem; }
+            .farmer-card .btn-profile { font-size: 0.75rem; padding: 5px 10px; }
+            .farmer-card .btn-whatsapp { font-size: 0.75rem; padding: 5px 10px; }
             .pagination button { padding: 5px 10px; font-size: 0.75rem; }
             .stats-badge { font-size: 0.75rem; padding: 4px 12px; }
             .farmer-card .card-image {
@@ -697,11 +713,12 @@
            13. TOUCH DEVICE OPTIMIZATIONS
            ======================================================= */
         @media (hover: none) and (pointer: coarse) {
-            button, .search-btn, .btn-primary, .clear-filters {
+            button, .search-btn, .btn-profile, .btn-whatsapp, .clear-filters {
                 min-height: 40px;
             }
             .farmer-card:hover { transform: none !important; }
-            .btn-primary:hover { transform: none !important; }
+            .btn-profile:hover { transform: none !important; }
+            .btn-whatsapp:hover { transform: none !important; }
         }
     </style>
 </head>
@@ -741,7 +758,7 @@
                 <input
                     type="text"
                     id="farmerSearch"
-                    placeholder="Search farmers..."
+                    placeholder="Search by name, crop, or location..."
                     class="search-input"
                 >
                 <button class="search-btn" id="searchBtn">
@@ -760,15 +777,6 @@
             <button class="clear-filters" id="clearFilters">
                 <i class="fas fa-times"></i> Clear
             </button>
-
-            <div class="view-toggle">
-                <button id="gridViewBtn" class="active" title="Grid View">
-                    <i class="fas fa-th"></i>
-                </button>
-                <button id="listViewBtn" title="List View">
-                    <i class="fas fa-list"></i>
-                </button>
-            </div>
         </div>
 
         <!-- ===== FARMER GRID ===== -->
@@ -810,8 +818,6 @@
             const cropFilter = document.getElementById('cropFilter');
             const locationFilter = document.getElementById('locationFilter');
             const clearFilters = document.getElementById('clearFilters');
-            const gridViewBtn = document.getElementById('gridViewBtn');
-            const listViewBtn = document.getElementById('listViewBtn');
             const pagination = document.getElementById('pagination');
             const totalCount = document.getElementById('totalFarmersCount');
 
@@ -820,7 +826,6 @@
             let filteredFarmers = [];
             let currentPage = 1;
             const itemsPerPage = 15;
-            let currentView = 'grid';
 
             // --- API Fetch ---
             async function fetchFarmers() {
@@ -945,7 +950,7 @@
                 farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            // --- Create Farmer Card - Compact with 150px Image ---
+            // --- Create Farmer Card - Like the Image ---
             function createFarmerCard(farmer) {
                 const isExpert = (parseInt(farmer.years_experience) || 0) >= 7;
                 const profilePic = farmer.profile_picture_url || '/uploads/default.png';
@@ -972,6 +977,9 @@
                     whatsappLink = `https://wa.me/${cleaned}`;
                 }
 
+                // Get first crop for tag
+                const firstCrop = farmer.crop_specialization ? farmer.crop_specialization.split(',')[0].trim() : '';
+
                 return `
                     <div class="farmer-card">
                         <div class="card-image">
@@ -982,21 +990,21 @@
                             <h3 class="card-title">${farmer.farm_name || 'Farm'}</h3>
                             <div class="card-subtitle">${name}</div>
                             <div class="card-details">
-                                <p><strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
-                                <p><strong>Location:</strong> ${farmLocation}</p>
-                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} yrs</p>` : ''}
+                                <p><i class="fas fa-seedling"></i> <strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
+                                <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${farmLocation}</p>
+                                ${farmer.years_experience ? `<p><i class="fas fa-graduation-cap"></i> <strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
                             </div>
                             <div class="card-tags">
-                                ${farmer.crop_specialization ? `<span class="tag">🌾 ${farmer.crop_specialization.split(',')[0]}</span>` : ''}
+                                ${firstCrop ? `<span class="tag tag-crop"><i class="fas fa-seedling"></i> ${firstCrop}</span>` : ''}
                                 ${isExpert ? '<span class="tag tag-expert"><i class="fas fa-star"></i> Expert</span>' : ''}
-                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs</span>` : ''}
+                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs exp</span>` : ''}
                             </div>
                             <div class="card-actions">
-                                <button class="btn-primary contact-profile-link" ${dataAttrs}>
-                                    <i class="fas fa-user"></i> Profile
+                                <button class="btn-profile contact-profile-link" ${dataAttrs}>
+                                    <i class="fas fa-user"></i> View Profile
                                 </button>
                                 ${farmer.contact_number ? `
-                                    <a href="${whatsappLink}" target="_blank" class="btn-primary btn-whatsapp">
+                                    <a href="${whatsappLink}" target="_blank" class="btn-whatsapp">
                                         <i class="fab fa-whatsapp"></i>
                                     </a>
                                 ` : ''}
@@ -1058,22 +1066,6 @@
                 applyFilters();
             };
 
-            // --- Toggle View ---
-            function setView(view) {
-                currentView = view;
-                const container = document.querySelector('main');
-                if (view === 'list') {
-                    container.classList.add('list-view');
-                    gridViewBtn.classList.remove('active');
-                    listViewBtn.classList.add('active');
-                } else {
-                    container.classList.remove('list-view');
-                    gridViewBtn.classList.add('active');
-                    listViewBtn.classList.remove('active');
-                }
-                renderFarmers();
-            }
-
             // --- Event Listeners ---
             searchBtn.addEventListener('click', applyFilters);
             searchInput.addEventListener('keypress', function(e) {
@@ -1082,9 +1074,6 @@
             cropFilter.addEventListener('change', applyFilters);
             locationFilter.addEventListener('change', applyFilters);
             clearFilters.addEventListener('click', resetFilters);
-
-            gridViewBtn.addEventListener('click', () => setView('grid'));
-            listViewBtn.addEventListener('click', () => setView('list'));
 
             // --- Profile Viewer Redirect ---
             farmerList.addEventListener('click', function(e) {
