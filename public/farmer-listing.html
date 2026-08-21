@@ -1,927 +1,934 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌾 Farmer Directory - AgriConnect</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f7ee;
-            color: #1a2a1a;
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* ===== HEADER ===== */
-        .main-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 0 1.2rem 0;
-            border-bottom: 1px solid #e0ece0;
-            margin-bottom: 1.5rem;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .logo-area .logo-icon {
-            background: #1f5a1f;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        .logo-area .logo-text {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #1a3a1a;
-        }
-
-        .logo-area .logo-text span {
-            color: #2d7a2d;
-        }
-
-        .back-home-btn {
-            background: transparent;
-            border: 1px solid #d0e0d0;
-            padding: 0.4rem 1.2rem;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #2a4a2a;
-            cursor: pointer;
-            transition: 0.15s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .back-home-btn:hover {
-            background: #eaf3e5;
-            border-color: #8aaa8a;
-        }
-
-        /* ===== DIRECTORY HEADER ===== */
-        .directory-header {
-            margin-bottom: 1.5rem;
-        }
-
-        .directory-header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1a3a1a;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .directory-header h1 i {
-            color: #2d7a2d;
-        }
-
-        .directory-header .subtitle {
-            color: #4a6a4a;
-            font-size: 0.95rem;
-            margin-top: 0.2rem;
-        }
-
-        .directory-header .badge-row {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .badge-count {
-            background: #1f5a1f;
-            color: white;
-            padding: 0.2rem 1rem;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .badge-count i {
-            font-size: 0.6rem;
-        }
-
-        /* ===== SEARCH BAR ===== */
-        .search-bar {
-            background: white;
-            padding: 0.6rem 1rem;
-            border-radius: 14px;
-            border: 1px solid #e0ece0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 20, 0, 0.03);
-        }
-
-        .search-bar .search-box {
-            flex: 2 1 180px;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: #f2f8ef;
-            border-radius: 30px;
-            padding: 0 0.9rem;
-            border: 1px solid #dce8d6;
-            transition: 0.2s;
-        }
-
-        .search-bar .search-box:focus-within {
-            border-color: #3a8a3a;
-            box-shadow: 0 0 0 3px rgba(58, 138, 58, 0.08);
-        }
-
-        .search-bar .search-box i {
-            color: #4a7a4a;
-            font-size: 0.8rem;
-        }
-
-        .search-bar .search-box input {
-            border: none;
-            background: transparent;
-            padding: 0.45rem 0;
-            font-size: 0.85rem;
-            width: 100%;
-            outline: none;
-            color: #1a2a1a;
-        }
-
-        .search-bar .search-box input::placeholder {
-            color: #7a9a7a;
-        }
-
-        .search-bar .filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.4rem;
-            flex: 1 1 200px;
-        }
-
-        .search-bar .filter-group select {
-            background: #f2f8ef;
-            border: 1px solid #dce8d6;
-            border-radius: 30px;
-            padding: 0.35rem 0.9rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #1f3a1f;
-            cursor: pointer;
-            outline: none;
-            flex: 1 1 90px;
-            transition: 0.15s;
-        }
-
-        .search-bar .filter-group select:focus {
-            border-color: #3a8a3a;
-        }
-
-        .search-bar .filter-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .search-bar .clear-btn {
-            background: transparent;
-            border: none;
-            color: #5a7a5a;
-            font-weight: 500;
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 0.3rem 0.7rem;
-            border-radius: 30px;
-            transition: 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 0.2rem;
-            white-space: nowrap;
-        }
-
-        .search-bar .clear-btn:hover {
-            background: #eaf3e5;
-            color: #1a401a;
-        }
-
-        .search-bar .view-toggle {
-            display: flex;
-            gap: 0.2rem;
-            background: #f2f8ef;
-            border-radius: 30px;
-            padding: 0.2rem;
-            border: 1px solid #dce8d6;
-        }
-
-        .search-bar .view-toggle button {
-            background: transparent;
-            border: none;
-            padding: 0.25rem 0.6rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            color: #4a6a4a;
-            transition: 0.15s;
-        }
-
-        .search-bar .view-toggle button.active {
-            background: #1f5a1f;
-            color: white;
-        }
-
-        .search-bar .view-toggle button:hover:not(.active) {
-            background: #dce8d6;
-        }
-
-        /* ===== GRID ===== */
-        .farmers-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.2rem;
-        }
-
-        /* ===== FARMER CARD ===== */
-        .farmer-card {
-            background: white;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 20, 0, 0.04);
-            border: 1px solid #e6f0e0;
-            transition: transform 0.15s, box-shadow 0.15s;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .farmer-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(30, 70, 30, 0.07);
-            border-color: #c8ddc4;
-        }
-
-        /* Card Image */
-        .card-image {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            object-position: center;
-            background: #eaf3e5;
-            position: relative;
-            display: block;
-        }
-
-        .card-image-wrapper {
-            position: relative;
-            overflow: hidden;
-            height: 150px;
-            flex-shrink: 0;
-        }
-
-        .card-image-wrapper .default-avatar {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #dce8d6;
-            color: #4a7a4a;
-            font-size: 3rem;
-        }
-
-        /* Expert Badge - top right corner */
-        .expert-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #f6e9b3;
-            color: #7a6100;
-            font-weight: 700;
-            font-size: 0.6rem;
-            padding: 0.15rem 0.6rem;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            z-index: 2;
-        }
-
-        .expert-badge i {
-            font-size: 0.5rem;
-        }
-
-        /* Card Content */
-        .card-content {
-            padding: 0.8rem 0.9rem 0.9rem;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .card-content .farm-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #173017;
-            line-height: 1.2;
-            margin-bottom: 0.05rem;
-        }
-
-        .card-content .farmer-name {
-            font-size: 0.8rem;
-            color: #4d6f4d;
-            font-weight: 500;
-            margin-bottom: 0.4rem;
-        }
-
-        .card-content .info-row {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-size: 0.78rem;
-            color: #3a553a;
-            padding: 0.08rem 0;
-        }
-
-        .card-content .info-row i {
-            width: 0.9rem;
-            color: #4a7a4a;
-            font-size: 0.65rem;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .card-content .info-row span {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Tags */
-        .tag-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            margin: 0.3rem 0 0.4rem 0;
-        }
-
-        .tag {
-            background: #eef6ea;
-            color: #1f4a1f;
-            font-size: 0.6rem;
-            font-weight: 500;
-            padding: 0.08rem 0.6rem;
-            border-radius: 20px;
-            white-space: nowrap;
-        }
-
-        .tag.expert-tag {
-            background: #f6e9b3;
-            color: #7a6100;
-        }
-
-        .tag.exp-tag {
-            background: #e0ece0;
-            color: #2a4a2a;
-        }
-
-        /* Card Footer - Buttons */
-        .card-footer {
-            margin-top: auto;
-            padding-top: 0.5rem;
-            border-top: 1px solid #ecf4e8;
-            display: flex;
-            gap: 0.4rem;
-        }
-
-        .card-footer .btn-profile {
-            flex: 1;
-            background: #1f5a1f;
-            color: white;
-            border: none;
-            padding: 0.35rem 0.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: 0.12s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-
-        .card-footer .btn-profile:hover {
-            background: #134013;
-            box-shadow: 0 2px 8px rgba(26, 80, 26, 0.15);
-        }
-
-        .card-footer .btn-profile i {
-            font-size: 0.6rem;
-        }
-
-        .card-footer .btn-whatsapp {
-            background: #25D366;
-            color: white;
-            border: none;
-            padding: 0.35rem 0.8rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: 0.12s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-
-        .card-footer .btn-whatsapp:hover {
-            background: #1da851;
-            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
-        }
-
-        .card-footer .btn-whatsapp i {
-            font-size: 0.7rem;
-        }
-
-        /* ===== NO RESULTS ===== */
-        .no-results {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 3rem 1rem;
-            background: white;
-            border-radius: 16px;
-            color: #3d5e3d;
-            font-size: 0.95rem;
-            border: 1px dashed #c2d8c2;
-        }
-
-        .no-results i {
-            font-size: 2rem;
-            color: #7ba07b;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        /* ===== LOADING ===== */
-        .loading-spinner {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 2.5rem;
-            color: #3d683d;
-            font-size: 1rem;
-        }
-
-        .loading-spinner i {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            display: block;
-            color: #3a7a3a;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1200px) {
-            .farmers-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 820px) {
-            .farmers-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            body {
-                padding: 1rem;
-            }
-            .directory-header h1 {
-                font-size: 1.4rem;
-            }
-        }
-
-        @media (max-width: 550px) {
-            .farmers-grid {
-                grid-template-columns: 1fr;
-            }
-            .search-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 0.8rem;
-            }
-            .search-bar .filter-group {
-                flex-wrap: wrap;
-            }
-            .search-bar .filter-group select {
-                flex: 1 1 100%;
-            }
-            .search-bar .filter-actions {
-                flex-wrap: wrap;
-            }
-            .main-header {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            .directory-header h1 {
-                font-size: 1.2rem;
-            }
-            .card-image-wrapper {
-                height: 130px;
-            }
-            .card-image {
-                height: 130px;
-            }
-        }
-
-        /* ===== LIST VIEW ===== */
-        .farmers-grid.list-view {
-            grid-template-columns: 1fr;
-        }
-
-        .farmers-grid.list-view .farmer-card {
-            flex-direction: row;
-            align-items: stretch;
-        }
-
-        .farmers-grid.list-view .card-image-wrapper {
-            height: auto;
-            width: 180px;
-            flex-shrink: 0;
-        }
-
-        .farmers-grid.list-view .card-image {
-            height: 100%;
-            width: 100%;
-        }
-
-        .farmers-grid.list-view .card-content {
-            flex: 1;
-        }
-
-        @media (max-width: 600px) {
-            .farmers-grid.list-view .farmer-card {
-                flex-direction: column;
-            }
-            .farmers-grid.list-view .card-image-wrapper {
-                width: 100%;
-                height: 150px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌾 Farmer Directory · AgriConnect</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #f2f8f0;
+      color: #152015;
+      min-height: 100vh;
+      padding: 1.5rem 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ----- HEADER (logo + home) ----- */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0 1rem 0;
+      border-bottom: 1px solid #dce8d8;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .logo-icon {
+      background: #1b5a1b;
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .logo-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #193519;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span {
+      color: #2b7a2b;
+    }
+
+    .back-home-btn {
+      background: transparent;
+      border: 1px solid #d0dfd0;
+      padding: 0.3rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #284828;
+      cursor: pointer;
+      transition: 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .back-home-btn:hover {
+      background: #e6f0e2;
+      border-color: #9bb89b;
+    }
+
+    /* ----- DIRECTORY HEADER (title, badge) ----- */
+    .directory-header {
+      margin-bottom: 1.2rem;
+    }
+
+    .dir-title {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem 1rem;
+    }
+
+    .dir-title h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #173017;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dir-title h1 i {
+      color: #2d7a2d;
+    }
+
+    .subtitle {
+      color: #3d5e3d;
+      font-size: 0.95rem;
+      margin-top: 0.15rem;
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-top: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-count {
+      background: #1b5a1b;
+      color: white;
+      padding: 0.15rem 1.1rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-count i {
+      font-size: 0.6rem;
+    }
+
+    /* ----- SEARCH / FILTER BAR (compact) ----- */
+    .filter-bar {
+      background: white;
+      padding: 0.5rem 0.9rem;
+      border-radius: 16px;
+      border: 1px solid #e2eee0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 20, 0, 0.02);
+    }
+
+    .filter-bar .search-box {
+      flex: 2 1 180px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f3f9f0;
+      border-radius: 40px;
+      padding: 0 0.9rem;
+      border: 1px solid #dcead6;
+      transition: 0.2s;
+    }
+
+    .filter-bar .search-box:focus-within {
+      border-color: #3a8a3a;
+      box-shadow: 0 0 0 3px rgba(58, 138, 58, 0.06);
+    }
+
+    .filter-bar .search-box i {
+      color: #3d733d;
+      font-size: 0.8rem;
+    }
+
+    .filter-bar .search-box input {
+      border: none;
+      background: transparent;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+      width: 100%;
+      outline: none;
+      color: #1a2a1a;
+    }
+
+    .filter-bar .search-box input::placeholder {
+      color: #7a9a7a;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      flex: 1 1 200px;
+    }
+
+    .filter-group select {
+      background: #f3f9f0;
+      border: 1px solid #dcead6;
+      border-radius: 40px;
+      padding: 0.3rem 1rem 0.3rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #1f3a1f;
+      cursor: pointer;
+      outline: none;
+      flex: 1 1 80px;
+      transition: 0.15s;
+      appearance: auto;
+    }
+
+    .filter-group select:focus {
+      border-color: #3a8a3a;
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: #4f744f;
+      font-weight: 500;
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0.25rem 0.7rem;
+      border-radius: 30px;
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      white-space: nowrap;
+    }
+
+    .clear-btn:hover {
+      background: #e8f2e3;
+      color: #1a401a;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 0.15rem;
+      background: #f3f9f0;
+      border-radius: 40px;
+      padding: 0.15rem;
+      border: 1px solid #dcead6;
+    }
+
+    .view-toggle button {
+      background: transparent;
+      border: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      color: #4a6a4a;
+      transition: 0.15s;
+    }
+
+    .view-toggle button.active {
+      background: #1b5a1b;
+      color: white;
+    }
+
+    .view-toggle button:hover:not(.active) {
+      background: #dcead6;
+    }
+
+    /* ----- FARMER GRID (4 cols) ----- */
+    .farmers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+    }
+
+    /* ----- CARD ----- */
+    .farmer-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0, 18, 0, 0.03);
+      border: 1px solid #e4efe0;
+      transition: transform 0.12s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .farmer-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(30, 70, 30, 0.06);
+      border-color: #c6ddc0;
+    }
+
+    /* image wrapper — fixed 150px */
+    .card-image-wrapper {
+      position: relative;
+      overflow: hidden;
+      height: 150px;
+      flex-shrink: 0;
+      background: #e6f0e2;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      background: #e6f0e2;
+    }
+
+    .default-avatar {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #dce8d6;
+      color: #3d733d;
+      font-size: 3.2rem;
+    }
+
+    /* Expert badge — top right */
+    .expert-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #f6eabb;
+      color: #705f00;
+      font-weight: 700;
+      font-size: 0.6rem;
+      padding: 0.1rem 0.6rem 0.1rem 0.5rem;
+      border-radius: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      z-index: 3;
+      letter-spacing: 0.2px;
+    }
+
+    .expert-badge i {
+      font-size: 0.5rem;
+    }
+
+    /* card content */
+    .card-content {
+      padding: 0.7rem 0.8rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .farm-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #143014;
+      line-height: 1.2;
+      margin-bottom: 0.05rem;
+    }
+
+    .farmer-name {
+      font-size: 0.78rem;
+      color: #467046;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.76rem;
+      color: #345534;
+      padding: 0.06rem 0;
+    }
+
+    .info-row i {
+      width: 0.9rem;
+      color: #3d733d;
+      font-size: 0.65rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .info-row span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* tags */
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem 0.25rem;
+      margin: 0.25rem 0 0.35rem 0;
+    }
+
+    .tag {
+      background: #eef6ea;
+      color: #1d471d;
+      font-size: 0.58rem;
+      font-weight: 500;
+      padding: 0.05rem 0.6rem;
+      border-radius: 30px;
+      white-space: nowrap;
+    }
+
+    .tag.expert-tag {
+      background: #f6eabb;
+      color: #705f00;
+    }
+
+    .tag.exp-tag {
+      background: #e2eee0;
+      color: #254f25;
+    }
+
+    /* card footer buttons */
+    .card-footer {
+      margin-top: auto;
+      padding-top: 0.45rem;
+      border-top: 1px solid #edf5ea;
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .btn-profile {
+      flex: 1;
+      background: #1b5a1b;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+
+    .btn-profile i {
+      font-size: 0.6rem;
+    }
+
+    .btn-profile:hover {
+      background: #114011;
+      box-shadow: 0 2px 10px rgba(26, 80, 26, 0.1);
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.75rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .btn-whatsapp i {
+      font-size: 0.75rem;
+    }
+
+    .btn-whatsapp:hover {
+      background: #1da851;
+      box-shadow: 0 2px 10px rgba(37, 211, 102, 0.2);
+    }
+
+    /* no results & loading */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: white;
+      border-radius: 20px;
+      color: #3d5e3d;
+      font-size: 0.95rem;
+      border: 1px dashed #c8dec8;
+    }
+
+    .no-results i {
+      font-size: 2rem;
+      color: #6f9a6f;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .loading-spinner {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 2.5rem;
+      color: #3d683d;
+      font-size: 1rem;
+    }
+
+    .loading-spinner i {
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+      display: block;
+      color: #3a7a3a;
+    }
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 1200px) {
+      .farmers-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 820px) {
+      .farmers-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      body {
+        padding: 1rem;
+      }
+      .dir-title h1 {
+        font-size: 1.4rem;
+      }
+    }
+
+    @media (max-width: 550px) {
+      .farmers-grid {
+        grid-template-columns: 1fr;
+      }
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.7rem;
+      }
+      .filter-group {
+        flex-wrap: wrap;
+      }
+      .filter-group select {
+        flex: 1 1 100%;
+      }
+      .filter-actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+      .main-header {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+      .dir-title h1 {
+        font-size: 1.2rem;
+      }
+      .card-image-wrapper {
+        height: 130px;
+      }
+      .card-image {
+        height: 130px;
+      }
+    }
+
+    /* ----- LIST VIEW ----- */
+    .farmers-grid.list-view {
+      grid-template-columns: 1fr;
+    }
+
+    .farmers-grid.list-view .farmer-card {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .farmers-grid.list-view .card-image-wrapper {
+      height: auto;
+      width: 180px;
+      flex-shrink: 0;
+    }
+
+    .farmers-grid.list-view .card-image {
+      height: 100%;
+      width: 100%;
+    }
+
+    .farmers-grid.list-view .card-content {
+      flex: 1;
+    }
+
+    @media (max-width: 600px) {
+      .farmers-grid.list-view .farmer-card {
+        flex-direction: column;
+      }
+      .farmers-grid.list-view .card-image-wrapper {
+        width: 100%;
+        height: 150px;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
 
-    <!-- ===== MAIN HEADER ===== -->
-    <header class="main-header">
-        <div class="logo-area">
-            <div class="logo-icon"><i class="fas fa-seedling"></i></div>
-            <div class="logo-text">Agri<span>Connect</span></div>
-        </div>
-        <a href="agri2.html" class="back-home-btn">
-            <i class="fas fa-arrow-left"></i> Back to Home
-        </a>
-    </header>
-
-    <!-- ===== DIRECTORY HEADER ===== -->
-    <div class="directory-header">
-        <h1><i class="fas fa-users"></i> Farmer Directory</h1>
-        <p class="subtitle">Connect with verified farmers across India. Browse, search, and contact farmers directly.</p>
-        <div class="badge-row">
-            <span class="badge-count"><i class="fas fa-check-circle"></i> <span id="farmerCount">0</span> Approved Farmers</span>
-        </div>
+  <!-- HEADER -->
+  <header class="main-header">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fas fa-seedling"></i></div>
+      <div class="logo-text">Agri<span>Connect</span></div>
     </div>
+    <a href="agri2.html" class="back-home-btn">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+  </header>
 
-    <!-- ===== SEARCH BAR ===== -->
-    <div class="search-bar">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search by farmer, farm, crop or location..." />
-        </div>
-        <div class="filter-group">
-            <select id="cropFilter">
-                <option value="">All Crops</option>
-            </select>
-            <select id="locationFilter">
-                <option value="">All Locations</option>
-            </select>
-        </div>
-        <div class="filter-actions">
-            <button class="clear-btn" id="clearFiltersBtn"><i class="fas fa-undo-alt"></i> Clear</button>
-            <div class="view-toggle">
-                <button class="active" id="gridViewBtn" title="Grid View"><i class="fas fa-th"></i></button>
-                <button id="listViewBtn" title="List View"><i class="fas fa-list"></i></button>
-            </div>
-        </div>
+  <!-- DIRECTORY HEADER -->
+  <div class="directory-header">
+    <div class="dir-title">
+      <h1><i class="fas fa-users"></i> Farmer Directory</h1>
     </div>
+    <p class="subtitle">Connect with verified farmers across India. Browse, search, and contact farmers directly.</p>
+    <div class="badge-row">
+      <span class="badge-count"><i class="fas fa-check-circle"></i> <span id="farmerCount">0</span> Approved Farmers</span>
+    </div>
+  </div>
 
-    <!-- ===== FARMER GRID ===== -->
-    <div class="farmers-grid" id="farmersGrid">
-        <div class="loading-spinner">
-            <i class="fas fa-circle-notch fa-spin"></i>
-            Loading farmers...
-        </div>
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="Search by farmer, farm, crop or location…" />
     </div>
+    <div class="filter-group">
+      <select id="cropFilter">
+        <option value="">All Crops</option>
+      </select>
+      <select id="locationFilter">
+        <option value="">All Locations</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="clear-btn" id="clearFiltersBtn"><i class="fas fa-undo-alt"></i> Clear</button>
+      <div class="view-toggle">
+        <button class="active" id="gridViewBtn" title="Grid View"><i class="fas fa-th"></i></button>
+        <button id="listViewBtn" title="List View"><i class="fas fa-list"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="farmers-grid" id="farmersGrid">
+    <div class="loading-spinner">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      Loading farmers…
+    </div>
+  </div>
 
 </div>
 
 <script>
-    (function() {
-        'use strict';
+  (function() {
+    'use strict';
 
-        const grid = document.getElementById('farmersGrid');
-        const searchInput = document.getElementById('searchInput');
-        const cropFilter = document.getElementById('cropFilter');
-        const locationFilter = document.getElementById('locationFilter');
-        const clearBtn = document.getElementById('clearFiltersBtn');
-        const farmerCountSpan = document.getElementById('farmerCount');
-        const gridViewBtn = document.getElementById('gridViewBtn');
-        const listViewBtn = document.getElementById('listViewBtn');
+    const grid = document.getElementById('farmersGrid');
+    const searchInput = document.getElementById('searchInput');
+    const cropFilter = document.getElementById('cropFilter');
+    const locationFilter = document.getElementById('locationFilter');
+    const clearBtn = document.getElementById('clearFiltersBtn');
+    const farmerCountSpan = document.getElementById('farmerCount');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
 
-        let allFarmers = [];
-        let currentView = 'grid';
+    let allFarmers = [];
+    let currentView = 'grid';
 
-        // ===== FETCH FARMERS =====
-        async function fetchFarmers() {
-            try {
-                const response = await fetch('/api/approved-farmers', {
-                    method: 'GET',
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                const data = await response.json();
-                allFarmers = Array.isArray(data) ? data : [];
-
-                populateFilters(allFarmers);
-                applyFilters();
-
-            } catch (err) {
-                console.error('Failed to fetch farmers:', err);
-                grid.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Unable to load farmers.<br />
-                        <span style="font-size:0.8rem; color:#6e8b6e;">Please check server connection.</span>
-                    </div>
-                `;
-                farmerCountSpan.textContent = '0';
-            }
-        }
-
-        // ===== POPULATE FILTERS =====
-        function populateFilters(farmers) {
-            const cropsSet = new Set();
-            const locsSet = new Set();
-
-            farmers.forEach(f => {
-                if (f.crop_specialization) {
-                    const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
-                    crops.forEach(c => cropsSet.add(c));
-                }
-                if (f.farm_location) locsSet.add(f.farm_location.trim());
-            });
-
-            cropFilter.innerHTML = '<option value="">All Crops</option>';
-            [...cropsSet].sort().forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c;
-                opt.textContent = c;
-                cropFilter.appendChild(opt);
-            });
-
-            locationFilter.innerHTML = '<option value="">All Locations</option>';
-            [...locsSet].sort().forEach(l => {
-                const opt = document.createElement('option');
-                opt.value = l;
-                opt.textContent = l;
-                locationFilter.appendChild(opt);
-            });
-        }
-
-        // ===== APPLY FILTERS =====
-        function applyFilters() {
-            const term = searchInput.value.trim().toLowerCase();
-            const cropVal = cropFilter.value.toLowerCase();
-            const locVal = locationFilter.value.toLowerCase();
-
-            const filtered = allFarmers.filter(f => {
-                const nameMatch = (f.author_name || '').toLowerCase().includes(term);
-                const farmMatch = (f.farm_name || '').toLowerCase().includes(term);
-                const cropMatch = (f.crop_specialization || '').toLowerCase().includes(term);
-                const locMatch = (f.farm_location || '').toLowerCase().includes(term);
-                const searchPass = term === '' || nameMatch || farmMatch || cropMatch || locMatch;
-
-                let cropPass = true;
-                if (cropVal !== '') {
-                    const fcrops = (f.crop_specialization || '').split(',').map(c => c.trim().toLowerCase());
-                    cropPass = fcrops.includes(cropVal);
-                }
-
-                const locationPass = locVal === '' || (f.farm_location || '').toLowerCase() === locVal;
-
-                return searchPass && cropPass && locationPass;
-            });
-
-            renderFarmers(filtered);
-            farmerCountSpan.textContent = filtered.length;
-        }
-
-        // ===== RENDER FARMERS =====
-        function renderFarmers(farmers) {
-            if (!farmers.length) {
-                grid.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-tractor"></i>
-                        No farmers match your filters.<br />
-                        <span style="font-size:0.8rem; color:#6e8b6e;">Try adjusting your search.</span>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            farmers.forEach(f => {
-                const exp = parseInt(f.years_experience) || 0;
-                const isExpert = exp >= 7;
-
-                // Image handling
-                let imageHtml = '';
-                if (f.profile_picture_url && f.profile_picture_url.startsWith('http')) {
-                    imageHtml = `<img class="card-image" src="${f.profile_picture_url}" alt="${f.farm_name || 'Farm'}" />`;
-                } else {
-                    imageHtml = `
-                        <div class="default-avatar">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                    `;
-                }
-
-                // Expert badge
-                const expertBadgeHtml = isExpert
-                    ? `<span class="expert-badge"><i class="fas fa-star"></i> Expert</span>`
-                    : '';
-
-                // Crop tags (max 3)
-                let cropTags = '';
-                if (f.crop_specialization) {
-                    const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
-                    const displayCrops = crops.slice(0, 3);
-                    cropTags = displayCrops.map(c =>
-                        `<span class="tag">${c}</span>`
-                    ).join(' ');
-                    if (crops.length > 3) cropTags += `<span class="tag">+${crops.length - 3}</span>`;
-                }
-
-                // Contact info
-                const contactNumber = f.contact_number || '';
-                const email = f.email || f.contact_email || '';
-
-                // WhatsApp link
-                let whatsappLink = '#';
-                if (contactNumber) {
-                    let cleaned = contactNumber.replace(/[^0-9]/g, '');
-                    if (cleaned.length === 10) cleaned = '91' + cleaned;
-                    whatsappLink = `https://wa.me/${cleaned}`;
-                }
-
-                html += `
-                    <div class="farmer-card">
-                        <div class="card-image-wrapper">
-                            ${imageHtml}
-                            ${expertBadgeHtml}
-                        </div>
-                        <div class="card-content">
-                            <div class="farm-name">${f.farm_name || 'Farm'}</div>
-                            <div class="farmer-name">${f.author_name || 'Farmer'}</div>
-
-                            <div class="info-row">
-                                <i class="fas fa-seedling"></i>
-                                <span>Crops: ${f.crop_specialization || 'Not specified'}</span>
-                            </div>
-                            <div class="info-row">
-                                <i class="fas fa-map-pin"></i>
-                                <span>${f.farm_location || 'Location not listed'}</span>
-                            </div>
-                            <div class="info-row">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>${exp} years experience</span>
-                            </div>
-
-                            <div class="tag-container">
-                                ${cropTags}
-                                ${isExpert ? '<span class="tag expert-tag">⭐ Expert</span>' : ''}
-                                <span class="tag exp-tag">${exp}yrs</span>
-                            </div>
-
-                            <div class="card-footer">
-                                <button class="btn-profile" 
-                                        data-name="${f.author_name || f.farm_name}"
-                                        data-email="${email}"
-                                        data-contact="${contactNumber}"
-                                        data-experience="${exp}"
-                                        data-location="${f.farm_location || ''}"
-                                        data-pic="${f.profile_picture_url || ''}"
-                                        data-is-expert="${isExpert}">
-                                    <i class="fas fa-user"></i> View Profile
-                                </button>
-                                <a href="${whatsappLink}" target="_blank" class="btn-whatsapp" title="Contact on WhatsApp">
-                                    <i class="fab fa-whatsapp"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            grid.innerHTML = html;
-
-            // ===== EVENT: View Profile =====
-            document.querySelectorAll('.btn-profile').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-
-                    const userData = localStorage.getItem('agriUser');
-                    if (!userData) {
-                        alert('Please login to view farmer profile details.');
-                        return;
-                    }
-
-                    const profile = {
-                        name: this.dataset.name || 'Farmer',
-                        email: this.dataset.email || 'Not Listed',
-                        contact: this.dataset.contact || '',
-                        experience: this.dataset.experience || '',
-                        location: this.dataset.location || '',
-                        pic: this.dataset.pic || '',
-                        isExpert: this.dataset.isExpert === 'true'
-                    };
-
-                    const params = new URLSearchParams(profile);
-                    window.location.href = `profile-viewer.html?${params.toString()}`;
-                });
-            });
-        }
-
-        // ===== VIEW TOGGLE =====
-        function setView(view) {
-            currentView = view;
-            grid.classList.toggle('list-view', view === 'list');
-            gridViewBtn.classList.toggle('active', view === 'grid');
-            listViewBtn.classList.toggle('active', view === 'list');
-            applyFilters();
-        }
-
-        gridViewBtn.addEventListener('click', () => setView('grid'));
-        listViewBtn.addEventListener('click', () => setView('list'));
-
-        // ===== EVENT LISTENERS =====
-        searchInput.addEventListener('input', applyFilters);
-        cropFilter.addEventListener('change', applyFilters);
-        locationFilter.addEventListener('change', applyFilters);
-
-        clearBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            cropFilter.value = '';
-            locationFilter.value = '';
-            applyFilters();
+    // ----- FETCH -----
+    async function fetchFarmers() {
+      try {
+        const response = await fetch('/api/approved-farmers', {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache' }
         });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        allFarmers = Array.isArray(data) ? data : [];
+        populateFilters(allFarmers);
+        applyFilters();
+      } catch (err) {
+        console.error('Failed to fetch farmers:', err);
+        grid.innerHTML = `
+          <div class="no-results">
+            <i class="fas fa-exclamation-triangle"></i>
+            Unable to load farmers.<br />
+            <span style="font-size:0.8rem; color:#6e8b6e;">Please check server connection.</span>
+          </div>
+        `;
+        farmerCountSpan.textContent = '0';
+      }
+    }
 
-        // ===== START =====
-        fetchFarmers();
+    // ----- POPULATE FILTERS -----
+    function populateFilters(farmers) {
+      const cropsSet = new Set();
+      const locsSet = new Set();
 
-    })();
+      farmers.forEach(f => {
+        if (f.crop_specialization) {
+          const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
+          crops.forEach(c => cropsSet.add(c));
+        }
+        if (f.farm_location) locsSet.add(f.farm_location.trim());
+      });
+
+      cropFilter.innerHTML = '<option value="">All Crops</option>';
+      [...cropsSet].sort().forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        cropFilter.appendChild(opt);
+      });
+
+      locationFilter.innerHTML = '<option value="">All Locations</option>';
+      [...locsSet].sort().forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l;
+        opt.textContent = l;
+        locationFilter.appendChild(opt);
+      });
+    }
+
+    // ----- APPLY FILTERS -----
+    function applyFilters() {
+      const term = searchInput.value.trim().toLowerCase();
+      const cropVal = cropFilter.value.toLowerCase();
+      const locVal = locationFilter.value.toLowerCase();
+
+      const filtered = allFarmers.filter(f => {
+        const nameMatch = (f.author_name || '').toLowerCase().includes(term);
+        const farmMatch = (f.farm_name || '').toLowerCase().includes(term);
+        const cropMatch = (f.crop_specialization || '').toLowerCase().includes(term);
+        const locMatch = (f.farm_location || '').toLowerCase().includes(term);
+        const searchPass = term === '' || nameMatch || farmMatch || cropMatch || locMatch;
+
+        let cropPass = true;
+        if (cropVal !== '') {
+          const fcrops = (f.crop_specialization || '').split(',').map(c => c.trim().toLowerCase());
+          cropPass = fcrops.includes(cropVal);
+        }
+
+        const locationPass = locVal === '' || (f.farm_location || '').toLowerCase() === locVal;
+        return searchPass && cropPass && locationPass;
+      });
+
+      renderFarmers(filtered);
+      farmerCountSpan.textContent = filtered.length;
+    }
+
+    // ----- RENDER -----
+    function renderFarmers(farmers) {
+      if (!farmers.length) {
+        grid.innerHTML = `
+          <div class="no-results">
+            <i class="fas fa-tractor"></i>
+            No farmers match your filters.<br />
+            <span style="font-size:0.8rem; color:#6e8b6e;">Try adjusting your search.</span>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      farmers.forEach(f => {
+        const exp = parseInt(f.years_experience) || 0;
+        const isExpert = exp >= 7;
+
+        // image
+        let imageHtml = '';
+        if (f.profile_picture_url && f.profile_picture_url.startsWith('http')) {
+          imageHtml = `<img class="card-image" src="${f.profile_picture_url}" alt="${f.farm_name || 'Farm'}" loading="lazy" />`;
+        } else {
+          imageHtml = `<div class="default-avatar"><i class="fas fa-user-tie"></i></div>`;
+        }
+
+        const expertBadgeHtml = isExpert
+          ? `<span class="expert-badge"><i class="fas fa-star"></i> Expert</span>`
+          : '';
+
+        // crop tags
+        let cropTags = '';
+        if (f.crop_specialization) {
+          const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
+          const displayCrops = crops.slice(0, 3);
+          cropTags = displayCrops.map(c => `<span class="tag">${c}</span>`).join(' ');
+          if (crops.length > 3) cropTags += `<span class="tag">+${crops.length - 3}</span>`;
+        }
+
+        const contactNumber = f.contact_number || '';
+        const email = f.email || f.contact_email || '';
+
+        let whatsappLink = '#';
+        if (contactNumber) {
+          let cleaned = contactNumber.replace(/[^0-9]/g, '');
+          if (cleaned.length === 10) cleaned = '91' + cleaned;
+          whatsappLink = `https://wa.me/${cleaned}`;
+        }
+
+        html += `
+          <div class="farmer-card">
+            <div class="card-image-wrapper">
+              ${imageHtml}
+              ${expertBadgeHtml}
+            </div>
+            <div class="card-content">
+              <div class="farm-name">${f.farm_name || 'Farm'}</div>
+              <div class="farmer-name">${f.author_name || 'Farmer'}</div>
+
+              <div class="info-row">
+                <i class="fas fa-seedling"></i>
+                <span>Crops: ${f.crop_specialization || 'Not specified'}</span>
+              </div>
+              <div class="info-row">
+                <i class="fas fa-map-pin"></i>
+                <span>${f.farm_location || 'Location not listed'}</span>
+              </div>
+              <div class="info-row">
+                <i class="fas fa-calendar-alt"></i>
+                <span>${exp} years experience</span>
+              </div>
+
+              <div class="tag-container">
+                ${cropTags}
+                ${isExpert ? '<span class="tag expert-tag">⭐ Expert</span>' : ''}
+                <span class="tag exp-tag">${exp}yrs</span>
+              </div>
+
+              <div class="card-footer">
+                <button class="btn-profile"
+                        data-name="${f.author_name || f.farm_name}"
+                        data-email="${email}"
+                        data-contact="${contactNumber}"
+                        data-experience="${exp}"
+                        data-location="${f.farm_location || ''}"
+                        data-pic="${f.profile_picture_url || ''}"
+                        data-is-expert="${isExpert}">
+                  <i class="fas fa-user"></i> View Profile
+                </button>
+                <a href="${whatsappLink}" target="_blank" class="btn-whatsapp" title="Contact on WhatsApp">
+                  <i class="fab fa-whatsapp"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+
+      // ----- View Profile click (keeps existing logic) -----
+      document.querySelectorAll('.btn-profile').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+
+          const userData = localStorage.getItem('agriUser');
+          if (!userData) {
+            alert('Please login to view farmer profile details.');
+            return;
+          }
+
+          const profile = {
+            name: this.dataset.name || 'Farmer',
+            email: this.dataset.email || 'Not Listed',
+            contact: this.dataset.contact || '',
+            experience: this.dataset.experience || '',
+            location: this.dataset.location || '',
+            pic: this.dataset.pic || '',
+            isExpert: this.dataset.isExpert === 'true'
+          };
+
+          const params = new URLSearchParams(profile);
+          window.location.href = `profile-viewer.html?${params.toString()}`;
+        });
+      });
+    }
+
+    // ----- VIEW TOGGLE -----
+    function setView(view) {
+      currentView = view;
+      grid.classList.toggle('list-view', view === 'list');
+      gridViewBtn.classList.toggle('active', view === 'grid');
+      listViewBtn.classList.toggle('active', view === 'list');
+      applyFilters();
+    }
+
+    gridViewBtn.addEventListener('click', () => setView('grid'));
+    listViewBtn.addEventListener('click', () => setView('list'));
+
+    // ----- EVENTS -----
+    searchInput.addEventListener('input', applyFilters);
+    cropFilter.addEventListener('change', applyFilters);
+    locationFilter.addEventListener('change', applyFilters);
+
+    clearBtn.addEventListener('click', function() {
+      searchInput.value = '';
+      cropFilter.value = '';
+      locationFilter.value = '';
+      applyFilters();
+    });
+
+    // ----- START -----
+    fetchFarmers();
+
+  })();
 </script>
 
 </body>
