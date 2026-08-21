@@ -9,23 +9,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const farmerListDiv = document.getElementById('farmerList');
         const farmerSearchInput = document.getElementById('farmerSearch');
         const searchButton = document.querySelector('#farmers .search-button');
-
-        async function fetchFarmers() {
-             try {
-                // Fetch only approved listings from the server
-                const response = await fetch('/api/approved-farmers'); 
-                allFarmers = await response.json();
-                filterFarmers(); // Initial render
-            } catch (error) {
-                console.error('Error fetching farmer directory:', error);
-                // Fallback for static data if DB is not used yet
-                allFarmers = [
-                   
-                ];
-                filterFarmers(); // Render fallback data
+// In agri.js - Farmer Directory Module
+async function fetchFarmers() {
+    try {
+        const response = await fetch('/api/approved-farmers', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache'
             }
-        }
-        
+        });
+        allFarmers = await response.json();
+        filterFarmers();
+    } catch (error) {
+        console.error('Error fetching farmer directory:', error);
+        document.getElementById('farmerList').innerHTML = 
+            '<p class="no-results-message">Unable to load farmers. Please try again.</p>';
+    }
+}
         function renderFarmers(farmerArray) {
             farmerListDiv.innerHTML = '';
             if (farmerArray.length === 0) {
