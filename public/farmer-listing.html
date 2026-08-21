@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>All Farmers - AgriConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         /* =======================================================
            1. VARIABLES & CONFIGURATION
@@ -15,20 +16,20 @@
             --primary-light: #dcfce7;
             --secondary: #facc15;
             --secondary-dark: #eab308;
-            --bg-body: #f0fdf4;
-            --bg-light: #f9fafb;
+            --bg-body: #f5f7fa;
+            --bg-light: #f8fafc;
             --bg-white: #ffffff;
             --bg-card: #ffffff;
-            --bg-dropdown: #ffffff;
-            --text-main: #2d3748;
-            --text-dark: #1f2937;
-            --text-muted: #4b5563;
-            --border: #e5e7eb;
-            --shadow-color: rgba(0, 0, 0, 0.1);
+            --text-main: #1e293b;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.06);
             --font-stack: 'Inter', sans-serif;
-            --shadow-md: 0 4px 6px -1px var(--shadow-color);
-            --card-radius: 16px;
-            --shadow: 0 8px 20px rgba(0,0,0,0.1);
+            --card-radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
+            --transition: 0.3s ease;
         }
 
         [data-theme="dark"] {
@@ -39,7 +40,6 @@
             --bg-light: #1e293b;
             --bg-white: #1e293b;
             --bg-card: #1e293b;
-            --bg-dropdown: #334155;
             --text-main: #f1f5f9;
             --text-dark: #f8fafc;
             --text-muted: #94a3b8;
@@ -51,8 +51,8 @@
            2. ANIMATIONS
            ======================================================= */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translate3d(0, 30px, 0); }
-            to { opacity: 1; transform: translate3d(0, 0, 0); }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes spin {
@@ -65,6 +65,8 @@
            ======================================================= */
         *, *::before, *::after {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
@@ -73,27 +75,17 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            line-height: 1.6;
+            line-height: 1.5;
             min-height: 100vh;
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--primary-light);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-dark);
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-light); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
         .container {
-            max-width: 1280px;
+            max-width: 1320px;
             margin-left: auto;
             margin-right: auto;
             padding-left: 1.5rem;
@@ -104,10 +96,10 @@
            4. HEADER
            ======================================================= */
         header {
-            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 1rem 0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            padding: 0.8rem 0;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -122,7 +114,7 @@
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 800;
             text-decoration: none;
             color: white;
@@ -133,29 +125,29 @@
 
         .logo i {
             color: var(--secondary);
+            font-size: 1.6rem;
         }
 
-        .logo span {
-            color: var(--secondary);
-        }
+        .logo span { color: var(--secondary); }
 
         .back-link {
             color: white;
             text-decoration: none;
             font-weight: 600;
-            padding: 0.5rem 1.2rem;
+            padding: 0.4rem 1.2rem;
             background: rgba(255, 255, 255, 0.12);
             border-radius: 50px;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .back-link:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateX(-4px);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-3px);
         }
 
         /* =======================================================
@@ -163,28 +155,30 @@
            ======================================================= */
         .page-header {
             padding: 2rem 0 1.5rem 0;
-            border-bottom: 2px solid var(--border);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
         }
 
         .page-header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 800;
-            color: var(--primary-dark);
+            color: var(--text-dark);
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.8rem;
-            margin: 0;
+            margin: 0 0 0.3rem 0;
         }
 
         .page-header h1 i {
             color: var(--secondary);
+            font-size: 2rem;
         }
 
         .page-header p {
             color: var(--text-muted);
-            font-size: 1.1rem;
-            margin-top: 0.3rem;
+            font-size: 1rem;
+            margin: 0 0 0.8rem 0;
         }
 
         .stats-badge {
@@ -193,12 +187,14 @@
             gap: 8px;
             background: var(--primary-light);
             color: var(--primary-dark);
-            padding: 6px 16px;
+            padding: 5px 18px;
             border-radius: 50px;
             font-weight: 600;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            border: 1px solid rgba(22, 163, 74, 0.15);
         }
+
+        .stats-badge i { font-size: 0.9rem; }
 
         /* =======================================================
            6. CONTROLS BAR
@@ -206,13 +202,14 @@
         .controls-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
+            gap: 0.8rem;
+            margin-bottom: 1.8rem;
+            padding: 1rem 1.5rem;
             background: var(--bg-white);
             border-radius: var(--card-radius);
             box-shadow: var(--shadow);
             align-items: center;
+            border: 1px solid var(--border);
         }
 
         .search-wrapper {
@@ -224,34 +221,36 @@
 
         .search-input {
             flex: 1;
-            padding: 12px 18px;
-            border: 2px solid var(--border);
-            border-radius: 50px;
-            font-size: 1rem;
+            padding: 8px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.3s;
-            min-width: 150px;
+            transition: all 0.3s;
             background: var(--bg-white);
             color: var(--text-main);
+            min-width: 120px;
         }
 
         .search-input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
         }
 
         .search-btn {
-            padding: 12px 24px;
+            padding: 8px 18px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            white-space: nowrap;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
         }
 
         .search-btn:hover {
@@ -260,34 +259,36 @@
         }
 
         .filter-select {
-            padding: 12px 18px;
-            border: 2px solid var(--border);
-            border-radius: 50px;
-            font-size: 1rem;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
             background: var(--bg-white);
             color: var(--text-main);
             cursor: pointer;
             outline: none;
-            min-width: 150px;
-            transition: border-color 0.3s;
+            min-width: 140px;
+            transition: all 0.3s;
         }
 
         .filter-select:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
         }
 
         .clear-filters {
-            padding: 12px 20px;
+            padding: 8px 16px;
             background: var(--bg-light);
-            border: 2px solid var(--border);
-            border-radius: 50px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
             color: var(--text-muted);
             transition: all 0.3s;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .clear-filters:hover {
@@ -297,19 +298,19 @@
 
         .view-toggle {
             display: flex;
-            gap: 0.5rem;
+            gap: 4px;
             align-items: center;
             margin-left: auto;
         }
 
         .view-toggle button {
-            padding: 8px 14px;
-            border: 2px solid var(--border);
+            padding: 6px 12px;
+            border: 1.5px solid var(--border);
             background: var(--bg-white);
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
         }
 
@@ -324,12 +325,12 @@
         }
 
         /* =======================================================
-           7. GRID & LIST VIEWS
+           7. GRID CONTAINER - SMALL CARDS
            ======================================================= */
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
         }
 
         .list-view .grid-container {
@@ -338,86 +339,120 @@
 
         .list-view .card {
             display: flex;
-            gap: 1.5rem;
-            align-items: stretch;
-            padding: 1.2rem 1.8rem;
+            gap: 1.2rem;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
             flex-direction: row;
         }
 
         .list-view .card .card-image {
-            width: 140px;
-            height: 140px;
+            width: 70px;
+            height: 70px;
             flex-shrink: 0;
+            border-radius: 50%;
+        }
+
+        .list-view .card .card-image img {
+            border-radius: 50%;
         }
 
         .list-view .card .card-body {
             flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .list-view .card .card-body .card-title {
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+
+        .list-view .card .card-body .card-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            margin-bottom: 0;
+        }
+
+        .list-view .card .card-body .card-details p {
+            font-size: 0.8rem;
+            margin-bottom: 0;
+        }
+
+        .list-view .card .card-body .card-tags {
+            margin-bottom: 0;
         }
 
         .list-view .card .card-actions {
             flex-shrink: 0;
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            justify-content: center;
+            gap: 0.4rem;
         }
 
         .list-view .card .card-actions .btn-primary {
-            min-width: 120px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            min-width: auto;
+        }
+
+        .list-view .card .card-actions .btn-whatsapp {
+            padding: 6px 12px;
         }
 
         @media (max-width: 768px) {
             .list-view .card {
                 flex-direction: column;
                 align-items: stretch;
-                padding: 1.2rem;
+                padding: 1rem;
             }
             .list-view .card .card-image {
                 width: 100%;
-                height: 160px;
+                height: 120px;
+                border-radius: 8px;
+            }
+            .list-view .card .card-image img {
+                border-radius: 8px;
             }
             .list-view .card .card-actions {
                 flex-direction: row;
                 flex-wrap: wrap;
             }
             .list-view .card .card-actions .btn-primary {
-                min-width: auto;
                 flex: 1;
+                min-width: auto;
             }
         }
 
         /* =======================================================
-           8. CARDS
+           8. CARDS - SMALL & PROFESSIONAL
            ======================================================= */
         .card {
             background: var(--bg-card);
             border-radius: var(--card-radius);
             box-shadow: var(--shadow);
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all var(--transition);
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             animation: fadeInUp 0.4s ease-out forwards;
         }
 
         .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
         }
 
         .card-image {
             width: 100%;
-            height: 200px;
+            height: 160px;
             object-fit: cover;
             background: var(--bg-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            color: var(--text-muted);
             position: relative;
             overflow: hidden;
         }
@@ -429,109 +464,115 @@
         }
 
         .card-image .default-icon {
-            font-size: 4rem;
+            font-size: 3rem;
             color: var(--primary);
             opacity: 0.3;
         }
 
         .expert-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 8px;
+            right: 8px;
             background: #fef3c7;
             color: #d97706;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 50px;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
 
         .card-body {
-            padding: 1.5rem;
+            padding: 1rem 1.2rem 1.2rem;
             flex: 1;
             display: flex;
             flex-direction: column;
+            gap: 0.3rem;
         }
 
         .card-body .card-title {
-            font-size: 1.3rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            color: var(--primary-dark);
-            margin-bottom: 0.3rem;
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.3;
         }
 
         .card-body .card-subtitle {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
+            margin: 0;
         }
 
         .card-body .card-details {
-            flex: 1;
-            margin-bottom: 1rem;
+            margin: 0.2rem 0 0.3rem;
         }
 
         .card-body .card-details p {
-            margin-bottom: 0.3rem;
-            font-size: 0.95rem;
+            margin: 0;
+            font-size: 0.82rem;
             color: var(--text-muted);
+            line-height: 1.4;
         }
 
         .card-body .card-details p strong {
             color: var(--text-dark);
+            font-weight: 600;
         }
 
         .card-body .card-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.3rem;
+            margin: 0.2rem 0 0.4rem;
         }
 
         .tag {
             background: var(--bg-light);
-            padding: 4px 12px;
+            padding: 2px 10px;
             border-radius: 50px;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: 500;
             color: var(--text-muted);
+            border: 1px solid var(--border);
         }
 
         .tag-expert {
             background: #fef3c7;
             color: #d97706;
+            border-color: #fde68a;
         }
 
         .tag-experience {
             background: #dbeafe;
             color: #1d4ed8;
+            border-color: #bfdbfe;
         }
 
         .card-actions {
             display: flex;
-            gap: 0.8rem;
-            margin-top: auto;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
         }
 
         .btn-primary {
             flex: 1;
-            padding: 10px 20px;
+            padding: 6px 12px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
         }
 
         .btn-primary:hover {
@@ -543,7 +584,8 @@
             background: #25D366;
             color: white;
             border: none;
-            flex: 0.5;
+            flex: 0.4;
+            min-width: 40px;
         }
 
         .btn-whatsapp:hover {
@@ -564,40 +606,43 @@
             font-size: 2rem;
             animation: spin 1s linear infinite;
             display: block;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
         .no-results {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 3rem 1.5rem;
         }
 
         .no-results i {
-            font-size: 4rem;
+            font-size: 3rem;
             color: var(--text-muted);
             opacity: 0.3;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
         .no-results h3 {
             color: var(--text-dark);
-            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
         }
 
         .no-results p {
             color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .no-results .retry-btn {
-            margin-top: 1rem;
-            padding: 10px 24px;
+            margin-top: 0.8rem;
+            padding: 8px 20px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 0.85rem;
             transition: all 0.3s;
         }
 
@@ -611,24 +656,26 @@
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
-            margin-top: 2.5rem;
+            gap: 0.4rem;
+            margin-top: 2rem;
             flex-wrap: wrap;
         }
 
         .pagination button {
-            padding: 8px 16px;
-            border: 2px solid var(--border);
+            padding: 6px 14px;
+            border: 1.5px solid var(--border);
             background: var(--bg-white);
             color: var(--text-main);
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 500;
+            font-size: 0.85rem;
         }
 
         .pagination button:hover:not(.active):not(:disabled) {
             background: var(--bg-light);
+            border-color: var(--primary);
         }
 
         .pagination button.active {
@@ -638,7 +685,7 @@
         }
 
         .pagination button:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
@@ -648,8 +695,8 @@
         .footer {
             background: var(--primary-dark);
             color: white;
-            padding: 2rem 0;
-            margin-top: 3rem;
+            padding: 1.5rem 0;
+            margin-top: 2.5rem;
             text-align: center;
         }
 
@@ -662,37 +709,32 @@
             text-decoration: underline;
         }
 
+        .footer p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
         /* =======================================================
            12. RESPONSIVE
            ======================================================= */
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
             .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 1.5rem;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
             }
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-
-            .logo {
-                font-size: 1.4rem;
-            }
-
-            .back-link {
-                font-size: 0.85rem;
-                padding: 0.4rem 1rem;
-            }
-
-            .page-header h1 {
-                font-size: 1.8rem;
-            }
+            .container { padding: 0 1rem; }
+            .logo { font-size: 1.2rem; }
+            .back-link { font-size: 0.75rem; padding: 0.3rem 0.8rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-header p { font-size: 0.9rem; }
 
             .controls-bar {
                 flex-direction: column;
-                padding: 1rem;
+                padding: 0.8rem 1rem;
+                gap: 0.6rem;
             }
 
             .search-wrapper {
@@ -700,67 +742,32 @@
                 width: 100%;
             }
 
-            .search-input {
-                width: 100%;
-            }
-
-            .search-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .filter-select {
-                width: 100%;
-            }
-
+            .search-input { width: 100%; }
+            .search-btn { width: 100%; justify-content: center; }
+            .filter-select { width: 100%; }
             .view-toggle {
                 margin-left: 0;
                 justify-content: center;
                 width: 100%;
             }
-
-            .view-toggle button {
-                flex: 1;
-                text-align: center;
-            }
+            .view-toggle button { flex: 1; text-align: center; }
 
             .grid-container {
                 grid-template-columns: 1fr;
-                gap: 1.2rem;
+                gap: 1rem;
             }
 
-            .card-image {
-                height: 160px;
-            }
+            .card-image { height: 140px; }
         }
 
         @media (max-width: 480px) {
-            .page-header h1 {
-                font-size: 1.4rem;
-            }
-
-            .card-body .card-title {
-                font-size: 1.1rem;
-            }
-
-            .card-body .card-details p {
-                font-size: 0.85rem;
-            }
-
-            .btn-primary {
-                font-size: 0.85rem;
-                padding: 8px 16px;
-            }
-
-            .pagination button {
-                padding: 6px 12px;
-                font-size: 0.85rem;
-            }
-
-            .stats-badge {
-                font-size: 0.8rem;
-                padding: 4px 12px;
-            }
+            .page-header h1 { font-size: 1.3rem; }
+            .page-header h1 i { font-size: 1.3rem; }
+            .card-body .card-title { font-size: 0.95rem; }
+            .card-body .card-details p { font-size: 0.75rem; }
+            .btn-primary { font-size: 0.75rem; padding: 5px 10px; }
+            .pagination button { padding: 5px 10px; font-size: 0.75rem; }
+            .stats-badge { font-size: 0.75rem; padding: 4px 12px; }
         }
 
         /* =======================================================
@@ -768,14 +775,10 @@
            ======================================================= */
         @media (hover: none) and (pointer: coarse) {
             button, .search-btn, .btn-primary, .clear-filters {
-                min-height: 44px;
+                min-height: 40px;
             }
-            .card:hover {
-                transform: none !important;
-            }
-            .btn-primary:hover {
-                transform: none !important;
-            }
+            .card:hover { transform: none !important; }
+            .btn-primary:hover { transform: none !important; }
         }
     </style>
 </head>
@@ -789,7 +792,7 @@
                 Agri<span>Connect</span>
             </a>
             <a href="/agri2.html" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to Home
+                <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
     </header>
@@ -815,7 +818,7 @@
                 <input
                     type="text"
                     id="farmerSearch"
-                    placeholder="Search by farm name, crop, or location..."
+                    placeholder="Search farmers..."
                     class="search-input"
                 >
                 <button class="search-btn" id="searchBtn">
@@ -867,9 +870,6 @@
             <p>
                 &copy; 2026 <a href="/agri2.html">AgriConnect</a> - Empowering Farmers, Growing Communities.
             </p>
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8;">
-                <i class="fas fa-leaf"></i> Built with ❤️ for Indian Farmers
-            </p>
         </div>
     </footer>
 
@@ -896,7 +896,7 @@
             let allFarmers = [];
             let filteredFarmers = [];
             let currentPage = 1;
-            const itemsPerPage = 12;
+            const itemsPerPage = 15;
             let currentView = 'grid';
 
             // --- API Fetch ---
@@ -924,13 +924,8 @@
                     allFarmers = await response.json();
                     console.log(`✅ Loaded ${allFarmers.length} approved farmers`);
 
-                    // Update total count
                     totalCount.textContent = allFarmers.length;
-
-                    // Populate filter dropdowns
                     populateFilters();
-
-                    // Apply initial filtering
                     applyFilters();
 
                 } catch (error) {
@@ -939,7 +934,7 @@
                         <div class="no-results">
                             <i class="fas fa-exclamation-triangle"></i>
                             <h3>Unable to Load Farmers</h3>
-                            <p>Please try again later. If the problem persists, contact support.</p>
+                            <p>Please try again later.</p>
                             <button onclick="location.reload()" class="retry-btn">
                                 <i class="fas fa-sync"></i> Retry
                             </button>
@@ -950,7 +945,6 @@
 
             // --- Populate Filters ---
             function populateFilters() {
-                // Crop filter
                 const crops = [...new Set(allFarmers.map(f => f.crop_specialization).filter(Boolean))];
                 cropFilter.innerHTML = '<option value="">All Crops</option>';
                 crops.forEach(crop => {
@@ -960,7 +954,6 @@
                     cropFilter.appendChild(option);
                 });
 
-                // Location filter
                 const locations = [...new Set(allFarmers.map(f => f.farm_location || f.user_location).filter(Boolean))];
                 locationFilter.innerHTML = '<option value="">All Locations</option>';
                 locations.forEach(loc => {
@@ -978,7 +971,6 @@
                 const locationValue = locationFilter.value;
 
                 filteredFarmers = allFarmers.filter(farmer => {
-                    // Search filter
                     if (searchTerm) {
                         const searchable = [
                             farmer.farm_name,
@@ -989,18 +981,11 @@
                         ].filter(Boolean).join(' ').toLowerCase();
                         if (!searchable.includes(searchTerm)) return false;
                     }
-
-                    // Crop filter
-                    if (cropValue && farmer.crop_specialization !== cropValue) {
-                        return false;
-                    }
-
-                    // Location filter
+                    if (cropValue && farmer.crop_specialization !== cropValue) return false;
                     if (locationValue) {
                         const farmerLocation = farmer.farm_location || farmer.user_location;
                         if (farmerLocation !== locationValue) return false;
                     }
-
                     return true;
                 });
 
@@ -1018,7 +1003,7 @@
                         <div class="no-results">
                             <i class="fas fa-search"></i>
                             <h3>No Farmers Found</h3>
-                            <p>Try adjusting your search or filters to find what you're looking for.</p>
+                            <p>Try adjusting your search or filters.</p>
                             <button onclick="resetFilters()" class="retry-btn">
                                 <i class="fas fa-undo"></i> Reset Filters
                             </button>
@@ -1032,13 +1017,8 @@
                 const end = Math.min(start + itemsPerPage, totalItems);
                 const pageItems = filteredFarmers.slice(start, end);
 
-                // Render cards
                 farmerList.innerHTML = pageItems.map(farmer => createFarmerCard(farmer)).join('');
-
-                // Render pagination
                 renderPagination(totalPages);
-
-                // Scroll to top of results
                 farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
@@ -1049,7 +1029,6 @@
                 const farmLocation = farmer.farm_location || farmer.user_location || 'Location not specified';
                 const name = farmer.author_name || farmer.farm_name || 'Anonymous Farmer';
 
-                // Build data attributes for profile viewer
                 const dataAttrs = `
                     data-id="${farmer.id || ''}"
                     data-name="${name}"
@@ -1063,7 +1042,6 @@
                     data-crop="${farmer.crop_specialization || ''}"
                 `;
 
-                // Create WhatsApp link
                 let whatsappLink = '#';
                 if (farmer.contact_number) {
                     let cleaned = farmer.contact_number.replace(/[^0-9]/g, '');
@@ -1083,16 +1061,16 @@
                             <div class="card-details">
                                 <p><strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
                                 <p><strong>Location:</strong> ${farmLocation}</p>
-                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
+                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} yrs</p>` : ''}
                             </div>
                             <div class="card-tags">
                                 ${farmer.crop_specialization ? `<span class="tag">🌾 ${farmer.crop_specialization.split(',')[0]}</span>` : ''}
                                 ${isExpert ? '<span class="tag tag-expert"><i class="fas fa-star"></i> Expert</span>' : ''}
-                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs exp</span>` : ''}
+                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs</span>` : ''}
                             </div>
                             <div class="card-actions">
                                 <button class="btn-primary contact-profile-link" ${dataAttrs}>
-                                    <i class="fas fa-user"></i> View Profile
+                                    <i class="fas fa-user"></i> Profile
                                 </button>
                                 ${farmer.contact_number ? `
                                     <a href="${whatsappLink}" target="_blank" class="btn-primary btn-whatsapp">
@@ -1117,7 +1095,6 @@
                     <i class="fas fa-chevron-left"></i>
                 </button>`;
 
-                // Show page numbers
                 let startPage = Math.max(1, currentPage - 2);
                 let endPage = Math.min(totalPages, currentPage + 2);
 
@@ -1171,7 +1148,6 @@
                     gridViewBtn.classList.add('active');
                     listViewBtn.classList.remove('active');
                 }
-                // Re-render with same data
                 renderFarmers();
             }
 
@@ -1217,7 +1193,6 @@
             // --- Initialize ---
             fetchFarmers();
 
-            // --- Expose for debugging ---
             window.refreshFarmers = fetchFarmers;
             window.applyFilters = applyFilters;
         });
