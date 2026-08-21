@@ -195,14 +195,14 @@
         .stats-badge i { font-size: 0.9rem; }
 
         /* =======================================================
-           6. CONTROLS BAR
+           6. SEARCH & FILTERS - EXACT MATCH
            ======================================================= */
-        .controls-bar {
+        .search-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.8rem;
+            gap: 1rem;
             margin-bottom: 1.8rem;
-            padding: 1rem 1.5rem;
+            padding: 0.8rem 1.2rem;
             background: var(--bg-white);
             border-radius: var(--card-radius);
             box-shadow: var(--shadow);
@@ -212,31 +212,35 @@
 
         .search-wrapper {
             flex: 1;
-            min-width: 200px;
+            min-width: 250px;
             display: flex;
+            align-items: center;
             gap: 0.5rem;
+        }
+
+        .search-wrapper i {
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .search-input {
             flex: 1;
-            padding: 8px 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
+            padding: 8px 12px;
+            border: none;
             font-size: 0.9rem;
             outline: none;
-            transition: all 0.3s;
-            background: var(--bg-white);
+            background: transparent;
             color: var(--text-main);
             min-width: 120px;
         }
 
-        .search-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        .search-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
         }
 
         .search-btn {
-            padding: 8px 18px;
+            padding: 8px 24px;
             background: var(--primary);
             color: white;
             border: none;
@@ -295,16 +299,16 @@
         }
 
         /* =======================================================
-           7. FARMER GRID - 3 COLUMN
+           7. FARMER GRID - 4 COLUMN (Like the image)
            ======================================================= */
         .farmer-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 1.5rem;
         }
 
         /* =======================================================
-           8. FARMER CARD - LIKE THE IMAGE
+           8. FARMER CARD - EXACT MATCH TO IMAGE
            ======================================================= */
         .farmer-card {
             background: var(--bg-card);
@@ -353,6 +357,7 @@
             opacity: 0.3;
         }
 
+        /* Expert Badge */
         .farmer-card .expert-badge {
             position: absolute;
             top: 8px;
@@ -377,7 +382,7 @@
             flex-direction: column;
         }
 
-        /* Farm Name */
+        /* Farm Name - Like image */
         .farmer-card .card-content .card-title {
             font-size: 1.1rem;
             font-weight: 700;
@@ -386,30 +391,24 @@
             line-height: 1.3;
         }
 
-        /* Farmer Name (subtitle) */
+        /* Farmer Name - Like image */
         .farmer-card .card-content .card-subtitle {
             color: var(--text-muted);
             font-size: 0.85rem;
-            margin: 0 0 0.4rem 0;
+            margin: 0 0 0.5rem 0;
             font-weight: 500;
         }
 
-        /* Details - Crops, Location, Experience */
+        /* Details - Crops, Location, Experience - Like image */
         .farmer-card .card-content .card-details {
             margin: 0 0 0.3rem 0;
         }
 
         .farmer-card .card-content .card-details p {
-            margin: 0.1rem 0;
-            font-size: 0.82rem;
+            margin: 0.15rem 0;
+            font-size: 0.8rem;
             color: var(--text-muted);
             line-height: 1.5;
-        }
-
-        .farmer-card .card-content .card-details p i {
-            width: 16px;
-            color: var(--primary);
-            font-size: 0.75rem;
         }
 
         .farmer-card .card-content .card-details p strong {
@@ -417,7 +416,7 @@
             font-weight: 600;
         }
 
-        /* Tags */
+        /* Tags - Like image */
         .farmer-card .card-tags {
             display: flex;
             flex-wrap: wrap;
@@ -426,7 +425,6 @@
         }
 
         .farmer-card .tag {
-            background: var(--bg-light);
             padding: 1px 12px;
             border-radius: 50px;
             font-size: 0.65rem;
@@ -436,6 +434,7 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            background: var(--bg-light);
         }
 
         .farmer-card .tag i {
@@ -468,18 +467,10 @@
             color: var(--primary);
         }
 
-        /* Action Buttons - Like the image "View Profile" */
-        .farmer-card .card-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: auto;
-            padding-top: 0.5rem;
-            border-top: 1px solid var(--border);
-        }
-
+        /* View Profile Button - Like image */
         .farmer-card .btn-profile {
-            flex: 1;
-            padding: 6px 14px;
+            width: 100%;
+            padding: 8px 0;
             background: var(--primary);
             color: white;
             border: none;
@@ -492,7 +483,8 @@
             justify-content: center;
             gap: 6px;
             text-decoration: none;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
         }
 
         .farmer-card .btn-profile:hover {
@@ -501,7 +493,15 @@
         }
 
         .farmer-card .btn-profile i {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* WhatsApp button - small, next to profile */
+        .farmer-card .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 0.4rem;
         }
 
         .farmer-card .btn-whatsapp {
@@ -516,10 +516,11 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 600;
             text-decoration: none;
-            min-width: 42px;
+            min-width: 38px;
+            flex-shrink: 0;
         }
 
         .farmer-card .btn-whatsapp:hover {
@@ -529,6 +530,10 @@
 
         .farmer-card .btn-whatsapp i {
             font-size: 0.9rem;
+        }
+
+        .farmer-card .btn-profile-wrapper {
+            flex: 1;
         }
 
         /* =======================================================
@@ -654,9 +659,16 @@
         }
 
         /* =======================================================
-           12. RESPONSIVE - 3 COLUMN TO 2 TO 1
+           12. RESPONSIVE - 4 COLUMN TO 3 TO 2 TO 1
            ======================================================= */
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
+            .farmer-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 1.2rem;
+            }
+        }
+
+        @media (max-width: 992px) {
             .farmer-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 1.2rem;
@@ -670,18 +682,21 @@
             .page-header h1 { font-size: 1.5rem; }
             .page-header p { font-size: 0.85rem; }
 
-            .controls-bar {
+            .search-container {
                 flex-direction: column;
                 padding: 0.8rem 1rem;
                 gap: 0.6rem;
             }
 
             .search-wrapper {
-                flex-direction: column;
                 width: 100%;
+                border: 1.5px solid var(--border);
+                border-radius: 8px;
+                padding: 0 12px;
+                background: var(--bg-white);
             }
 
-            .search-input { width: 100%; }
+            .search-input { width: 100%; padding: 10px 8px; }
             .search-btn { width: 100%; justify-content: center; }
             .filter-select { width: 100%; }
 
@@ -699,13 +714,17 @@
             .page-header h1 { font-size: 1.2rem; }
             .page-header h1 i { font-size: 1.2rem; }
             .farmer-card .card-content .card-title { font-size: 1rem; }
-            .farmer-card .card-content .card-details p { font-size: 0.78rem; }
-            .farmer-card .btn-profile { font-size: 0.75rem; padding: 5px 10px; }
-            .farmer-card .btn-whatsapp { font-size: 0.75rem; padding: 5px 10px; }
+            .farmer-card .card-content .card-details p { font-size: 0.75rem; }
+            .farmer-card .btn-profile { font-size: 0.8rem; padding: 6px 0; }
             .pagination button { padding: 5px 10px; font-size: 0.75rem; }
             .stats-badge { font-size: 0.75rem; padding: 4px 12px; }
             .farmer-card .card-image {
                 height: 160px;
+            }
+            .farmer-card .btn-whatsapp {
+                padding: 6px 10px;
+                min-width: 34px;
+                font-size: 0.7rem;
             }
         }
 
@@ -752,19 +771,21 @@
             </div>
         </div>
 
-        <!-- ===== CONTROLS BAR ===== -->
-        <div class="controls-bar">
+        <!-- ===== SEARCH & FILTERS ===== -->
+        <div class="search-container">
             <div class="search-wrapper">
+                <i class="fas fa-search"></i>
                 <input
                     type="text"
                     id="farmerSearch"
                     placeholder="Search by name, crop, or location..."
                     class="search-input"
                 >
-                <button class="search-btn" id="searchBtn">
-                    <i class="fas fa-search"></i> Search
-                </button>
             </div>
+
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> Search Farmers
+            </button>
 
             <select class="filter-select" id="cropFilter">
                 <option value="">All Crops</option>
@@ -825,7 +846,7 @@
             let allFarmers = [];
             let filteredFarmers = [];
             let currentPage = 1;
-            const itemsPerPage = 15;
+            const itemsPerPage = 12;
 
             // --- API Fetch ---
             async function fetchFarmers() {
@@ -950,7 +971,7 @@
                 farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            // --- Create Farmer Card - Like the Image ---
+            // --- Create Farmer Card - Exact Match to Image ---
             function createFarmerCard(farmer) {
                 const isExpert = (parseInt(farmer.years_experience) || 0) >= 7;
                 const profilePic = farmer.profile_picture_url || '/uploads/default.png';
@@ -990,9 +1011,9 @@
                             <h3 class="card-title">${farmer.farm_name || 'Farm'}</h3>
                             <div class="card-subtitle">${name}</div>
                             <div class="card-details">
-                                <p><i class="fas fa-seedling"></i> <strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
-                                <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${farmLocation}</p>
-                                ${farmer.years_experience ? `<p><i class="fas fa-graduation-cap"></i> <strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
+                                <p><strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
+                                <p><strong>Location:</strong> ${farmLocation}</p>
+                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
                             </div>
                             <div class="card-tags">
                                 ${firstCrop ? `<span class="tag tag-crop"><i class="fas fa-seedling"></i> ${firstCrop}</span>` : ''}
@@ -1000,9 +1021,11 @@
                                 ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs exp</span>` : ''}
                             </div>
                             <div class="card-actions">
-                                <button class="btn-profile contact-profile-link" ${dataAttrs}>
-                                    <i class="fas fa-user"></i> View Profile
-                                </button>
+                                <div class="btn-profile-wrapper">
+                                    <button class="btn-profile contact-profile-link" ${dataAttrs}>
+                                        <i class="fas fa-user"></i> View Profile
+                                    </button>
+                                </div>
                                 ${farmer.contact_number ? `
                                     <a href="${whatsappLink}" target="_blank" class="btn-whatsapp">
                                         <i class="fab fa-whatsapp"></i>
