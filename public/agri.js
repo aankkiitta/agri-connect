@@ -28,7 +28,7 @@ async function fetchFarmers() {
             '<p class="no-results-message">Unable to load farmers. Please try again.</p>';
     }
 }
-        function renderFarmers(farmerArray) {
+     function renderFarmers(farmerArray) {
     farmerListDiv.innerHTML = '';
 
     if (farmerArray.length === 0) {
@@ -37,10 +37,8 @@ async function fetchFarmers() {
         return;
     }
 
-    // Show only 6 farmers initially
-    const farmersToShow = showAllFarmers
-        ? farmerArray
-        : farmerArray.slice(0, 6);
+    // SHOW ONLY 6 FARMERS
+    const farmersToShow = farmerArray.slice(0, 6);
 
     farmersToShow.forEach(farmer => {
 
@@ -59,42 +57,25 @@ async function fetchFarmers() {
         farmerListDiv.innerHTML += `
             <div class="card">
                 <h3>${farmer.farm_name}</h3>
-                <p><strong>Crops:</strong> ${farmer.crop_specialization}</p>
-                <p><strong>Location:</strong> ${farmer.farm_location}</p>
-                <button class="view-details-button contact-profile-link" ${dataAttributes}>
+
+                <p>
+                    <strong>Crops:</strong>
+                    ${farmer.crop_specialization}
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    ${farmer.farm_location}
+                </p>
+
+                <button
+                    class="view-details-button contact-profile-link"
+                    ${dataAttributes}>
                     Contact Farmer
                 </button>
             </div>
         `;
     });
-
-    // View More button
-    let viewMoreBtn = document.getElementById('viewMoreFarmersBtn');
-
-    if (farmerArray.length > 6) {
-
-        if (!viewMoreBtn) {
-            viewMoreBtn = document.createElement('button');
-            viewMoreBtn.id = 'viewMoreFarmersBtn';
-            viewMoreBtn.className = 'hero-button';
-            viewMoreBtn.style.display = 'block';
-            viewMoreBtn.style.margin = '25px auto';
-
-            farmerListDiv.parentNode.appendChild(viewMoreBtn);
-
-            viewMoreBtn.addEventListener('click', () => {
-                showAllFarmers = !showAllFarmers;
-                renderFarmers(farmerArray);
-            });
-        }
-
-        viewMoreBtn.textContent = showAllFarmers
-            ? 'Show Less'
-            : 'View More Farmers';
-
-    } else if (viewMoreBtn) {
-        viewMoreBtn.remove();
-    }
 }
      window.filterFarmers = function() {
     if (!farmerSearchInput) return;
