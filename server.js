@@ -1,2037 +1,1568 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriConnect Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #1e400f;
-            --secondary: #38a169;
-            --accent: #facc15;
-            --light: #f7f7f7;
-            --dark: #1e400f;
-            --success: #38a169;
-            --warning: #f39c12;
-            --danger: #ef4444;
-            --sidebar-width: 260px;
-            --header-height: 70px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Login Form Styles */
-        .login-form-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100vh;
-            background-color: #f5f7fa;
-        }
-
-        .login-card {
-            background: white;
-            padding: 40px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            border-radius: 8px;
-        }
-
-        .login-card h2 {
-            color: var(--primary);
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-card h2 i {
-            margin-right: 10px;
-            color: var(--accent);
-        }
-
-        .login-card input[type="email"],
-        .login-card input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .login-card button {
-            width: 100%;
-            padding: 12px;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background 0.3s;
-            border-radius: 4px;
-        }
-
-        .login-card button:hover {
-            background: #2b7850;
-        }
-
-        #loginMessage {
-            margin-top: 15px;
-            font-weight: 600;
-        }
-
-        /* Dashboard Wrapper */
-        #dashboard-wrapper {
-            display: none;
-            flex-grow: 1;
-            width: 100%;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--primary);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            transition: all 0.3s;
-            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .logo-container {
-            padding: 20px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            height: var(--header-height);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-            display: flex;
-            align-items: center;
-        }
-
-        .logo i {
-            margin-right: 10px;
-            color: var(--accent);
-        }
-
-        .logo span {
-            color: var(--accent);
-        }
-
-        .nav-links {
-            padding: 15px 0;
-        }
-
-        .nav-links li {
-            list-style: none;
-            padding: 12px 20px;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .nav-links li:hover,
-        .nav-links li.active {
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 4px solid var(--accent);
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-links i {
-            margin-right: 10px;
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
-        /* Main Content Styles */
-        .main-container-content {
-            flex-grow: 1;
-            margin-left: var(--sidebar-width);
-            transition: margin-left 0.3s;
-            width: calc(100% - var(--sidebar-width));
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            transition: all 0.3s;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 15px 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .header h1 {
-            color: var(--dark);
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-        }
-
-        .header h1 i {
-            margin-right: 10px;
-            color: var(--secondary);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification-icon {
-            position: relative;
-            font-size: 20px;
-            color: var(--dark);
-            cursor: pointer;
-        }
-
-        .notification-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--danger);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 15px;
-            background: var(--light);
-            border-radius: 50px;
-            cursor: pointer;
-        }
-
-        .user-profile img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        /* Content Sections */
-        .content-section {
-            display: none;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .section-header h2 {
-            color: var(--dark);
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-header h2 i {
-            margin-right: 10px;
-            color: var(--secondary);
-        }
-
-        .view-all {
-            color: var(--secondary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .view-all i {
-            margin-left: 5px;
-        }
-
-        /* Stats Cards */
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 24px;
-            color: white;
-        }
-
-        .users-icon { background: #10b981; }
-        .stories-icon { background: #facc15; }
-        .listings-icon { background: #3b82f6; }
-        .pending-icon { background: var(--danger); }
-
-        .stat-info h3 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .stat-info p {
-            color: #777;
-            font-size: 14px;
-        }
-
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 700px;
-        }
-
-        table th,
-        table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        table th {
-            color: #777;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-        }
-
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status.approved {
-            background: #e6f7ee;
-            color: var(--success);
-        }
-
-        .status.pending {
-            background: #fef5e6;
-            color: var(--warning);
-        }
-
-        .status.rejected {
-            background: #fde8e6;
-            color: var(--danger);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .action-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .approve-btn {
-            background: var(--success);
-            color: white;
-        }
-
-        .reject-btn {
-            background: var(--danger);
-            color: white;
-        }
-
-        .delete-btn {
-            background: #888;
-            color: white;
-        }
-
-        .view-btn {
-            background: var(--secondary);
-            color: white;
-        }
-
-        .action-btn:hover {
-            opacity: 0.9;
-            transform: scale(1.05);
-        }
-
-        .text-truncate {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .loading-message {
-            text-align: center;
-            padding: 40px;
-            color: #555;
-            font-style: italic;
-        }
-
-        /* Modal */
-        .admin-modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .admin-modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .admin-modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: scale(0.9);
-            transition: transform 0.3s;
-            position: relative;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .admin-modal-overlay.active .admin-modal-content {
-            transform: scale(1);
-        }
-
-        .modal-close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #aaa;
-        }
-
-        .modal-detail-item {
-            margin-bottom: 15px;
-        }
-
-        .modal-detail-item strong {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--dark);
-        }
-
-        /* Form Styles */
-        .form-container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #f8fafc;
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .form-container label {
-            display: block;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .form-container input,
-        .form-container textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-container textarea {
-            resize: vertical;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .form-grid .full-width {
-            grid-column: 1 / -1;
-        }
-
-        /* Toggle Button */
-        .toggle-sidebar {
-            display: none;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 70px;
-                overflow: hidden;
-            }
-
-            .logo span,
-            .nav-links li a span {
-                display: none;
-            }
-
-            .nav-links i {
-                margin-right: 0;
-                font-size: 20px;
-            }
-
-            .main-container-content {
-                margin-left: 70px;
-                width: calc(100% - 70px);
-            }
-
-            .logo i {
-                margin-right: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .stats-container {
-                grid-template-columns: 1fr;
-            }
-
-            .header h1 {
-                font-size: 22px;
-            }
-
-            .user-profile span {
-                display: none;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .toggle-sidebar {
-                display: block;
-            }
-
-            .sidebar {
-                transform: translateX(-100%);
-                position: fixed;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-container-content {
-                margin-left: 0;
-                padding: 15px;
-                width: 100%;
-            }
-
-            .main-content {
-                padding: 0;
-            }
-
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .user-info {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Login Form -->
-    <div id="login-form-container" class="login-form-container">
-        <div class="login-card">
-            <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
-            <form id="adminLoginForm">
-                <input type="email" id="adminEmail" placeholder="Email (admin@agriconnect.com)" required>
-                <input type="password" id="adminPassword" placeholder="Password" required>
-                <button type="submit" id="loginButton">Log In</button>
-                <p id="loginMessage" style="display: none;"></p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboard-wrapper">
-        <div class="sidebar">
-            <div class="logo-container">
-                <div class="logo"><i class="fas fa-seedling"></i> Agri<span>Admin</span></div>
-            </div>
-            <ul class="nav-links">
-                <li class="active" data-target="dashboard">
-                    <a href="#"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-                </li>
-                <li data-target="pending-stories">
-                    <a href="#"><i class="fas fa-scroll"></i> <span>Story Approvals</span></a>
-                </li>
-                <li data-target="managed-stories">
-                    <a href="#"><i class="fas fa-list-alt"></i> <span>Managed Stories</span></a>
-                </li>
-                <li data-target="pending-farmers">
-                    <a href="#"><i class="fas fa-address-book"></i> <span>Farmer Listings</span></a>
-                </li>
-                <li data-target="managed-farmers">
-                    <a href="#"><i class="fas fa-list-alt"></i> <span>Managed Listings</span></a>
-                </li>
-                <li data-target="equipment-management">
-                    <a href="#"><i class="fas fa-tools"></i> <span>Equipment</span></a>
-                </li>
-                <li data-target="reviews-management">
-                    <a href="#"><i class="fas fa-star"></i> <span>Reviews</span></a>
-                </li>
-                <li data-target="comments-management">
-                    <a href="#"><i class="fas fa-comments"></i> <span>Comments</span></a>
-                </li>
-                <li data-target="scheme-management">
-                    <a href="#"><i class="fas fa-file-contract"></i> <span>Schemes</span></a>
-                </li>
-                <li data-target="articles-management">
-                    <a href="#"><i class="fas fa-newspaper"></i> <span>Articles</span></a>
-                </li>
-                <li data-target="user-management">
-                    <a href="#"><i class="fas fa-users"></i> <span>Users</span></a>
-                </li>
-                <li>
-                    <a href="#" id="logoutLink"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="main-container-content">
-            <div class="main-content">
-                <div class="header">
-                    <h1><i class="fas fa-tachometer-alt"></i> AgriConnect Control Panel</h1>
-                    <div class="user-info">
-                        <button class="toggle-sidebar">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                        <div class="notification-icon">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-count" id="pendingApprovalsCount">0</span>
-                        </div>
-                        <div class="user-profile">
-                            <img src="https://placehold.co/40x40/1e400f/ffffff?text=AD" alt="Admin">
-                            <span id="adminNameDisplay">Agri Admin</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DASHBOARD -->
-                <div id="dashboard" class="content-section active">
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-icon users-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="statTotalUsers">...</h3>
-                                <p>Total Users</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon stories-icon">
-                                <i class="fas fa-scroll"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="statPendingStories">...</h3>
-                                <p>Pending Stories</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon listings-icon">
-                                <i class="fas fa-address-card"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="statPendingFarmers">...</h3>
-                                <p>Pending Farmers</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon pending-icon">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 id="statTotalPending">...</h3>
-                                <p>Total Pending</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="content-section active">
-                        <div class="section-header">
-                            <h2><i class="fas fa-clock"></i> Latest Pending Approvals</h2>
-                            <a class="view-all" onclick="navigateTo('pending-stories')">Manage <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                        <div class="table-container">
-                            <table id="quickApprovalsTable">
-                                <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Submitted By</th>
-                                        <th>Content</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td colspan="5" class="loading-message">Loading...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PENDING STORIES -->
-                <div id="pending-stories" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-scroll"></i> Pending Stories</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="storiesTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Author</th>
-                                    <th>Location</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="5" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- MANAGED STORIES -->
-                <div id="managed-stories" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-list-alt"></i> All Stories</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="allStoriesTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Author</th>
-                                    <th>Status</th>
-                                    <th>Location</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- PENDING FARMERS -->
-                <div id="pending-farmers" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-address-book"></i> Pending Farmers</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="farmersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Farm Name</th>
-                                    <th>Crop</th>
-                                    <th>Location</th>
-                                    <th>Email</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- MANAGED FARMERS -->
-                <div id="managed-farmers" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-list-alt"></i> All Farmers</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="allFarmersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Farm Name</th>
-                                    <th>Status</th>
-                                    <th>Location</th>
-                                    <th>Email</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- EQUIPMENT -->
-                <div id="equipment-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-tools"></i> Equipment</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="equipmentTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Condition</th>
-                                    <th>Price</th>
-                                    <th>Seller</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="7" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- REVIEWS -->
-                <div id="reviews-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-star"></i> Reviews</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="reviewsTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Rating</th>
-                                    <th>Review</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- COMMENTS -->
-                <div id="comments-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-comments"></i> Comments</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="commentsTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Page</th>
-                                    <th>User</th>
-                                    <th>Comment</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="6" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- SCHEMES -->
-                <div id="scheme-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-file-contract"></i> Scheme Management</h2>
-                    </div>
-
-                    <div class="form-container" style="margin-bottom: 30px;">
-                        <form id="addSchemeForm">
-                            <div class="form-grid">
-                                <div>
-                                    <label>Scheme Name</label>
-                                    <input type="text" id="schName" required>
-                                </div>
-                                <div>
-                                    <label>Category</label>
-                                    <input type="text" id="schCategory" required>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Description</label>
-                                    <textarea id="schDesc" rows="3" required></textarea>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Eligibility</label>
-                                    <input type="text" id="schElig" required>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Documents</label>
-                                    <textarea id="schDocs" placeholder="Comma-separated"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Steps</label>
-                                    <textarea id="schSteps" placeholder="Comma-separated"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div>
-                                    <label>Link (URL)</label>
-                                    <input type="url" id="schLink">
-                                </div>
-                                <div>
-                                    <label>State</label>
-                                    <input type="text" id="schState" placeholder="Central">
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Help Link</label>
-                                    <input type="url" id="schHelpLink" placeholder="https://wa.me/...">
-                                </div>
-                            </div>
-                            <input type="hidden" id="schemeEditId">
-                            <button type="submit" class="action-btn approve-btn" style="width:100%; padding:15px;">
-                                <i class="fas fa-plus"></i> Save Scheme
-                            </button>
-                        </form>
-                    </div>
-
-                    <div style="margin-top:20px;">
-                        <h3 style="margin-bottom:15px;">Active Schemes</h3>
-                        <div style="overflow-x:auto; background:white; border-radius:8px; border:1px solid #e2e8f0;">
-                            <table style="width:100%; border-collapse:collapse;">
-                                <thead>
-                                    <tr style="background:#f1f5f9; text-align:left;">
-                                        <th style="padding:12px;">Name</th>
-                                        <th style="padding:12px;">Category</th>
-                                        <th style="padding:12px; text-align:center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminSchemeTableBody">
-                                    <tr><td colspan="3" style="text-align:center; padding:20px;">Loading...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ARTICLES -->
-                <div id="articles-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-newspaper"></i> Article Management</h2>
-                    </div>
-
-                    <div class="form-container" style="margin-bottom:30px;">
-                        <form id="articleForm">
-                            <div class="form-grid">
-                                <div>
-                                    <label>Title</label>
-                                    <input type="text" id="artTitle" required>
-                                </div>
-                                <div>
-                                    <label>Category</label>
-                                    <input type="text" id="artCategory" required>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="full-width">
-                                    <label>Content</label>
-                                    <textarea id="artContent" rows="8" required></textarea>
-                                </div>
-                            </div>
-                            <div class="form-grid">
-                                <div>
-                                    <label>Publish Date</label>
-                                    <input type="datetime-local" id="artDateTime" required>
-                                </div>
-                                <div>
-                                    <label>Image URL</label>
-                                    <input type="url" id="artImage" placeholder="https://example.com/image.jpg">
-                                </div>
-                            </div>
-                            <input type="hidden" id="articleEditId">
-                            <button type="submit" class="action-btn approve-btn" style="width:100%; padding:15px;">
-                                <i class="fas fa-paper-plane"></i> Publish Article
-                            </button>
-                        </form>
-                    </div>
-
-                    <div style="margin-top:20px;">
-                        <h3 style="margin-bottom:15px;">Published Articles</h3>
-                        <div style="overflow-x:auto; background:white; border-radius:8px; border:1px solid #e2e8f0;">
-                            <table style="width:100%; border-collapse:collapse;">
-                                <thead>
-                                    <tr style="background:#f1f5f9; text-align:left;">
-                                        <th style="padding:12px;">Title</th>
-                                        <th style="padding:12px;">Category</th>
-                                        <th style="padding:12px; text-align:center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminArticleTableBody">
-                                    <tr><td colspan="3" style="text-align:center; padding:20px;">Loading...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- USERS -->
-                <div id="user-management" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-users"></i> User Management</h2>
-                    </div>
-                    <div class="table-container">
-                        <table id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Location</th>
-                                    <th>Experience</th>
-                                    <th>Registered</th>
-                                    <th>Contact</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="7" class="loading-message">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL -->
-    <div id="adminModal" class="admin-modal-overlay">
-        <div class="admin-modal-content">
-            <button id="closeModalBtn" class="modal-close-btn">&times;</button>
-            <h2 id="modalTitle" style="margin-bottom:20px; color:var(--dark);"></h2>
-            <div id="modalBodyContent"></div>
-        </div>
-    </div>
-
-    <script>
-        // ============================================================
-        // CONFIGURATION - PRODUCTION READY
-        // ============================================================
-        const ADMIN_USER_ID = 99999;
-        const ADMIN_STORAGE_KEY = 'agriAdminUser';
-        const PENDING_LIMIT_QUICK_VIEW = 5;
-
-        // Using relative URLs - NO localhost hardcoding
-        // All API calls will use /api/... relative paths
-
-        // ============================================================
-        // STATE
-        // ============================================================
-        let allPendingStories = [];
-        let allPendingFarmers = [];
-        let allManagedStories = [];
-        let allManagedFarmers = [];
-        let allEquipment = [];
-        let allReviews = [];
-        let allComments = [];
-
-        // ============================================================
-        // AUTHENTICATION
-        // ============================================================
-        function checkAuth() {
-            try {
-                const userData = localStorage.getItem(ADMIN_STORAGE_KEY);
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    showDashboard(user.name || 'Agri Admin');
-                    loadAllAdminData();
-                } else {
-                    document.getElementById('login-form-container').style.display = 'flex';
-                    document.getElementById('dashboard-wrapper').style.display = 'none';
-                }
-            } catch (e) {
-                localStorage.removeItem(ADMIN_STORAGE_KEY);
-                document.getElementById('login-form-container').style.display = 'flex';
-                document.getElementById('dashboard-wrapper').style.display = 'none';
-            }
-        }
-
-        function showDashboard(adminName) {
-            document.getElementById('login-form-container').style.display = 'none';
-            document.getElementById('dashboard-wrapper').style.display = 'flex';
-            document.getElementById('adminNameDisplay').textContent = adminName || 'Agri Admin';
-        }
-
-        async function handleAdminLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value.trim();
-            const messageEl = document.getElementById('loginMessage');
-
-            messageEl.style.display = 'block';
-            messageEl.style.color = '#38a169';
-            messageEl.textContent = 'Logging in...';
-
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(data.user));
-                    messageEl.style.color = '#38a169';
-                    messageEl.textContent = 'Login successful!';
-
-                    setTimeout(() => {
-                        showDashboard(data.user.name);
-                        loadAllAdminData();
-                    }, 500);
-                } else {
-                    messageEl.style.color = '#ef4444';
-                    messageEl.textContent = data.message || 'Invalid credentials.';
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                messageEl.style.color = '#ef4444';
-                messageEl.textContent = 'Unable to connect to server. Please try again.';
-            }
-        }
-
-        function handleLogout(e) {
-            e.preventDefault();
-            localStorage.removeItem(ADMIN_STORAGE_KEY);
-            window.location.reload();
-        }
-
-        // ============================================================
-        // API HELPERS - All using relative URLs
-        // ============================================================
-        async function apiFetch(endpoint, options = {}) {
-            if (!localStorage.getItem(ADMIN_STORAGE_KEY)) {
-                checkAuth();
-                return null;
-            }
-
-            try {
-                const url = endpoint.startsWith('/api/') ? endpoint : `/api/admin/${endpoint}`;
-                console.log('Fetching:', url);
-
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(options.headers || {})
-                    }
-                });
-
-                if (!response.ok) {
-                    const text = await response.text();
-                    try {
-                        const errorData = JSON.parse(text);
-                        throw new Error(errorData.message || `HTTP ${response.status}`);
-                    } catch {
-                        throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
-                    }
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return await response.json();
-                }
-                return { success: true, data: await response.text() };
-            } catch (error) {
-                console.error(`API Error (${endpoint}):`, error);
-                showMessage('Connection Error', 'Unable to connect to the server. Please try again.');
-                return null;
-            }
-        }
-
-        // ============================================================
-        // UTILITY FUNCTIONS
-        // ============================================================
-        function showMessage(title, message) {
-            const modal = document.getElementById('adminModal');
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalBodyContent').innerHTML = `<p>${message}</p>`;
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('adminModal').classList.remove('active');
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            try {
-                const date = new Date(dateString);
-                return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
-            } catch {
-                return 'N/A';
-            }
-        }
-
-        async function updateStatus(type, id, status) {
-            if (!confirm(`Are you sure you want to ${status} this ${type}?`)) return false;
-
-            try {
-                const result = await apiFetch(`${type}/update-status`, {
-                    method: 'POST',
-                    body: JSON.stringify({ id, status })
-                });
-
-                if (result && result.success) {
-                    showMessage('Success', `${type} ${status} successfully!`);
-                    await loadAllAdminData();
-                    return true;
-                } else {
-                    showMessage('Error', result?.message || 'Update failed.');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Update error:', error);
-                showMessage('Error', 'Failed to update status.');
-                return false;
-            }
-        }
-
-        async function deleteItem(type, id) {
-            if (!confirm(`Delete this ${type}? This cannot be undone.`)) return false;
-
-            try {
-                // Different delete endpoints
-                let url;
-                if (type === 'review') {
-                    url = `/api/reviews/${id}/${ADMIN_USER_ID}`;
-                } else if (type === 'comment') {
-                    url = `/api/comments/${id}/${ADMIN_USER_ID}`;
-                } else {
-                    url = `/api/admin/${type}/${id}`;
-                }
-
-                const response = await fetch(url, { method: 'DELETE' });
-                const result = await response.json();
-
-                if (result && result.success) {
-                    showMessage('Success', `${type} deleted successfully!`);
-                    await loadAllAdminData();
-                    return true;
-                } else {
-                    showMessage('Error', result?.message || 'Delete failed.');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                showMessage('Error', 'Failed to delete item.');
-                return false;
-            }
-        }
-
-        // ============================================================
-        // DATA LOADING
-        // ============================================================
-        async function loadDashboardStats() {
-            const stats = await apiFetch('stats');
-            if (stats) {
-                document.getElementById('statTotalUsers').textContent = (stats.totalUsers || 0).toLocaleString();
-                document.getElementById('statPendingStories').textContent = (stats.pendingStories || 0).toLocaleString();
-                document.getElementById('statPendingFarmers').textContent = (stats.pendingFarmers || 0).toLocaleString();
-                document.getElementById('statTotalPending').textContent = (stats.pendingApprovals || 0).toLocaleString();
-                document.getElementById('pendingApprovalsCount').textContent = (stats.pendingApprovals || 0).toLocaleString();
-            }
-        }
-
-        async function loadAllApprovalItems() {
-            const [pendingStories, pendingFarmers, managedStories, managedFarmers, equipment] = await Promise.all([
-                apiFetch('stories/pending'),
-                apiFetch('farmers/pending'),
-                apiFetch('stories/all'),
-                apiFetch('farmers/all'),
-                apiFetch('equipment/all')
-            ]);
-
-            allPendingStories = pendingStories || [];
-            allPendingFarmers = pendingFarmers || [];
-            allManagedStories = managedStories || [];
-            allManagedFarmers = managedFarmers || [];
-            allEquipment = equipment || [];
-
-            renderQuickApprovals();
-            renderPendingStoriesTable();
-            renderManagedStoriesTable();
-            renderPendingFarmersTable();
-            renderManagedFarmersTable();
-            renderEquipmentTable();
-        }
-
-        async function loadReviewAndCommentData() {
-            try {
-                const [reviews, comments] = await Promise.all([
-                    fetch('/api/reviews').then(r => r.json()).catch(() => []),
-                    apiFetch('comments/all')
-                ]);
-                allReviews = reviews || [];
-                allComments = comments || [];
-                renderReviewsTable();
-                renderCommentsTable();
-            } catch (error) {
-                console.error('Error loading reviews/comments:', error);
-                allReviews = [];
-                allComments = [];
-                renderReviewsTable();
-                renderCommentsTable();
-            }
-        }
-
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
-        function renderQuickApprovals() {
-            const tbody = document.querySelector('#quickApprovalsTable tbody');
-            const combined = [
-                ...allPendingStories.map(s => ({ ...s, type: 'Story', content: s.story_text, submitter: s.author_name })),
-                ...allPendingFarmers.map(f => ({ ...f, type: 'Farmer', content: f.farm_name + ' - ' + f
-                        .crop_specialization, submitter: f.farm_name }))
-            ].sort((a, b) => new Date(a.submission_date) - new Date(b.submission_date));
-
-            if (combined.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="loading-message">No pending approvals.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = combined.slice(0, PENDING_LIMIT_QUICK_VIEW).map(item => `
-                <tr>
-                    <td><span class="status pending">${item.type}</span></td>
-                    <td>${item.submitter}</td>
-                    <td class="text-truncate" title="${item.content}">${item.content.substring(0, 50)}...</td>
-                    <td>${formatDate(item.submission_date)}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="${item.type.toLowerCase()}" data-id="${item.id}">View</button>
-                            <button class="action-btn approve-btn" data-type="${item.type.toLowerCase()}" data-id="${item.id}">Approve</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderPendingStoriesTable() {
-            const tbody = document.querySelector('#storiesTable tbody');
-            if (allPendingStories.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="loading-message">No pending stories.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allPendingStories.map(s => `
-                <tr>
-                    <td>#${s.id}</td>
-                    <td>${s.author_name}</td>
-                    <td>${s.location}</td>
-                    <td>${formatDate(s.submission_date)}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="story" data-id="${s.id}">View</button>
-                            <button class="action-btn approve-btn" data-type="story" data-id="${s.id}">Approve</button>
-                            <button class="action-btn reject-btn" data-type="story" data-id="${s.id}">Reject</button>
-                            <button class="action-btn delete-btn" data-type="story" data-id="${s.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderManagedStoriesTable() {
-            const tbody = document.querySelector('#allStoriesTable tbody');
-            if (allManagedStories.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No stories found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allManagedStories.map(s => `
-                <tr>
-                    <td>#${s.id}</td>
-                    <td>${s.author_name}</td>
-                    <td><span class="status ${s.status.toLowerCase()}">${s.status}</span></td>
-                    <td>${s.location}</td>
-                    <td>${formatDate(s.submission_date)}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="story" data-id="${s.id}">View</button>
-                            <button class="action-btn delete-btn" data-type="story" data-id="${s.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderPendingFarmersTable() {
-            const tbody = document.querySelector('#farmersTable tbody');
-            if (allPendingFarmers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No pending farmers.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allPendingFarmers.map(f => `
-                <tr>
-                    <td>#${f.id}</td>
-                    <td>${f.farm_name}</td>
-                    <td>${f.crop_specialization}</td>
-                    <td>${f.farm_location}</td>
-                    <td>${f.contact_email}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="farmer" data-id="${f.id}">View</button>
-                            <button class="action-btn approve-btn" data-type="farmer" data-id="${f.id}">Approve</button>
-                            <button class="action-btn reject-btn" data-type="farmer" data-id="${f.id}">Reject</button>
-                            <button class="action-btn delete-btn" data-type="farmer" data-id="${f.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderManagedFarmersTable() {
-            const tbody = document.querySelector('#allFarmersTable tbody');
-            if (allManagedFarmers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No farmers found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allManagedFarmers.map(f => `
-                <tr>
-                    <td>#${f.id}</td>
-                    <td>${f.farm_name}</td>
-                    <td><span class="status ${f.status.toLowerCase()}">${f.status}</span></td>
-                    <td>${f.farm_location}</td>
-                    <td>${f.contact_email}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="farmer" data-id="${f.id}">View</button>
-                            <button class="action-btn delete-btn" data-type="farmer" data-id="${f.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderEquipmentTable() {
-            const tbody = document.querySelector('#equipmentTable tbody');
-            if (allEquipment.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading-message">No equipment found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allEquipment.map(e => `
-                <tr>
-                    <td>#${e.id}</td>
-                    <td>${e.name}</td>
-                    <td>${e.category}</td>
-                    <td>${e.condition_status}</td>
-                    <td>$${Number(e.price).toFixed(2)}</td>
-                    <td>${e.seller_name}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="equipment" data-id="${e.id}">View</button>
-                            <button class="action-btn delete-btn" data-type="equipment" data-id="${e.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderReviewsTable() {
-            const tbody = document.querySelector('#reviewsTable tbody');
-            if (allReviews.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No reviews found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allReviews.map(r => `
-                <tr>
-                    <td>#${r.id}</td>
-                    <td>${r.authorName}</td>
-                    <td>${r.rating} <i class="fas fa-star" style="color:gold;"></i></td>
-                    <td class="text-truncate" title="${r.text}">${r.text.substring(0, 50)}...</td>
-                    <td>${formatDate(r.timestamp)}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="review" data-id="${r.id}">View</button>
-                            <button class="action-btn delete-btn" data-type="review" data-id="${r.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderCommentsTable() {
-            const tbody = document.querySelector('#commentsTable tbody');
-            if (allComments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="loading-message">No comments found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = allComments.map(c => `
-                <tr>
-                    <td>#${c.id}</td>
-                    <td>${c.page_identifier}</td>
-                    <td>${c.authorName}</td>
-                    <td class="text-truncate" title="${c.text}">${c.text.substring(0, 50)}...</td>
-                    <td>${formatDate(c.timestamp)}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view-btn" data-type="comment" data-id="${c.id}">View</button>
-                            <button class="action-btn delete-btn" data-type="comment" data-id="${c.id}">Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // ============================================================
-        // LOAD USERS
-        // ============================================================
-        async function loadUsersTable() {
-            const users = await apiFetch('users');
-            const tbody = document.querySelector('#usersTable tbody');
-            if (!users || users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading-message">No users found.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = users.map(u => `
-                <tr>
-                    <td>#${u.id}</td>
-                    <td>${u.name}</td>
-                    <td>${u.email}</td>
-                    <td>${u.location || 'N/A'}</td>
-                    <td>${u.years_experience || 0} yrs</td>
-                    <td>${formatDate(u.created_at)}</td>
-                    <td>${u.contact_number || 'N/A'}</td>
-                </tr>
-            `).join('');
-        }
-
-        // ============================================================
-        // SCHEME MANAGEMENT
-        // ============================================================
-        async function loadSchemesTable() {
-            const tbody = document.getElementById('adminSchemeTableBody');
-            try {
-                const res = await fetch('/api/schemes');
-                const schemes = await res.json();
-                if (!schemes || schemes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No schemes found.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = schemes.map(s => `
-                    <tr>
-                        <td style="padding:12px; font-weight:600;">${s.name}</td>
-                        <td style="padding:12px;">${s.category}</td>
-                        <td style="padding:12px; text-align:center;">
-                            <button onclick='fillFormForEdit(${JSON.stringify(s)})' style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:6px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button onclick="deleteScheme(${s.id})" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:6px 10px; border-radius:4px; cursor:pointer;">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Failed to load schemes.</td></tr>';
-            }
-        }
-
-        function fillFormForEdit(scheme) {
-            document.getElementById('schName').value = scheme.name;
-            document.getElementById('schCategory').value = scheme.category;
-            document.getElementById('schDesc').value = scheme.description;
-            document.getElementById('schElig').value = scheme.eligibility;
-            document.getElementById('schDocs').value = scheme.documents || '';
-            document.getElementById('schSteps').value = scheme.roadmap || '';
-            document.getElementById('schLink').value = scheme.link || '';
-            document.getElementById('schState').value = scheme.state || '';
-            document.getElementById('schHelpLink').value = scheme.help_link || '';
-            document.getElementById('schemeEditId').value = scheme.id;
-
-            const btn = document.querySelector('#addSchemeForm button[type="submit"]');
-            btn.innerHTML = '<i class="fas fa-sync"></i> Update Scheme';
-            btn.style.background = '#3b82f6';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function deleteScheme(id) {
-            if (!confirm("Delete this scheme permanently?")) return;
-            try {
-                const res = await fetch(`/api/admin/schemes/${id}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.success) {
-                    showMessage('Success', 'Scheme deleted!');
-                    loadSchemesTable();
-                    loadDashboardStats();
-                }
-            } catch (err) {
-                showMessage('Error', 'Delete failed.');
-            }
-        }
-
-        document.getElementById('addSchemeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const editId = document.getElementById('schemeEditId').value;
-            const data = {
-                id: editId || null,
-                name: document.getElementById('schName').value,
-                category: document.getElementById('schCategory').value,
-                description: document.getElementById('schDesc').value,
-                eligibility: document.getElementById('schElig').value,
-                documents: document.getElementById('schDocs').value,
-                roadmap: document.getElementById('schSteps').value,
-                link: document.getElementById('schLink').value,
-                state: document.getElementById('schState').value,
-                help_link: document.getElementById('schHelpLink').value || '#'
-            };
-
-            try {
-                const res = await fetch('/api/admin/schemes/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    showMessage('Success', editId ? 'Scheme updated!' : 'Scheme added!');
-                    document.getElementById('addSchemeForm').reset();
-                    document.getElementById('schemeEditId').value = '';
-                    const btn = document.querySelector('#addSchemeForm button[type="submit"]');
-                    btn.innerHTML = '<i class="fas fa-plus"></i> Save Scheme';
-                    btn.style.background = '';
-                    loadSchemesTable();
-                    loadDashboardStats();
-                } else {
-                    showMessage('Error', result.message || 'Save failed.');
-                }
-            } catch (err) {
-                showMessage('Error', 'Could not save scheme.');
-            }
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
+const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+const cors = require('cors');
+const axios = require('axios');
+
+// --- Configuration ---
+const saltRounds = 10;
+const ADMIN_USER_ID = 99999;
+const ADMIN_EMAIL = 'admin@agriconnect.com';
+const ADMIN_PASSWORD_HASH = '$2b$10$77o11F2iW/jG1G5zE8z2w.z5/7qA9r3k5y6L/L1H.Q/1A.T/9f0k'; // Hashed "admin123"
+
+// --- PRODUCTION URL HELPER ---
+function getPublicUrl(req, filePath) {
+    if (!filePath) return null;
+    // If it's already a full URL, return it
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        return filePath;
+    }
+    // Remove leading slash if present for consistency
+    const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    // Check if PUBLIC_API_URL is set (Render environment variable)
+    const baseUrl = process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
+    return `${baseUrl}/${cleanPath}`;
+}
+
+// --- DATABASE SETUP ---
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: {
+        rejectUnauthorized: false
+    },
+    waitForConnections: true,
+    connectionLimit: 10
+});
+
+const db = pool;
+
+// --- MULTER STORAGE CONFIGURATION ---
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'public/uploads');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage: storage });
+
+// --- CORS CONFIGURATION ---
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+].filter(Boolean);
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked for origin:', origin);
+            callback(null, true); // Allow anyway for debugging
+        }
+    },
+    credentials: true
+}));
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// --- DATABASE INITIALIZATION ---
+async function initializeDatabase() {
+    try {
+        const connection = await db.getConnection();
+        console.log('✅ Successfully connected to MySQL database.');
+        console.log(`📊 Database: ${process.env.DB_NAME} on ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+        connection.release();
+
+        // Create all necessary tables
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                location VARCHAR(255),
+                contact_number VARCHAR(20),
+                years_experience INT DEFAULT 0,
+                profile_picture_url VARCHAR(255) DEFAULT '/uploads/default.png',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS success_stories (
+                id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+                user_id INT,
+                author_name VARCHAR(255) NOT NULL,
+                story_text TEXT NOT NULL,
+                location VARCHAR(255),
+                submission_date DATE DEFAULT (CURRENT_DATE()),
+                status VARCHAR(50) DEFAULT 'pending'
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS farmer_directory (
+                id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+                user_id INT,
+                farm_name VARCHAR(255) NOT NULL,
+                crop_specialization VARCHAR(255) NOT NULL,
+                farm_location VARCHAR(255) NOT NULL,
+                contact_email VARCHAR(255),
+                submission_date DATE DEFAULT (CURRENT_DATE()),
+                status VARCHAR(50) DEFAULT 'pending'
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS equipment (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                seller_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                category VARCHAR(100),
+                price DECIMAL(10, 2),
+                description TEXT,
+                image_url VARCHAR(255),
+                condition_status VARCHAR(50)
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS schemes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                eligibility TEXT,
+                link VARCHAR(255),
+                state VARCHAR(100),
+                category VARCHAR(100),
+                documents TEXT,
+                roadmap TEXT,
+                help_link VARCHAR(255)
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_schemes (
+                user_id INT NOT NULL,
+                scheme_id INT NOT NULL,
+                PRIMARY KEY (user_id, scheme_id)
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                parent_id INT NULL,
+                page_identifier VARCHAR(255) NOT NULL,
+                text TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                rating INT NOT NULL,
+                text TEXT NOT NULL,
+                page_name VARCHAR(255) DEFAULT 'home',
+                username VARCHAR(255) DEFAULT 'Anonymous',
+                user_photo VARCHAR(255) DEFAULT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS hub_listings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                author_name VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                category VARCHAR(100) NOT NULL,
+                exchange_type VARCHAR(50) DEFAULT 'normal',
+                target_size INT DEFAULT 1,
+                location VARCHAR(255) NOT NULL,
+                description TEXT NOT NULL,
+                contact_number VARCHAR(20),
+                image_url VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS hub_group_members (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                listing_id INT NOT NULL,
+                user_id INT NOT NULL,
+                user_name VARCHAR(255),
+                user_contact VARCHAR(20),
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_member (listing_id, user_id)
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS articles (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                category VARCHAR(100),
+                content TEXT,
+                image_url VARCHAR(255),
+                published_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_crop_plans (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                crop_name VARCHAR(255) NOT NULL,
+                sowing_date DATE,
+                harvest_date DATE,
+                current_stage VARCHAR(100),
+                progress_percent INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log('✅ All database tables verified/created successfully.');
+    } catch (err) {
+        console.error('❌ FATAL ERROR during database initialization:');
+        console.error(`   Message: ${err.message}`);
+        console.error(`   Code: ${err.code || 'N/A'}`);
+        console.error(`   Errno: ${err.errno || 'N/A'}`);
+        console.error(`   Host: ${process.env.DB_HOST}`);
+        console.error(`   Database: ${process.env.DB_NAME}`);
+        // DO NOT log password
+        process.exit(1);
+    }
+}
+
+initializeDatabase();
+
+// --- HEALTH ENDPOINT ---
+app.get('/api/health', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Agri Connect API is running',
+        environment: process.env.NODE_ENV || 'production',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// --- DEBUG ENDPOINT (Public Data Counts Only) ---
+app.get('/api/debug/public-data', async (req, res) => {
+    try {
+        const [farmers] = await db.query('SELECT COUNT(*) as count FROM farmer_directory');
+        const [approvedFarmers] = await db.query('SELECT COUNT(*) as count FROM farmer_directory WHERE status = "approved"');
+        const [stories] = await db.query('SELECT COUNT(*) as count FROM success_stories');
+        const [approvedStories] = await db.query('SELECT COUNT(*) as count FROM success_stories WHERE status = "approved"');
+        const [reviews] = await db.query('SELECT COUNT(*) as count FROM reviews');
+
+        res.json({
+            farmers: farmers[0].count,
+            approvedFarmers: approvedFarmers[0].count,
+            stories: stories[0].count,
+            approvedStories: approvedStories[0].count,
+            reviews: reviews[0].count
         });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error.' });
+    }
+});
 
-        // ============================================================
-        // ARTICLE MANAGEMENT
-        // ============================================================
-        async function loadArticlesTable() {
-            const tbody = document.getElementById('adminArticleTableBody');
-            try {
-                const res = await fetch('/api/articles');
-                const articles = await res.json();
-                if (!articles || articles.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No articles found.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = articles.map(a => `
-                    <tr>
-                        <td style="padding:10px; font-weight:600;">${a.title}</td>
-                        <td style="padding:10px;">${a.category}</td>
-                        <td style="padding:10px; text-align:center;">
-                            <button onclick='fillArticleFormForEdit(${JSON.stringify(a)})' class="action-btn view-btn">Edit</button>
-                            <button onclick="deleteArticle(${a.id})" class="action-btn reject-btn">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Failed to load articles.</td></tr>';
-            }
+// --- ROUTE HANDLER FOR ROOT URL ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'agri2.html'));
+});
+
+// ======== AUTHENTICATION ROUTES ========
+
+// /signup
+app.post('/signup', async (req, res) => {
+    const { name, email, location, contact_number, password, years_experience } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, saltRounds);
+        const sql = 'INSERT INTO users (name, email, location, contact_number, password, years_experience) VALUES (?, ?, ?, ?, ?, ?)';
+        const [result] = await db.query(sql, [name, email, location, contact_number, hash, years_experience || 0]);
+        const [rows] = await db.query('SELECT id, name, email, location, contact_number, profile_picture_url, years_experience FROM users WHERE id = ?', [result.insertId]);
+
+        res.status(200).json({ success: true, message: 'Account created successfully!', user: rows[0] });
+    } catch (err) {
+        const message = err.errno === 1062 ? 'Email address already registered.' : 'Database error during signup.';
+        res.status(500).json({ success: false, message: message });
+    }
+});
+
+// /login (Frontend user login)
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const sql = 'SELECT id, name, email, password, location, contact_number, profile_picture_url, years_experience FROM users WHERE email = ?';
+        const [results] = await db.query(sql, [email]);
+
+        if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        const user = results[0];
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (isMatch) {
+            const { password: userPasswordHash, ...userWithoutPassword } = user;
+            res.status(200).json({ success: true, message: 'Login successful!', user: userWithoutPassword });
+        } else {
+            res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error during login.' });
+    }
+});
 
-        function fillArticleFormForEdit(article) {
-            document.getElementById('artTitle').value = article.title;
-            document.getElementById('artCategory').value = article.category;
-            document.getElementById('artContent').value = article.content;
-            document.getElementById('artImage').value = article.image_url || '';
-            document.getElementById('articleEditId').value = article.id;
+// Admin Login
+app.post('/api/admin/login', async (req, res) => {
+    const { email, password } = req.body;
 
-            if (article.published_at) {
-                const d = new Date(article.published_at);
-                document.getElementById('artDateTime').value = d.toISOString().slice(0, 16);
-            }
+    if (email !== ADMIN_EMAIL) {
+        return res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
+    }
 
-            const btn = document.getElementById('saveArtBtn');
-            btn.innerHTML = '<i class="fas fa-sync"></i> Update Article';
-            btn.style.background = '#3b82f6';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    const ADMIN_CLEAR_PASSWORD = 'admin123';
+    const isMatch = (password === ADMIN_CLEAR_PASSWORD);
 
-        async function deleteArticle(id) {
-            if (!confirm("Delete this article permanently?")) return;
-            try {
-                const res = await fetch(`/api/admin/articles/${id}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.success) {
-                    showMessage('Success', 'Article deleted!');
-                    loadArticlesTable();
-                }
-            } catch (err) {
-                showMessage('Error', 'Delete failed.');
-            }
-        }
-
-        document.getElementById('articleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const editId = document.getElementById('articleEditId').value;
-            const data = {
-                id: editId || null,
-                title: document.getElementById('artTitle').value,
-                category: document.getElementById('artCategory').value,
-                content: document.getElementById('artContent').value,
-                image_url: document.getElementById('artImage').value,
-                date: document.getElementById('artDateTime').value
-            };
-
-            try {
-                const res = await fetch('/api/admin/articles/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    showMessage('Success', editId ? 'Article updated!' : 'Article published!');
-                    document.getElementById('articleForm').reset();
-                    document.getElementById('articleEditId').value = '';
-                    const btn = document.getElementById('saveArtBtn');
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publish Article';
-                    btn.style.background = '';
-                    loadArticlesTable();
-                } else {
-                    showMessage('Error', result.message || 'Save failed.');
-                }
-            } catch (err) {
-                showMessage('Error', 'Could not save article.');
-            }
-        });
-
-        // ============================================================
-        // NAVIGATION
-        // ============================================================
-        window.navigateTo = function(sectionId) {
-            document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
-            const navItem = document.querySelector(`[data-target="${sectionId}"]`);
-            if (navItem) navItem.classList.add('active');
-
-            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-            const section = document.getElementById(sectionId);
-            if (section) section.classList.add('active');
-
-            // Load data when switching tabs
-            switch (sectionId) {
-                case 'user-management':
-                    loadUsersTable();
-                    break;
-                case 'reviews-management':
-                    renderReviewsTable();
-                    break;
-                case 'comments-management':
-                    renderCommentsTable();
-                    break;
-                case 'equipment-management':
-                    renderEquipmentTable();
-                    break;
-                case 'scheme-management':
-                    loadSchemesTable();
-                    break;
-                case 'articles-management':
-                    loadArticlesTable();
-                    break;
-            }
+    if (isMatch) {
+        const adminUser = {
+            id: ADMIN_USER_ID,
+            name: 'Agri Admin',
+            email: ADMIN_EMAIL,
+            isAuthenticated: true
         };
+        res.status(200).json({ success: true, message: 'Admin login successful!', user: adminUser });
+    } else {
+        res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
+    }
+});
 
-        // ============================================================
-        // MAIN LOAD FUNCTION
-        // ============================================================
-        async function loadAllAdminData() {
-            try {
-                await loadDashboardStats();
-                await loadAllApprovalItems();
-                await loadReviewAndCommentData();
-                await loadSchemesTable();
-                await loadArticlesTable();
+// ======== USER PROFILE ROUTES ========
 
-                if (document.getElementById('user-management').classList.contains('active')) {
-                    await loadUsersTable();
+// Upload Profile Picture
+app.post('/api/upload-profile-picture', upload.single('profileImage'), async (req, res) => {
+    const userId = req.body.userId;
+    if (!req.file || !userId) return res.status(400).json({ success: false, message: 'No file or user ID provided.' });
+
+    const imageUrl = '/uploads/' + req.file.filename;
+    try {
+        const sql = 'UPDATE users SET profile_picture_url = ? WHERE id = ?';
+        await db.query(sql, [imageUrl, userId]);
+
+        const fullImageUrl = getPublicUrl(req, imageUrl);
+        res.status(200).json({ success: true, message: 'Profile picture updated!', profile_picture_url: fullImageUrl });
+    } catch (err) {
+        fs.unlink(req.file.path, (unlinkErr) => { if (unlinkErr) console.error('Error deleting failed upload:', unlinkErr); });
+        res.status(500).json({ success: false, message: 'Database update failed.' });
+    }
+});
+
+// Get User by ID
+app.get('/api/user/:id', async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT id, name, email, contact_number, location, years_experience, profile_picture_url 
+             FROM users 
+             WHERE id = ?`,
+            [req.params.id]
+        );
+
+        if (rows.length === 0) {
+            return res.json(null);
+        }
+
+        // Convert profile picture URL to full URL
+        if (rows[0].profile_picture_url) {
+            rows[0].profile_picture_url = getPublicUrl(req, rows[0].profile_picture_url);
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('USER FETCH ERROR:', err);
+        res.status(500).json(null);
+    }
+});
+
+// ======== FARMER DIRECTORY ROUTES ========
+
+// Submit Farmer Directory Listing
+app.post('/api/submit-farmer-listing', async (req, res) => {
+    const { userId, farmName, cropSpecialization, farmLocation, contactEmail } = req.body;
+    const sql = `INSERT INTO farmer_directory (user_id, farm_name, crop_specialization, farm_location, contact_email, status) VALUES (?, ?, ?, ?, ?, 'pending');`;
+    try {
+        await db.query(sql, [userId, farmName, cropSpecialization, farmLocation, contactEmail]);
+        res.status(200).json({ success: true, message: 'Listing submitted successfully.' });
+    } catch (err) {
+        console.error('Error submitting farmer listing:', err);
+        res.status(500).json({ success: false, message: 'Failed to submit listing.' });
+    }
+});
+
+// Fetch User's Submitted Farmer Listings
+app.get('/api/my-farmer-listings/:userId', async (req, res) => {
+    try {
+        const sql = `
+            SELECT farm_name, crop_specialization, farm_location, status, submission_date 
+            FROM farmer_directory 
+            WHERE user_id = ? 
+            ORDER BY submission_date DESC
+        `;
+        const [listings] = await db.query(sql, [req.params.userId]);
+        res.status(200).json(listings);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Failed to load user listings.' });
+    }
+});
+
+// GET Approved Farmers - FIXED for production
+app.get('/api/approved-farmers', async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                f.id,
+                f.user_id,
+                f.farm_name,
+                f.crop_specialization,
+                f.farm_location,
+                f.contact_email,
+                f.submission_date,
+                f.status,
+                u.name AS author_name,
+                u.email,
+                u.contact_number,
+                u.location AS user_location,
+                u.years_experience,
+                u.profile_picture_url
+            FROM farmer_directory f
+            LEFT JOIN users u ON f.user_id = u.id
+            WHERE f.status = 'approved'
+            ORDER BY f.submission_date DESC
+        `;
+        const [farmers] = await db.query(sql);
+
+        // Convert profile picture URLs to full URLs
+        const processedFarmers = farmers.map(farmer => {
+            if (farmer.profile_picture_url) {
+                farmer.profile_picture_url = getPublicUrl(req, farmer.profile_picture_url);
+            }
+            return farmer;
+        });
+
+        console.log(`✅ GET /api/approved-farmers: ${processedFarmers.length} farmers returned`);
+        res.status(200).json(processedFarmers);
+    } catch (err) {
+        console.error('❌ Error fetching approved farmers:', err);
+        res.status(500).json({ success: false, message: 'Failed to load farmer directory from database.' });
+    }
+});
+
+// ======== SUCCESS STORIES ROUTES ========
+
+// Submit Success Story
+app.post('/api/submit-story', async (req, res) => {
+    const { userId, authorName, storyText, location } = req.body;
+    const sql = `INSERT INTO success_stories (user_id, author_name, story_text, location, status) VALUES (?, ?, ?, ?, 'pending');`;
+    try {
+        await db.query(sql, [userId, authorName, storyText, location]);
+        res.status(200).json({ success: true, message: 'Story submitted successfully.' });
+    } catch (err) {
+        console.error('Error submitting story:', err);
+        res.status(500).json({ success: false, message: 'Failed to submit story.' });
+    }
+});
+
+// GET Approved Success Stories - FIXED for production
+app.get('/api/success-stories', async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                ss.id,
+                ss.user_id,
+                ss.author_name,
+                ss.story_text,
+                ss.location,
+                ss.submission_date,
+                ss.status,
+                u.email,
+                u.contact_number,
+                u.years_experience,
+                u.profile_picture_url
+            FROM success_stories ss
+            LEFT JOIN users u ON ss.user_id = u.id
+            WHERE ss.status = 'approved'
+            ORDER BY ss.submission_date DESC
+        `;
+        const [stories] = await db.query(sql);
+
+        // Convert profile picture URLs to full URLs
+        const processedStories = stories.map(story => {
+            if (story.profile_picture_url) {
+                story.profile_picture_url = getPublicUrl(req, story.profile_picture_url);
+            }
+            return story;
+        });
+
+        console.log(`✅ GET /api/success-stories: ${processedStories.length} stories returned`);
+        res.status(200).json(processedStories);
+    } catch (err) {
+        console.error('❌ Error fetching success stories:', err);
+        res.status(500).json({ success: false, message: 'Failed to load success stories.' });
+    }
+});
+
+// ======== SCHEMES ROUTES ========
+
+// Get All Schemes
+app.get('/api/schemes', async (req, res) => {
+    try {
+        const [schemes] = await db.query(
+            'SELECT id, name, description, eligibility, link, state, category, documents, roadmap, help_link FROM schemes'
+        );
+        res.json(schemes);
+    } catch (error) {
+        console.error('❌ Database query failed:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+
+// Fetch User's Saved Scheme IDs
+app.get('/api/my-schemes/ids/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const [savedSchemes] = await db.query(
+            'SELECT scheme_id FROM user_schemes WHERE user_id = ?',
+            [userId]
+        );
+        res.json(savedSchemes);
+    } catch (error) {
+        console.error('Error fetching saved scheme IDs:', error);
+        res.status(500).json({ success: false, message: 'Failed to retrieve user saved schemes.' });
+    }
+});
+
+// Fetch User's Saved Scheme Details
+app.get('/api/my-schemes/details/:userId', async (req, res) => {
+    try {
+        const sql = `SELECT s.name, s.description, s.link FROM schemes s JOIN user_schemes us ON s.id = us.scheme_id WHERE us.user_id = ?;`;
+        const [schemes] = await db.query(sql, [req.params.userId]);
+        res.status(200).json(schemes);
+    } catch (err) {
+        console.error('Error fetching user schemes:', err);
+        res.status(500).json({ success: false, message: 'Failed to load user schemes.' });
+    }
+});
+
+// Save a Scheme
+app.post('/api/save-scheme', async (req, res) => {
+    const { userId, schemeId } = req.body;
+    try {
+        const [existing] = await db.query(
+            'SELECT * FROM user_schemes WHERE user_id = ? AND scheme_id = ?',
+            [userId, schemeId]
+        );
+
+        if (existing.length === 0) {
+            await db.query(
+                'INSERT INTO user_schemes (user_id, scheme_id) VALUES (?, ?)',
+                [userId, schemeId]
+            );
+        }
+        res.json({ success: true, message: 'Scheme state updated.' });
+    } catch (error) {
+        console.error('Error saving scheme:', error);
+        res.status(500).json({ success: false, message: 'Database error during save operation.' });
+    }
+});
+
+// Unsave a Scheme
+app.post('/api/unsave-scheme', async (req, res) => {
+    const { userId, schemeId } = req.body;
+    try {
+        await db.query(
+            'DELETE FROM user_schemes WHERE user_id = ? AND scheme_id = ?',
+            [userId, schemeId]
+        );
+        res.json({ success: true, message: 'Scheme unsaved successfully.' });
+    } catch (error) {
+        console.error('Error unsaving scheme:', error);
+        res.status(500).json({ success: false, message: 'Database error during unsave operation.' });
+    }
+});
+
+// ======== EQUIPMENT ROUTES ========
+
+// Add Equipment for Sale
+app.post('/api/equipment/add', upload.single('image'), async (req, res) => {
+    const { userId, name, category, condition, price, description } = req.body;
+
+    if (!userId || !name || !price) {
+        return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+
+    const imageUrl = req.file ? '/uploads/' + req.file.filename : '/uploads/default-equipment.png';
+
+    try {
+        const sql = `
+            INSERT INTO equipment 
+            (seller_id, name, category, condition_status, price, description, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        await db.query(sql, [userId, name, category, condition, price, description, imageUrl]);
+
+        res.json({ success: true, message: 'Equipment listed successfully!' });
+    } catch (error) {
+        console.error("Database Insert Error:", error);
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => { if (err) console.error("File cleanup error:", err); });
+        }
+        res.status(500).json({ success: false, message: 'Database error occurred.' });
+    }
+});
+
+// Get All Equipment for Marketplace
+app.get('/api/equipment/all', async (req, res) => {
+    try {
+        const sql = `
+            SELECT e.*, u.name AS seller_name, u.contact_number, u.email AS seller_email
+            FROM equipment e
+            JOIN users u ON e.seller_id = u.id
+            ORDER BY e.id DESC;
+        `;
+        const [equipment] = await db.query(sql);
+
+        // Convert image URLs to full URLs
+        const processedEquipment = equipment.map(item => {
+            if (item.image_url) {
+                item.image_url = getPublicUrl(req, item.image_url);
+            }
+            return item;
+        });
+
+        res.status(200).json(processedEquipment);
+    } catch (err) {
+        console.error('Error fetching all equipment:', err);
+        res.status(500).json({ success: false, message: 'Failed to load marketplace equipment.' });
+    }
+});
+
+// Fetch User's Equipment Listings
+app.get('/api/my-equipment/:userId', async (req, res) => {
+    try {
+        const [equipment] = await db.query('SELECT * FROM equipment WHERE seller_id = ? ORDER BY id DESC', [req.params.userId]);
+
+        // Convert image URLs to full URLs
+        const processedEquipment = equipment.map(item => {
+            if (item.image_url) {
+                item.image_url = getPublicUrl(req, item.image_url);
+            }
+            return item;
+        });
+
+        res.status(200).json(processedEquipment);
+    } catch (err) {
+        console.error('Error fetching user equipment:', err);
+        res.status(500).json({ success: false, message: 'Failed to load user equipment listings.' });
+    }
+});
+
+// Delete Equipment (User Side)
+app.delete('/api/equipment/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    try {
+        const [check] = await db.query('SELECT * FROM equipment WHERE id = ? AND seller_id = ?', [id, userId]);
+        if (check.length === 0) {
+            return res.status(403).json({ success: false, message: 'Unauthorized or Item not found.' });
+        }
+
+        const imageUrl = check[0].image_url;
+        if (imageUrl && !imageUrl.includes('default')) {
+            const filePath = path.join(__dirname, 'public', imageUrl);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+
+        await db.query('DELETE FROM equipment WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Listing deleted successfully.' });
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(500).json({ success: false, message: 'Server error during deletion.' });
+    }
+});
+
+// Edit Equipment (User Side)
+app.put('/api/equipment/:id', upload.single('image'), async (req, res) => {
+    const { id } = req.params;
+    const { userId, name, category, condition, price, description } = req.body;
+
+    try {
+        const [check] = await db.query('SELECT * FROM equipment WHERE id = ? AND seller_id = ?', [id, userId]);
+        if (check.length === 0) {
+            return res.status(403).json({ success: false, message: 'Unauthorized or Item not found.' });
+        }
+
+        let sql, params;
+        if (req.file) {
+            const imageUrl = '/uploads/' + req.file.filename;
+            sql = `UPDATE equipment SET name=?, category=?, condition_status=?, price=?, description=?, image_url=? WHERE id=?`;
+            params = [name, category, condition, price, description, imageUrl, id];
+        } else {
+            sql = `UPDATE equipment SET name=?, category=?, condition_status=?, price=?, description=? WHERE id=?`;
+            params = [name, category, condition, price, description, id];
+        }
+
+        await db.query(sql, params);
+        res.json({ success: true, message: 'Listing updated successfully!' });
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ success: false, message: 'Server error during update.' });
+    }
+});
+
+// ======== REVIEWS ROUTES ========
+
+// POST Review - FIXED for production
+app.post('/api/reviews/add', upload.single('photo'), async (req, res) => {
+    try {
+        const { rating, review_text, username, page_name, userId } = req.body;
+
+        if (!rating || !review_text) {
+            return res.status(400).json({ success: false, message: 'Rating and review text are required.' });
+        }
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'User ID required' });
+        }
+
+        const photoPath = req.file ? 'uploads/' + req.file.filename : null;
+        const finalPageName = page_name || 'home';
+        const finalUsername = username || 'Anonymous';
+
+        await db.query(
+            `INSERT INTO reviews (user_id, rating, text, page_name, username, user_photo)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                rating,
+                review_text,
+                finalPageName,
+                finalUsername,
+                photoPath
+            ]
+        );
+
+        console.log(`✅ POST /api/reviews/add: Review added for page "${finalPageName}" by user ${userId}`);
+        res.json({ success: true, message: 'Review submitted successfully.' });
+
+    } catch (err) {
+        console.error("❌ REVIEW ERROR:", err);
+        res.status(500).json({ success: false, message: 'Server error while submitting review.' });
+    }
+});
+
+// GET Reviews List - FIXED for production
+app.get('/api/reviews/list', async (req, res) => {
+    try {
+        const page_name = req.query.page_name || 'home';
+        const page_no = parseInt(req.query.page_no) || 1;
+        const limit = 3;
+        const offset = (page_no - 1) * limit;
+
+        const [rows] = await db.query(
+            `SELECT 
+                r.id, 
+                r.rating, 
+                r.text, 
+                r.username, 
+                r.page_name,
+                r.user_photo,
+                r.timestamp,
+                u.id AS user_id,
+                u.name AS authorName, 
+                u.email, 
+                u.contact_number, 
+                u.profile_picture_url, 
+                u.years_experience, 
+                u.location
+             FROM reviews r
+             LEFT JOIN users u ON r.user_id = u.id
+             WHERE r.page_name = ? 
+             ORDER BY r.id DESC 
+             LIMIT ? OFFSET ?`,
+            [page_name, limit, offset]
+        );
+
+        // Convert profile picture URLs to full URLs
+        const processedRows = rows.map(row => {
+            if (row.profile_picture_url) {
+                row.profile_picture_url = getPublicUrl(req, row.profile_picture_url);
+            }
+            if (row.user_photo) {
+                row.user_photo = getPublicUrl(req, row.user_photo);
+            }
+            return row;
+        });
+
+        console.log(`✅ GET /api/reviews/list: ${processedRows.length} reviews returned for page "${page_name}"`);
+        res.json(processedRows);
+
+    } catch (err) {
+        console.error("❌ REVIEW LIST ERROR:", err);
+        res.status(500).json([]);
+    }
+});
+
+// GET Reviews Average - FIXED for production
+app.get('/api/reviews/average', async (req, res) => {
+    try {
+        const { page_name } = req.query;
+
+        const [rows] = await db.query(
+            `SELECT AVG(rating) AS avg_rating, COUNT(*) AS total
+             FROM reviews
+             WHERE page_name = ?`,
+            [page_name || 'home']
+        );
+
+        res.json({
+            avg_rating: parseFloat(rows[0]?.avg_rating || 0),
+            total: parseInt(rows[0]?.total || 0)
+        });
+
+    } catch (err) {
+        console.error("❌ AVG ERROR:", err);
+        res.status(500).json({ avg_rating: 0, total: 0 });
+    }
+});
+
+// GET Reviews (Alternative endpoint for backward compatibility)
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                r.*, 
+                u.name AS authorName, 
+                u.email, 
+                u.contact_number, 
+                u.profile_picture_url, 
+                u.years_experience, 
+                u.location
+            FROM reviews r
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.timestamp DESC`;
+        const [reviews] = await db.query(sql);
+
+        // Convert profile picture URLs to full URLs
+        const processedReviews = reviews.map(review => {
+            if (review.profile_picture_url) {
+                review.profile_picture_url = getPublicUrl(req, review.profile_picture_url);
+            }
+            if (review.user_photo) {
+                review.user_photo = getPublicUrl(req, review.user_photo);
+            }
+            return review;
+        });
+
+        res.json(processedReviews);
+    } catch (err) {
+        console.error('Error fetching reviews:', err);
+        res.status(500).json({ success: false, message: 'Failed to load reviews.' });
+    }
+});
+
+// Delete Review
+app.delete('/api/reviews/:reviewId/:userId', async (req, res) => {
+    const { reviewId, userId } = req.params;
+
+    try {
+        const [review] = await db.query('SELECT user_id FROM reviews WHERE id = ?', [reviewId]);
+
+        if (review.length === 0) {
+            return res.status(404).json({ success: false, message: 'Review not found.' });
+        }
+
+        if (parseInt(userId) !== review[0].user_id && parseInt(userId) !== ADMIN_USER_ID) {
+            return res.status(403).json({ success: false, message: 'Unauthorized.' });
+        }
+
+        await db.query('DELETE FROM reviews WHERE id = ?', [reviewId]);
+        res.json({ success: true, message: 'Deleted successfully.' });
+    } catch (err) {
+        console.error('Error deleting review:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+// ======== COMMENTS ROUTES ========
+
+// Fetch Comments and Replies
+app.get('/api/comments/:pageIdentifier', async (req, res) => {
+    const { pageIdentifier } = req.params;
+    try {
+        const sql = `
+            SELECT
+                c.id, c.parent_id, c.text, c.timestamp, c.user_id,
+                u.name AS authorName, u.email, u.contact_number,
+                u.profile_picture_url, u.years_experience, u.location
+            FROM comments c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.page_identifier = ?
+            ORDER BY c.timestamp ASC;
+        `;
+        const [comments] = await db.query(sql, [pageIdentifier]);
+
+        // Convert profile picture URLs to full URLs
+        const processedComments = comments.map(comment => {
+            if (comment.profile_picture_url) {
+                comment.profile_picture_url = getPublicUrl(req, comment.profile_picture_url);
+            }
+            return comment;
+        });
+
+        res.status(200).json(processedComments);
+    } catch (err) {
+        console.error('Error fetching comments:', err);
+        res.status(500).json({ success: false, message: 'Failed to load comments from the server.' });
+    }
+});
+
+// Post a new comment or reply
+app.post('/api/comments', async (req, res) => {
+    const { userId, parentId, pageIdentifier, text } = req.body;
+    const finalParentId = (parentId === null || parentId === 0) ? null : parentId;
+
+    try {
+        const sql = `
+            INSERT INTO comments (user_id, parent_id, page_identifier, text)
+            VALUES (?, ?, ?, ?);
+        `;
+        await db.query(sql, [userId, finalParentId, pageIdentifier, text]);
+        res.status(200).json({ success: true, message: 'Comment posted successfully.' });
+    } catch (err) {
+        console.error('Error posting comment:', err);
+        res.status(500).json({ success: false, message: 'Failed to post comment due to server error.' });
+    }
+});
+
+// Delete a comment
+app.delete('/api/comments/:commentId/:userId', async (req, res) => {
+    const { commentId, userId } = req.params;
+
+    try {
+        const [commentCheck] = await db.query('SELECT user_id FROM comments WHERE id = ?', [commentId]);
+
+        if (commentCheck.length === 0) {
+            return res.status(404).json({ success: false, message: 'Comment not found.' });
+        }
+
+        const commentOwnerId = commentCheck[0].user_id;
+
+        if (parseInt(userId) !== commentOwnerId && parseInt(userId) !== ADMIN_USER_ID) {
+            return res.status(403).json({ success: false, message: 'Unauthorized to delete this comment.' });
+        }
+
+        await db.query('DELETE FROM comments WHERE id = ? OR parent_id = ?', [commentId, commentId]);
+        res.status(200).json({ success: true, message: 'Comment deleted successfully.' });
+    } catch (err) {
+        console.error('Error deleting comment:', err);
+        res.status(500).json({ success: false, message: 'Failed to delete comment.' });
+    }
+});
+
+// ======== CHAT/IMAGE/AUDIO UPLOAD ROUTES ========
+
+// Handles Image Uploads for Chat
+app.post('/upload/image', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send({ error: 'No file uploaded.' });
+    }
+    const filePath = getPublicUrl(req, `/uploads/${req.file.filename}`);
+    res.send({ filePath: filePath });
+});
+
+// Handles Audio Uploads for Chat
+app.post('/upload/audio', upload.single('audio'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send({ error: 'No file uploaded.' });
+    }
+    const filePath = getPublicUrl(req, `/uploads/${req.file.filename}`);
+    res.send({ filePath: filePath });
+});
+
+// ======== NEWS API ROUTE ========
+
+app.get('/news', async (req, res) => {
+    try {
+        const query = req.query.q || 'agriculture';
+        const page = req.query.page || 1;
+        const pageSize = req.query.pageSize || 12;
+        const sortBy = req.query.sortBy || 'publishedAt';
+
+        const NEWS_API_KEY = process.env.NEWS_API_KEY;
+        if (!NEWS_API_KEY) {
+            console.error('❌ NEWS_API_KEY environment variable is not set');
+            return res.status(500).json({ error: 'News API key is not configured.' });
+        }
+
+        const response = await axios.get(`https://newsapi.org/v2/everything`, {
+            params: {
+                q: query,
+                page: page,
+                pageSize: pageSize,
+                sortBy: sortBy,
+                apiKey: NEWS_API_KEY,
+                language: 'en'
+            }
+        });
+
+        res.json(response.data);
+    } catch (error) {
+        console.error('News API Error:', error.message);
+        res.status(500).json({ error: 'Failed to fetch news.' });
+    }
+});
+
+// ======== MANDI API PROXY ========
+
+const API_KEY = process.env.DATA_GOV_IN_API_KEY;
+
+app.get("/api/mandi", async (req, res) => {
+    try {
+        const { limit = 100, offset = 0 } = req.query;
+
+        if (!API_KEY) {
+            console.error('❌ DATA_GOV_IN_API_KEY environment variable is not set');
+            return res.status(500).json({ error: 'API key is not configured.' });
+        }
+
+        const response = await axios.get(
+            "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070",
+            {
+                params: {
+                    "api-key": API_KEY,
+                    format: "json",
+                    limit,
+                    offset
                 }
-            } catch (error) {
-                console.error('Error loading admin data:', error);
-                showMessage('Error', 'Failed to load some data. Please refresh.');
             }
+        );
+
+        res.json(response.data);
+    } catch (error) {
+        console.error('Mandi API Error:', error.message);
+        res.status(500).json({ error: 'API error' });
+    }
+});
+
+// ======== CROP PLANS ROUTES ========
+
+// Save OR Update a Crop Plan
+app.post('/api/save-crop-plan', async (req, res) => {
+    const { planId, userId, cropName, sowingDate, harvestDate, currentStage, progress } = req.body;
+
+    if (!userId || !cropName || !sowingDate) {
+        return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+
+    try {
+        if (planId) {
+            const sql = `UPDATE user_crop_plans SET sowing_date=?, harvest_date=?, current_stage=?, progress_percent=? WHERE id=? AND user_id=?`;
+            await db.query(sql, [sowingDate, harvestDate, currentStage, progress, planId, userId]);
+            res.json({ success: true, message: 'Plan updated successfully!' });
+        } else {
+            const sql = `INSERT INTO user_crop_plans (user_id, crop_name, sowing_date, harvest_date, current_stage, progress_percent) VALUES (?, ?, ?, ?, ?, ?)`;
+            await db.query(sql, [userId, cropName, sowingDate, harvestDate, currentStage, progress]);
+            res.json({ success: true, message: 'New plan created!' });
+        }
+    } catch (error) {
+        console.error('Error saving plan:', error);
+        res.status(500).json({ success: false, message: 'Database error.' });
+    }
+});
+
+// Fetch User's Active Plans
+app.get('/api/my-crop-plans/:userId', async (req, res) => {
+    try {
+        const [plans] = await db.query('SELECT * FROM user_crop_plans WHERE user_id = ? ORDER BY created_at DESC', [req.params.userId]);
+        res.json(plans);
+    } catch (error) {
+        console.error('Error fetching plans:', error);
+        res.status(500).json({ success: false, message: 'Failed to load plans.' });
+    }
+});
+
+// Delete a Plan
+app.delete('/api/crop-plan/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM user_crop_plans WHERE id = ?', [req.params.id]);
+        res.json({ success: true, message: 'Plan deleted.' });
+    } catch (error) {
+        console.error('Error deleting plan:', error);
+        res.status(500).json({ success: false, message: 'Deletion failed.' });
+    }
+});
+
+// ======== COMMUNITY HUB ROUTES ========
+
+// Add Hub Listing
+app.post('/api/hub-listings', async (req, res) => {
+    const { userId, authorName, title, category, exchangeType, targetSize, location, description, contactNumber } = req.body;
+
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+    const sql = `INSERT INTO hub_listings 
+                (user_id, author_name, title, category, exchange_type, target_size, location, description, contact_number) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    try {
+        const finalTarget = exchangeType === 'group' ? parseInt(targetSize) || 2 : 1;
+
+        await db.query(sql, [
+            userId, authorName, title, category || 'seed',
+            exchangeType, finalTarget, location, description, contactNumber
+        ]);
+        res.json({ success: true, message: "Listing published!" });
+    } catch (err) {
+        console.error("Database Error:", err);
+        res.status(500).json({ success: false, message: "Database Error" });
+    }
+});
+
+// Fetch All Hub Listings
+app.get('/api/hub-listings', async (req, res) => {
+    try {
+        const [results] = await db.query(`
+            SELECT h.*, COUNT(m.id) as member_count 
+            FROM hub_listings h 
+            LEFT JOIN hub_group_members m ON h.id = m.listing_id 
+            GROUP BY h.id 
+            ORDER BY h.created_at DESC`);
+        res.json(results);
+    } catch (err) {
+        console.error('Error fetching hub listings:', err);
+        res.status(500).json({ success: false, message: "Error fetching hub" });
+    }
+});
+
+// Get Group Details
+app.get('/api/hub/group-details/:listingId', async (req, res) => {
+    try {
+        const [members] = await db.query(
+            `SELECT user_name, user_contact FROM hub_group_members WHERE listing_id = ?`,
+            [req.params.listingId]
+        );
+        res.json(members);
+    } catch (err) {
+        console.error('Error fetching group details:', err);
+        res.status(500).json({ success: false, message: 'Failed to fetch group details.' });
+    }
+});
+
+// Join Group
+app.post('/api/hub/join-group', async (req, res) => {
+    const { listingId, userId, userName, userContact } = req.body;
+
+    if (!userId || !listingId) {
+        return res.status(400).json({ success: false, message: "Invalid request data." });
+    }
+
+    try {
+        const [existing] = await db.query(
+            'SELECT * FROM hub_group_members WHERE listing_id = ? AND user_id = ?',
+            [listingId, userId]
+        );
+
+        if (existing.length > 0) {
+            return res.json({ success: false, message: "You have already joined this group!" });
         }
 
-        // ============================================================
-        // EVENT HANDLERS
-        // ============================================================
-        // Action buttons (delegated)
-        document.addEventListener('click', function(e) {
-            const target = e.target.closest('button');
-            if (!target) return;
+        await db.query(
+            `INSERT INTO hub_group_members (listing_id, user_id, user_name, user_contact) VALUES (?, ?, ?, ?)`,
+            [listingId, userId, userName, userContact]
+        );
 
-            const type = target.dataset.type;
-            const id = target.dataset.id;
+        res.json({ success: true, message: "Successfully joined the group!" });
+    } catch (err) {
+        console.error("Join Group Error:", err);
+        res.status(500).json({ success: false, message: "Database error while joining." });
+    }
+});
 
-            if (target.classList.contains('approve-btn')) {
-                updateStatus(type, id, 'approved');
-            } else if (target.classList.contains('reject-btn') && !target.classList.contains('delete-btn')) {
-                updateStatus(type, id, 'rejected');
-            } else if (target.classList.contains('delete-btn')) {
-                deleteItem(type, id);
-            } else if (target.classList.contains('view-btn')) {
-                viewDetails(type, id);
-            }
-        });
+// ======== ARTICLES ROUTES ========
 
-        function viewDetails(type, id) {
-            let item = null;
-            if (type === 'story') {
-                item = allPendingStories.find(s => s.id == id) || allManagedStories.find(s => s.id == id);
-            } else if (type === 'farmer') {
-                item = allPendingFarmers.find(f => f.id == id) || allManagedFarmers.find(f => f.id == id);
-            } else if (type === 'review') {
-                item = allReviews.find(r => r.id == id);
-            } else if (type === 'comment') {
-                item = allComments.find(c => c.id == id);
-            } else if (type === 'equipment') {
-                item = allEquipment.find(e => e.id == id);
-            }
-
-            if (!item) {
-                showMessage('Error', 'Item not found.');
-                return;
-            }
-
-            let content = '';
-            let title = '';
-
-            if (item.story_text !== undefined) {
-                title = `Story #${id}`;
-                content = `
-                    <div class="modal-detail-item"><strong>Author:</strong> ${item.author_name}</div>
-                    <div class="modal-detail-item"><strong>Location:</strong> ${item.location}</div>
-                    <div class="modal-detail-item"><strong>Status:</strong> <span class="status ${(item.status || 'pending').toLowerCase()}">${item.status || 'Pending'}</span></div>
-                    <div class="modal-detail-item"><strong>Date:</strong> ${formatDate(item.submission_date)}</div>
-                    <div class="modal-detail-item"><strong>Story:</strong> <p style="white-space:pre-wrap;">${item.story_text}</p></div>
-                `;
-            } else if (item.rating !== undefined) {
-                title = `Review #${id}`;
-                content = `
-                    <div class="modal-detail-item"><strong>User:</strong> ${item.authorName}</div>
-                    <div class="modal-detail-item"><strong>Rating:</strong> ${item.rating}/5 <i class="fas fa-star" style="color:gold;"></i></div>
-                    <div class="modal-detail-item"><strong>Date:</strong> ${formatDate(item.timestamp)}</div>
-                    <div class="modal-detail-item"><strong>Review:</strong> <p style="white-space:pre-wrap;">${item.text}</p></div>
-                `;
-            } else if (item.page_identifier !== undefined) {
-                title = `Comment #${id}`;
-                content = `
-                    <div class="modal-detail-item"><strong>User:</strong> ${item.authorName}</div>
-                    <div class="modal-detail-item"><strong>Page:</strong> ${item.page_identifier}</div>
-                    <div class="modal-detail-item"><strong>Date:</strong> ${formatDate(item.timestamp)}</div>
-                    <div class="modal-detail-item"><strong>Comment:</strong> <p style="white-space:pre-wrap;">${item.text}</p></div>
-                `;
-            } else if (item.price !== undefined) {
-                title = `Equipment #${id}`;
-                content = `
-                    <div class="modal-detail-item"><strong>Name:</strong> ${item.name}</div>
-                    <div class="modal-detail-item"><strong>Seller:</strong> ${item.seller_name}</div>
-                    <div class="modal-detail-item"><strong>Category:</strong> ${item.category}</div>
-                    <div class="modal-detail-item"><strong>Condition:</strong> ${item.condition_status}</div>
-                    <div class="modal-detail-item"><strong>Price:</strong> $${Number(item.price).toFixed(2)}</div>
-                    <div class="modal-detail-item"><strong>Description:</strong> <p style="white-space:pre-wrap;">${item.description || 'N/A'}</p></div>
-                `;
-            } else {
-                title = `Farmer #${id}`;
-                content = `
-                    <div class="modal-detail-item"><strong>Farm:</strong> ${item.farm_name}</div>
-                    <div class="modal-detail-item"><strong>Crop:</strong> ${item.crop_specialization}</div>
-                    <div class="modal-detail-item"><strong>Location:</strong> ${item.farm_location}</div>
-                    <div class="modal-detail-item"><strong>Email:</strong> ${item.contact_email}</div>
-                    <div class="modal-detail-item"><strong>Status:</strong> <span class="status ${(item.status || 'pending').toLowerCase()}">${item.status || 'Pending'}</span></div>
-                    <div class="modal-detail-item"><strong>Date:</strong> ${formatDate(item.submission_date)}</div>
-                `;
-            }
-
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalBodyContent').innerHTML = content;
-            document.getElementById('adminModal').classList.add('active');
+// Get All Articles (Public)
+app.get('/api/articles', async (req, res) => {
+    try {
+        // Try to add column if missing (prevents 'Unknown column' error)
+        try {
+            await db.query('ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+        } catch (columnErr) {
+            // Ignore if column already exists
         }
 
-        // Close modal
-        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-        document.getElementById('adminModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
+        const [articles] = await db.query('SELECT * FROM articles ORDER BY published_at DESC');
+
+        // Convert image URLs to full URLs
+        const processedArticles = articles.map(article => {
+            if (article.image_url) {
+                article.image_url = getPublicUrl(req, article.image_url);
+            }
+            return article;
         });
 
-        // Login/Logout
-        document.getElementById('adminLoginForm').addEventListener('submit', handleAdminLogin);
-        document.getElementById('logoutLink').addEventListener('click', handleLogout);
+        res.status(200).json(processedArticles);
+    } catch (err) {
+        console.error('Error fetching articles:', err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
 
-        // Sidebar toggle
-        document.querySelector('.toggle-sidebar').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
+// Add Article (Admin)
+app.post('/api/articles', async (req, res) => {
+    const { title, category, content, image_url, date } = req.body;
+    try {
+        const sql = 'INSERT INTO articles (title, category, content, image_url, published_at) VALUES (?, ?, ?, ?, ?)';
+        const publishDate = date ? new Date(date) : new Date();
+
+        await db.query(sql, [title, category, content, image_url, publishDate]);
+        res.status(200).json({ success: true, message: 'Article published!' });
+    } catch (err) {
+        console.error('Error saving article:', err);
+        res.status(500).json({ success: false, message: 'Failed to save article.' });
+    }
+});
+
+// ======== ADMIN ROUTES ========
+
+// Admin Stats
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const [[totalUsersResult]] = await db.query('SELECT COUNT(*) AS count FROM users');
+        const [[pendingStoriesResult]] = await db.query("SELECT COUNT(*) AS count FROM success_stories WHERE status = 'pending'");
+        const [[pendingFarmersResult]] = await db.query("SELECT COUNT(*) AS count FROM farmer_directory WHERE status = 'pending'");
+        const [[totalEquipmentResult]] = await db.query('SELECT COUNT(*) AS count FROM equipment');
+
+        res.json({
+            totalUsers: totalUsersResult.count,
+            pendingApprovals: pendingStoriesResult.count + pendingFarmersResult.count,
+            pendingStories: pendingStoriesResult.count,
+            pendingFarmers: pendingFarmersResult.count,
+            totalEquipment: totalEquipmentResult.count
+        });
+    } catch (error) {
+        console.error('Error fetching admin stats:', error);
+        res.status(500).json({ success: false, message: 'Failed to load stats.' });
+    }
+});
+
+// Admin: Fetch Pending Success Stories
+app.get('/api/admin/stories/pending', async (req, res) => {
+    try {
+        const [stories] = await db.query(`
+            SELECT id, user_id, author_name, story_text, location, submission_date
+            FROM success_stories
+            WHERE status = 'pending'
+            ORDER BY submission_date ASC
+        `);
+        res.json(stories);
+    } catch (error) {
+        console.error('Error fetching pending stories:', error);
+        res.status(500).json({ success: false, message: 'Failed to load pending stories.' });
+    }
+});
+
+// Admin: Fetch ALL Success Stories
+app.get('/api/admin/stories/all', async (req, res) => {
+    try {
+        const [stories] = await db.query(`
+            SELECT id, user_id, author_name, story_text, location, submission_date, status
+            FROM success_stories
+            ORDER BY submission_date DESC
+        `);
+        res.json(stories);
+    } catch (error) {
+        console.error('Error fetching all stories:', error);
+        res.status(500).json({ success: false, message: 'Failed to load all stories.' });
+    }
+});
+
+// Admin: Update Story Status
+app.post('/api/admin/story/update-status', async (req, res) => {
+    const { id, status } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status.' });
+    }
+    try {
+        await db.query('UPDATE success_stories SET status = ? WHERE id = ?', [status, id]);
+        console.log(`✅ Story ${id} status updated to ${status}`);
+        res.json({ success: true, message: `Story ${status} successfully.` });
+    } catch (error) {
+        console.error('Error updating story status:', error);
+        res.status(500).json({ success: false, message: 'Failed to update story status.' });
+    }
+});
+
+// Admin: Delete Success Story
+app.delete('/api/admin/story/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await db.query('DELETE FROM success_stories WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Story not found.' });
+        }
+        res.json({ success: true, message: `Success Story ID ${id} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting story:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete story.' });
+    }
+});
+
+// Admin: Fetch Pending Farmer Directory Listings
+app.get('/api/admin/farmers/pending', async (req, res) => {
+    try {
+        const [farmers] = await db.query(`
+            SELECT id, user_id, farm_name, crop_specialization, farm_location, contact_email, submission_date
+            FROM farmer_directory
+            WHERE status = 'pending'
+            ORDER BY submission_date ASC
+        `);
+        res.json(farmers);
+    } catch (error) {
+        console.error('Error fetching pending farmers:', error);
+        res.status(500).json({ success: false, message: 'Failed to load pending farmers.' });
+    }
+});
+
+// Admin: Fetch ALL Farmer Directory Listings
+app.get('/api/admin/farmers/all', async (req, res) => {
+    try {
+        const [farmers] = await db.query(`
+            SELECT id, user_id, farm_name, crop_specialization, farm_location, contact_email, submission_date, status
+            FROM farmer_directory
+            ORDER BY submission_date DESC
+        `);
+        res.json(farmers);
+    } catch (error) {
+        console.error('Error fetching all farmers:', error);
+        res.status(500).json({ success: false, message: 'Failed to load all farmers.' });
+    }
+});
+
+// Admin: Update Farmer Status
+app.post('/api/admin/farmer/update-status', async (req, res) => {
+    const { id, status } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status.' });
+    }
+    try {
+        await db.query('UPDATE farmer_directory SET status = ? WHERE id = ?', [status, id]);
+        console.log(`✅ Farmer listing ${id} status updated to ${status}`);
+        res.json({ success: true, message: `Farmer listing ${status} successfully.` });
+    } catch (error) {
+        console.error('Error updating farmer status:', error);
+        res.status(500).json({ success: false, message: 'Failed to update farmer status.' });
+    }
+});
+
+// Admin: Delete Farmer Directory Listing
+app.delete('/api/admin/farmer/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await db.query('DELETE FROM farmer_directory WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Farmer listing not found.' });
+        }
+        res.json({ success: true, message: `Farmer Listing ID ${id} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting farmer listing:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete farmer listing.' });
+    }
+});
+
+// Admin: Fetch All Users
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const [users] = await db.query(`
+            SELECT id, name, email, location, contact_number, years_experience, created_at
+            FROM users
+            ORDER BY created_at DESC
+        `);
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching user list:', error);
+        res.status(500).json({ success: false, message: 'Failed to load user list.' });
+    }
+});
+
+// Admin: Fetch All Equipment Listings
+app.get('/api/admin/equipment/all', async (req, res) => {
+    try {
+        const sql = `
+            SELECT e.id, e.name, e.category, e.price, e.condition_status, u.name as seller_name
+            FROM equipment e
+            JOIN users u ON e.seller_id = u.id
+            ORDER BY e.id DESC
+        `;
+        const [equipment] = await db.query(sql);
+        res.json(equipment);
+    } catch (error) {
+        console.error('Error fetching all equipment for admin:', error);
+        res.status(500).json({ success: false, message: 'Failed to load all equipment listings.' });
+    }
+});
+
+// Admin: Delete Equipment
+app.delete('/api/admin/equipment/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await db.query('DELETE FROM equipment WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Equipment listing not found.' });
+        }
+        res.json({ success: true, message: `Equipment ID ${id} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting equipment listing:', error);
+        res.status(500).json({ success: false, message: 'Failed to delete equipment listing.' });
+    }
+});
+
+// Admin: Fetch All Comments
+app.get('/api/admin/comments/all', async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                c.id, c.parent_id, c.text, c.timestamp, c.user_id,
+                c.page_identifier,
+                u.name AS authorName, u.email, u.contact_number,
+                u.profile_picture_url, u.years_experience, u.location
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            ORDER BY c.timestamp DESC;
+        `;
+        const [comments] = await db.query(sql);
+
+        // Convert profile picture URLs to full URLs
+        const processedComments = comments.map(comment => {
+            if (comment.profile_picture_url) {
+                comment.profile_picture_url = getPublicUrl(req, comment.profile_picture_url);
+            }
+            return comment;
         });
 
-        // Navigation clicks
-        document.querySelectorAll('.nav-links li[data-target]').forEach(el => {
-            el.addEventListener('click', function() {
-                navigateTo(this.dataset.target);
-            });
-        });
+        res.status(200).json(processedComments);
+    } catch (err) {
+        console.error('Error fetching all comments for admin:', err);
+        res.status(500).json({ success: false, message: 'Failed to load all comments.' });
+    }
+});
 
-        // ============================================================
-        // INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-            // Initial loads
-            loadSchemesTable();
-            loadArticlesTable();
-        });
-    </script>
-</body>
-</html>
+// Admin: Save or Update Government Scheme
+app.post('/api/admin/schemes/save', async (req, res) => {
+    const { id, name, category, description, eligibility, documents, roadmap, link, state, help_link } = req.body;
+
+    try {
+        const schemeId = (id && id !== 'null' && id !== 'undefined' && !isNaN(id)) ? parseInt(id) : null;
+
+        if (schemeId) {
+            const sql = `UPDATE schemes SET name=?, category=?, description=?, eligibility=?, documents=?, roadmap=?, link=?, state=?, help_link=? WHERE id=?`;
+            await db.query(sql, [name, category, description, eligibility, documents, roadmap, link, state, help_link, schemeId]);
+            res.json({ success: true, message: 'Scheme updated successfully!', id: schemeId });
+        } else {
+            const sql = `INSERT INTO schemes (name, category, description, eligibility, documents, roadmap, link, state, help_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const [result] = await db.query(sql, [name, category, description, eligibility, documents, roadmap, link, state, help_link]);
+            res.json({ success: true, message: 'New scheme added successfully!', id: result.insertId });
+        }
+    } catch (error) {
+        console.error('Save Error:', error);
+        res.status(500).json({ success: false, message: 'Database error. Check column names.' });
+    }
+});
+
+// Admin: Delete Scheme
+app.delete('/api/admin/schemes/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await db.query('DELETE FROM schemes WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Scheme not found.' });
+        }
+        res.json({ success: true, message: 'Deleted successfully.' });
+    } catch (error) {
+        console.error('Delete Error:', error);
+        res.status(500).json({ success: false, message: 'Server error during deletion.' });
+    }
+});
+
+// Admin: Save or Update Article
+app.post('/api/admin/articles/save', async (req, res) => {
+    const { id, title, category, content, image_url, date } = req.body;
+    try {
+        if (id) {
+            const sql = 'UPDATE articles SET title=?, category=?, content=?, image_url=?, published_at=? WHERE id=?';
+            await db.query(sql, [title, category, content, image_url, date || new Date(), id]);
+            res.json({ success: true, message: 'Updated' });
+        } else {
+            const sql = 'INSERT INTO articles (title, category, content, image_url, published_at) VALUES (?, ?, ?, ?, ?)';
+            await db.query(sql, [title, category, content, image_url, date || new Date()]);
+            res.json({ success: true, message: 'Published' });
+        }
+    } catch (err) {
+        console.error('Error saving article:', err);
+        res.status(500).json({ success: false, message: 'Database error during save.' });
+    }
+});
+
+// Admin: Delete Article
+app.delete('/api/admin/articles/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM articles WHERE id = ?', [req.params.id]);
+        res.json({ success: true, message: 'Deleted' });
+    } catch (err) {
+        console.error('Error deleting article:', err);
+        res.status(500).json({ success: false, message: 'Failed to delete article.' });
+    }
+});
+
+// ======== SERVER START ========
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
+    console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
+});
