@@ -3,109 +3,266 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>All Farmers - AgriConnect</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>🌾 Farmer Directory - AgriConnect</title>
+    <!-- Font Awesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* =======================================================
-           1. VARIABLES & CONFIGURATION
-           ======================================================= */
-        :root {
-            --primary: #16a34a;
-            --primary-dark: #15803d;
-            --primary-light: #dcfce7;
-            --secondary: #facc15;
-            --secondary-dark: #eab308;
-            --bg-body: #f0fdf4;
-            --bg-light: #f8fafc;
-            --bg-white: #ffffff;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --shadow-color: rgba(0, 0, 0, 0.06);
-            --font-stack: 'Inter', sans-serif;
-            --card-radius: 16px;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --transition: 0.3s ease;
-        }
-
-        [data-theme="dark"] {
-            --primary: #22c55e;
-            --primary-dark: #16a34a;
-            --primary-light: #064e3b;
-            --bg-body: #0f172a;
-            --bg-light: #1e293b;
-            --bg-white: #1e293b;
-            --bg-card: #1e293b;
-            --text-main: #f1f5f9;
-            --text-dark: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --shadow-color: rgba(0, 0, 0, 0.4);
-        }
-
-        /* =======================================================
-           2. ANIMATIONS
-           ======================================================= */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* =======================================================
-           3. GLOBAL RESET
-           ======================================================= */
-        *, *::before, *::after {
-            box-sizing: border-box;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            line-height: 1.5;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f5f9f0;
+            color: #1e2a1e;
+            padding: 2rem 1.5rem;
             min-height: 100vh;
         }
 
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-light); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
-
         .container {
-            max-width: 1320px;
-            margin-left: auto;
-            margin-right: auto;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
+            max-width: 1280px;
+            margin: 0 auto;
         }
 
-        /* =======================================================
-           4. HEADER
-           ======================================================= */
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
+        /* Header */
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-header h1 i {
+            color: #2b6e2b;
+        }
+
+        .header-stats {
+            background: white;
+            padding: 0.5rem 1.4rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(0, 20, 0, 0.06);
+            color: #1e4a1e;
+        }
+
+        .header-stats span {
+            color: #0f3b0f;
+            font-weight: 800;
+        }
+
+        /* Search & Filter Bar */
+        .search-section {
+            background: white;
+            padding: 1.5rem 1.8rem;
+            border-radius: 20px;
+            box-shadow: 0 6px 18px rgba(0, 30, 0, 0.04);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border: 1px solid #e2eedb;
+        }
+
+        .search-box {
+            flex: 2 1 280px;
+            display: flex;
+            align-items: center;
+            background: #f2f8ef;
+            border-radius: 50px;
+            padding: 0 1.2rem;
+            border: 1px solid #d4e4cc;
+            transition: 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #2f7a2f;
+            box-shadow: 0 0 0 4px rgba(47, 122, 47, 0.12);
+        }
+
+        .search-box i {
+            color: #3f6b3f;
+            font-size: 1rem;
+            margin-right: 0.7rem;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
             padding: 0.8rem 0;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            font-size: 1rem;
+            width: 100%;
+            outline: none;
+            color: #1e2a1e;
         }
 
-        header .container {
+        .search-box input::placeholder {
+            color: #6d8f6d;
+            font-weight: 400;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.8rem;
+            flex: 1 1 220px;
+        }
+
+        .filter-group select {
+            background: #f2f8ef;
+            border: 1px solid #d4e4cc;
+            border-radius: 40px;
+            padding: 0.7rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1f3a1f;
+            cursor: pointer;
+            outline: none;
+            flex: 1 1 130px;
+            transition: 0.15s;
+        }
+
+        .filter-group select:focus {
+            border-color: #2f7a2f;
+            box-shadow: 0 0 0 3px rgba(47, 122, 47, 0.10);
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: #4d6b4d;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .clear-btn:hover {
+            background: #eaf3e5;
+            color: #174017;
+        }
+
+        /* Grid */
+        .farmers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.8rem;
+        }
+
+        /* Card */
+        .farmer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem 1.3rem 1.6rem;
+            box-shadow: 0 4px 16px rgba(0, 20, 0, 0.04);
+            border: 1px solid #e6f0e0;
+            transition: transform 0.15s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .farmer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(30, 70, 30, 0.08);
+            border-color: #c2dbc2;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #d7e8d0;
+            background: #eaf3e5;
+            flex-shrink: 0;
+        }
+
+        .farm-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #173017;
+            line-height: 1.2;
+        }
+
+        .farm-name small {
+            font-weight: 400;
+            font-size: 0.8rem;
+            color: #4d6f4d;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .crop-tag {
+            display: inline-block;
+            background: #e4f0de;
+            color: #1f4a1f;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            margin: 0.3rem 0.25rem 0.3rem 0;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: #2d462d;
+            margin-top: 0.5rem;
+        }
+
+        .detail-row i {
+            width: 1.1rem;
+            color: #3d6b3d;
+            font-size: 0.9rem;
+        }
+
+        .expert-badge {
+            background: #f6e9b3;
+            color: #7a6100;
+            font-weight: 600;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.7rem;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            letter-spacing: 0.3px;
+            margin-left: 0.4rem;
+        }
+
+        .card-footer {
+            margin-top: 1.2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9f2e4;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -113,1025 +270,385 @@
             gap: 0.5rem;
         }
 
-        .logo {
-            font-size: 1.4rem;
-            font-weight: 800;
-            text-decoration: none;
+        .contact-btn {
+            background: #1f5a1f;
             color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo i {
-            color: var(--secondary);
-            font-size: 1.6rem;
-        }
-
-        .logo span { color: var(--secondary); }
-
-        .back-link {
-            color: white;
-            text-decoration: none;
+            border: none;
+            padding: 0.55rem 1.4rem;
+            border-radius: 40px;
             font-weight: 600;
-            padding: 0.4rem 1.2rem;
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 50px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .back-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(-3px);
-        }
-
-        /* =======================================================
-           5. PAGE HEADER
-           ======================================================= */
-        .page-header {
-            padding: 1.5rem 0 1rem 0;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            margin: 0 0 0.2rem 0;
-        }
-
-        .page-header h1 i {
-            color: var(--secondary);
-            font-size: 1.8rem;
-        }
-
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin: 0 0 0.6rem 0;
-        }
-
-        .stats-badge {
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.15s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            padding: 4px 16px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border: 1px solid rgba(22, 163, 74, 0.15);
-        }
-
-        .stats-badge i { font-size: 0.9rem; }
-
-        /* =======================================================
-           6. SEARCH & FILTERS - EXACT MATCH
-           ======================================================= */
-        .search-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.8rem;
-            padding: 0.8rem 1.2rem;
-            background: var(--bg-white);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
-            align-items: center;
-            border: 1px solid var(--border);
-        }
-
-        .search-wrapper {
-            flex: 1;
-            min-width: 250px;
-            display: flex;
-            align-items: center;
             gap: 0.5rem;
         }
 
-        .search-wrapper i {
-            color: var(--text-muted);
-            font-size: 0.9rem;
+        .contact-btn:hover {
+            background: #134013;
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(26, 80, 26, 0.2);
         }
 
-        .search-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: none;
-            font-size: 0.9rem;
-            outline: none;
-            background: transparent;
-            color: var(--text-main);
-            min-width: 120px;
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-            opacity: 0.7;
-        }
-
-        .search-btn {
-            padding: 8px 24px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+        .exp-text {
             font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-
-        .search-btn:hover {
-            background: var(--primary-dark);
-            transform: scale(1.02);
-        }
-
-        .filter-select {
-            padding: 8px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            background: var(--bg-white);
-            color: var(--text-main);
-            cursor: pointer;
-            outline: none;
-            min-width: 140px;
-            transition: all 0.3s;
-        }
-
-        .filter-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-        }
-
-        .clear-filters {
-            padding: 8px 16px;
-            background: var(--bg-light);
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-muted);
-            transition: all 0.3s;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .clear-filters:hover {
-            background: var(--border);
-            color: var(--text-dark);
-        }
-
-        /* =======================================================
-           7. FARMER GRID - 4 COLUMN (Like the image)
-           ======================================================= */
-        .farmer-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 1.5rem;
-        }
-
-        /* =======================================================
-           8. FARMER CARD - EXACT MATCH TO IMAGE
-           ======================================================= */
-        .farmer-card {
-            background: var(--bg-card);
-            border-radius: var(--card-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all var(--transition);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            animation: fadeInUp 0.4s ease-out forwards;
-        }
-
-        .farmer-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--primary);
-        }
-
-        /* Image - 140px height */
-        .farmer-card .card-image {
-            width: 100%;
-            height: 140px;
-            overflow: hidden;
-            background: var(--bg-light);
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .farmer-card .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-        }
-
-        .farmer-card .card-image .default-icon {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: var(--primary);
-            opacity: 0.3;
-        }
-
-        /* Expert Badge */
-        .farmer-card .expert-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #fef3c7;
-            color: #d97706;
-            padding: 2px 10px;
-            border-radius: 50px;
-            font-size: 0.6rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            z-index: 2;
-        }
-
-        /* Card Content */
-        .farmer-card .card-content {
-            padding: 0.8rem 1rem 1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Farm Name - Like image */
-        .farmer-card .card-content .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin: 0 0 0.05rem 0;
-            line-height: 1.3;
-        }
-
-        /* Farmer Name - Like image */
-        .farmer-card .card-content .card-subtitle {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin: 0 0 0.5rem 0;
-            font-weight: 500;
-        }
-
-        /* Details - Crops, Location, Experience - Like image */
-        .farmer-card .card-content .card-details {
-            margin: 0 0 0.3rem 0;
-        }
-
-        .farmer-card .card-content .card-details p {
-            margin: 0.15rem 0;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .farmer-card .card-content .card-details p strong {
-            color: var(--text-dark);
-            font-weight: 600;
-        }
-
-        /* Tags - Like image */
-        .farmer-card .card-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-            margin: 0.3rem 0 0.6rem;
-        }
-
-        .farmer-card .tag {
-            padding: 1px 12px;
-            border-radius: 50px;
-            font-size: 0.65rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--bg-light);
-        }
-
-        .farmer-card .tag i {
-            font-size: 0.6rem;
-        }
-
-        .farmer-card .tag-expert {
-            background: #fef3c7;
-            color: #d97706;
-            border-color: #fde68a;
-        }
-
-        .farmer-card .tag-expert i {
-            color: #d97706;
-        }
-
-        .farmer-card .tag-experience {
-            background: #dbeafe;
-            color: #1d4ed8;
-            border-color: #bfdbfe;
-        }
-
-        .farmer-card .tag-crop {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border-color: #bbf7d0;
-        }
-
-        .farmer-card .tag-crop i {
-            color: var(--primary);
-        }
-
-        /* View Profile Button - Like image */
-        .farmer-card .btn-profile {
-            width: 100%;
-            padding: 8px 0;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            margin-top: 0.2rem;
-        }
-
-        .farmer-card .btn-profile:hover {
-            background: var(--primary-dark);
-            transform: scale(1.02);
-        }
-
-        .farmer-card .btn-profile i {
-            font-size: 0.8rem;
-        }
-
-        /* WhatsApp button - small, next to profile */
-        .farmer-card .card-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: auto;
-            padding-top: 0.4rem;
-        }
-
-        .farmer-card .btn-whatsapp {
-            padding: 6px 14px;
-            background: #25D366;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            min-width: 38px;
-            flex-shrink: 0;
-        }
-
-        .farmer-card .btn-whatsapp:hover {
-            background: #1da851;
-            transform: scale(1.02);
-        }
-
-        .farmer-card .btn-whatsapp i {
-            font-size: 0.9rem;
-        }
-
-        .farmer-card .btn-profile-wrapper {
-            flex: 1;
-        }
-
-        /* =======================================================
-           9. LOADING & NO RESULTS
-           ======================================================= */
-        .loading-spinner {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-muted);
-            grid-column: 1 / -1;
-        }
-
-        .loading-spinner i {
-            font-size: 2rem;
-            animation: spin 1s linear infinite;
-            display: block;
-            margin-bottom: 0.8rem;
+            color: #406040;
+            background: #f0f7ec;
+            padding: 0.25rem 0.9rem;
+            border-radius: 30px;
         }
 
         .no-results {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 3rem 1.5rem;
+            padding: 4rem 1rem;
+            background: white;
+            border-radius: 30px;
+            color: #3d5e3d;
+            font-size: 1.1rem;
+            border: 1px dashed #c2d8c2;
         }
 
         .no-results i {
-            font-size: 3rem;
-            color: var(--text-muted);
-            opacity: 0.3;
+            font-size: 2.4rem;
+            color: #7ba07b;
+            display: block;
             margin-bottom: 0.8rem;
         }
 
-        .no-results h3 {
-            color: var(--text-dark);
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .no-results p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .no-results .retry-btn {
-            margin-top: 0.8rem;
-            padding: 8px 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-        }
-
-        .no-results .retry-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        /* =======================================================
-           10. PAGINATION
-           ======================================================= */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 0.4rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .pagination button {
-            padding: 6px 14px;
-            border: 1.5px solid var(--border);
-            background: var(--bg-white);
-            color: var(--text-main);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .pagination button:hover:not(.active):not(:disabled) {
-            background: var(--bg-light);
-            border-color: var(--primary);
-        }
-
-        .pagination button.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .pagination button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* =======================================================
-           11. FOOTER
-           ======================================================= */
-        .footer {
-            background: var(--primary-dark);
-            color: white;
-            padding: 1.5rem 0;
-            margin-top: 2.5rem;
+        /* Loading */
+        .loading-spinner {
+            grid-column: 1 / -1;
             text-align: center;
+            padding: 3rem;
+            color: #3d683d;
+            font-size: 1.2rem;
         }
 
-        .footer a {
-            color: var(--secondary);
-            text-decoration: none;
+        .loading-spinner i {
+            font-size: 2.2rem;
+            margin-bottom: 0.6rem;
+            display: block;
+            color: #3a7a3a;
         }
 
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer p {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        /* =======================================================
-           12. RESPONSIVE - 4 COLUMN TO 3 TO 2 TO 1
-           ======================================================= */
-        @media (max-width: 1200px) {
-            .farmer-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 1.2rem;
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
             }
-        }
-
-        @media (max-width: 992px) {
-            .farmer-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 1.2rem;
+            .page-header h1 {
+                font-size: 1.6rem;
             }
-        }
-
-        @media (max-width: 768px) {
-            .container { padding: 0 1rem; }
-            .logo { font-size: 1.2rem; }
-            .back-link { font-size: 0.75rem; padding: 0.3rem 0.8rem; }
-            .page-header h1 { font-size: 1.5rem; }
-            .page-header p { font-size: 0.85rem; }
-
-            .search-container {
+            .search-section {
+                padding: 1.2rem;
                 flex-direction: column;
-                padding: 0.8rem 1rem;
-                gap: 0.6rem;
+                align-items: stretch;
             }
-
-            .search-wrapper {
-                width: 100%;
-                border: 1.5px solid var(--border);
-                border-radius: 8px;
-                padding: 0 12px;
-                background: var(--bg-white);
+            .filter-group {
+                flex-wrap: wrap;
             }
-
-            .search-input { width: 100%; padding: 10px 8px; }
-            .search-btn { width: 100%; justify-content: center; }
-            .filter-select { width: 100%; }
-
-            .farmer-grid {
+            .filter-group select {
+                flex: 1 1 100%;
+            }
+            .farmers-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
             }
-
-            .farmer-card .card-image {
-                height: 160px;
+            .header-stats {
+                font-size: 0.85rem;
+                padding: 0.3rem 1rem;
             }
-        }
-
-        @media (max-width: 480px) {
-            .page-header h1 { font-size: 1.2rem; }
-            .page-header h1 i { font-size: 1.2rem; }
-            .farmer-card .card-content .card-title { font-size: 1rem; }
-            .farmer-card .card-content .card-details p { font-size: 0.75rem; }
-            .farmer-card .btn-profile { font-size: 0.8rem; padding: 6px 0; }
-            .pagination button { padding: 5px 10px; font-size: 0.75rem; }
-            .stats-badge { font-size: 0.75rem; padding: 4px 12px; }
-            .farmer-card .card-image {
-                height: 160px;
-            }
-            .farmer-card .btn-whatsapp {
-                padding: 6px 10px;
-                min-width: 34px;
-                font-size: 0.7rem;
-            }
-        }
-
-        /* =======================================================
-           13. TOUCH DEVICE OPTIMIZATIONS
-           ======================================================= */
-        @media (hover: none) and (pointer: coarse) {
-            button, .search-btn, .btn-profile, .btn-whatsapp, .clear-filters {
-                min-height: 40px;
-            }
-            .farmer-card:hover { transform: none !important; }
-            .btn-profile:hover { transform: none !important; }
-            .btn-whatsapp:hover { transform: none !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== HEADER ===== -->
-    <header>
-        <div class="container">
-            <a href="/agri2.html" class="logo">
-                <i class="fas fa-seedling"></i>
-                Agri<span>Connect</span>
-            </a>
-            <a href="/agri2.html" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1><i class="fas fa-seedling"></i> Farmer Directory</h1>
+        <div class="header-stats">
+            <i class="fas fa-users" style="margin-right: 6px;"></i>
+            <span id="farmerCount">0</span> registered farmers
         </div>
-    </header>
+    </div>
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <main class="container">
-
-        <!-- ===== PAGE HEADER ===== -->
-        <div class="page-header">
-            <h1>
-                <i class="fas fa-users"></i> Farmer Directory
-            </h1>
-            <p>Connect with verified farmers across India. Browse, search, and contact farmers directly.</p>
-            <div class="stats-badge">
-                <i class="fas fa-check-circle"></i>
-                <span id="totalFarmersCount">0</span> Approved Farmers
-            </div>
+    <!-- SEARCH & FILTER -->
+    <div class="search-section">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by name, crop, or location..." />
         </div>
-
-        <!-- ===== SEARCH & FILTERS ===== -->
-        <div class="search-container">
-            <div class="search-wrapper">
-                <i class="fas fa-search"></i>
-                <input
-                    type="text"
-                    id="farmerSearch"
-                    placeholder="Search by name, crop, or location..."
-                    class="search-input"
-                >
-            </div>
-
-            <button class="search-btn" id="searchBtn">
-                <i class="fas fa-search"></i> Search Farmers
-            </button>
-
-            <select class="filter-select" id="cropFilter">
+        <div class="filter-group">
+            <select id="cropFilter">
                 <option value="">All Crops</option>
             </select>
-
-            <select class="filter-select" id="locationFilter">
+            <select id="locationFilter">
                 <option value="">All Locations</option>
             </select>
-
-            <button class="clear-filters" id="clearFilters">
-                <i class="fas fa-times"></i> Clear
-            </button>
+            <button class="clear-btn" id="clearFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
         </div>
+    </div>
 
-        <!-- ===== FARMER GRID ===== -->
-        <div id="farmerList" class="farmer-grid">
-            <!-- Populated by JavaScript -->
-            <div class="loading-spinner">
-                <i class="fas fa-spinner"></i>
-                Loading farmers...
-            </div>
+    <!-- GRID -->
+    <div class="farmers-grid" id="farmersGrid">
+        <div class="loading-spinner">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            Loading farmers...
         </div>
+    </div>
 
-        <!-- ===== PAGINATION ===== -->
-        <div class="pagination" id="pagination">
-            <!-- Populated by JavaScript -->
-        </div>
+</div>
 
-    </main>
+<script>
+    (function() {
+        'use strict';
 
-    <!-- ===== FOOTER ===== -->
-    <footer class="footer">
-        <div class="container">
-            <p>
-                &copy; 2026 <a href="/agri2.html">AgriConnect</a> - Empowering Farmers, Growing Communities.
-            </p>
-        </div>
-    </footer>
+        // DOM refs
+        const grid = document.getElementById('farmersGrid');
+        const searchInput = document.getElementById('searchInput');
+        const cropFilter = document.getElementById('cropFilter');
+        const locationFilter = document.getElementById('locationFilter');
+        const clearBtn = document.getElementById('clearFiltersBtn');
+        const farmerCountSpan = document.getElementById('farmerCount');
 
-    <!-- ===== SCRIPTS ===== -->
-    <script>
-        // ============================================================
-        // FARMER DIRECTORY - STANDALONE PAGE
-        // ============================================================
+        // State
+        let allFarmers = [];
+        let filteredFarmers = [];
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- DOM Elements ---
-            const farmerList = document.getElementById('farmerList');
-            const searchInput = document.getElementById('farmerSearch');
-            const searchBtn = document.getElementById('searchBtn');
-            const cropFilter = document.getElementById('cropFilter');
-            const locationFilter = document.getElementById('locationFilter');
-            const clearFilters = document.getElementById('clearFilters');
-            const pagination = document.getElementById('pagination');
-            const totalCount = document.getElementById('totalFarmersCount');
-
-            // --- State ---
-            let allFarmers = [];
-            let filteredFarmers = [];
-            let currentPage = 1;
-            const itemsPerPage = 12;
-
-            // --- API Fetch ---
-            async function fetchFarmers() {
-                try {
-                    farmerList.innerHTML = `
-                        <div class="loading-spinner">
-                            <i class="fas fa-spinner"></i>
-                            Loading farmers...
-                        </div>
-                    `;
-
-                    const response = await fetch('/api/approved-farmers', {
-                        method: 'GET',
-                        cache: 'no-store',
-                        headers: {
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    allFarmers = await response.json();
-                    console.log(`✅ Loaded ${allFarmers.length} approved farmers`);
-
-                    totalCount.textContent = allFarmers.length;
-                    populateFilters();
-                    applyFilters();
-
-                } catch (error) {
-                    console.error('❌ Error fetching farmers:', error);
-                    farmerList.innerHTML = `
-                        <div class="no-results">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>Unable to Load Farmers</h3>
-                            <p>Please try again later.</p>
-                            <button onclick="location.reload()" class="retry-btn">
-                                <i class="fas fa-sync"></i> Retry
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-
-            // --- Populate Filters ---
-            function populateFilters() {
-                const crops = [...new Set(allFarmers.map(f => f.crop_specialization).filter(Boolean))];
-                cropFilter.innerHTML = '<option value="">All Crops</option>';
-                crops.forEach(crop => {
-                    const option = document.createElement('option');
-                    option.value = crop;
-                    option.textContent = crop;
-                    cropFilter.appendChild(option);
+        // --- Fetch real farmers from your DB ---
+        async function fetchFarmers() {
+            try {
+                // ✅ IMPORTANT: change this URL to your actual backend endpoint
+                const response = await fetch('/api/approved-farmers', {
+                    method: 'GET',
+                    headers: { 'Cache-Control': 'no-cache' }
                 });
 
-                const locations = [...new Set(allFarmers.map(f => f.farm_location || f.user_location).filter(Boolean))];
-                locationFilter.innerHTML = '<option value="">All Locations</option>';
-                locations.forEach(loc => {
-                    const option = document.createElement('option');
-                    option.value = loc;
-                    option.textContent = loc;
-                    locationFilter.appendChild(option);
-                });
-            }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            // --- Apply Filters ---
-            function applyFilters() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                const cropValue = cropFilter.value;
-                const locationValue = locationFilter.value;
+                const data = await response.json();
 
-                filteredFarmers = allFarmers.filter(farmer => {
-                    if (searchTerm) {
-                        const searchable = [
-                            farmer.farm_name,
-                            farmer.crop_specialization,
-                            farmer.farm_location,
-                            farmer.user_location,
-                            farmer.author_name
-                        ].filter(Boolean).join(' ').toLowerCase();
-                        if (!searchable.includes(searchTerm)) return false;
-                    }
-                    if (cropValue && farmer.crop_specialization !== cropValue) return false;
-                    if (locationValue) {
-                        const farmerLocation = farmer.farm_location || farmer.user_location;
-                        if (farmerLocation !== locationValue) return false;
-                    }
-                    return true;
-                });
+                // Expecting an array of farmer objects with fields:
+                // farm_name, author_name, crop_specialization, farm_location,
+                // years_experience, contact_number, email, profile_picture_url, etc.
+                allFarmers = Array.isArray(data) ? data : [];
 
-                currentPage = 1;
-                renderFarmers();
-            }
+                // Populate filter dropdowns dynamically
+                populateFilters(allFarmers);
 
-            // --- Render Farmers ---
-            function renderFarmers() {
-                const totalItems = filteredFarmers.length;
-                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                // Apply initial render
+                applyFilters();
 
-                if (totalItems === 0) {
-                    farmerList.innerHTML = `
-                        <div class="no-results">
-                            <i class="fas fa-search"></i>
-                            <h3>No Farmers Found</h3>
-                            <p>Try adjusting your search or filters.</p>
-                            <button onclick="resetFilters()" class="retry-btn">
-                                <i class="fas fa-undo"></i> Reset Filters
-                            </button>
-                        </div>
-                    `;
-                    pagination.innerHTML = '';
-                    return;
-                }
-
-                const start = (currentPage - 1) * itemsPerPage;
-                const end = Math.min(start + itemsPerPage, totalItems);
-                const pageItems = filteredFarmers.slice(start, end);
-
-                farmerList.innerHTML = pageItems.map(farmer => createFarmerCard(farmer)).join('');
-                renderPagination(totalPages);
-                farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-
-            // --- Create Farmer Card - Exact Match to Image ---
-            function createFarmerCard(farmer) {
-                const isExpert = (parseInt(farmer.years_experience) || 0) >= 7;
-                const profilePic = farmer.profile_picture_url || '/uploads/default.png';
-                const farmLocation = farmer.farm_location || farmer.user_location || 'Location not specified';
-                const name = farmer.author_name || farmer.farm_name || 'Anonymous Farmer';
-
-                const dataAttrs = `
-                    data-id="${farmer.id || ''}"
-                    data-name="${name}"
-                    data-email="${farmer.contact_email || farmer.email || ''}"
-                    data-contact="${farmer.contact_number || ''}"
-                    data-pic="${profilePic}"
-                    data-experience="${farmer.years_experience || 0}"
-                    data-location="${farmLocation}"
-                    data-is-expert="${isExpert}"
-                    data-farm="${farmer.farm_name || ''}"
-                    data-crop="${farmer.crop_specialization || ''}"
+            } catch (err) {
+                console.error('Failed to fetch farmers:', err);
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Unable to load farmers.<br />
+                        <span style="font-size:0.9rem; color:#6e8b6e;">Please check your server connection.</span>
+                    </div>
                 `;
+                farmerCountSpan.textContent = '0';
+            }
+        }
 
-                let whatsappLink = '#';
-                if (farmer.contact_number) {
-                    let cleaned = farmer.contact_number.replace(/[^0-9]/g, '');
-                    if (cleaned.length === 10) cleaned = '91' + cleaned;
-                    whatsappLink = `https://wa.me/${cleaned}`;
+        // --- Populate crop & location dropdowns ---
+        function populateFilters(farmers) {
+            const cropsSet = new Set();
+            const locationsSet = new Set();
+
+            farmers.forEach(f => {
+                if (f.crop_specialization) {
+                    // Split by commas in case there are multiple crops
+                    const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
+                    crops.forEach(c => cropsSet.add(c));
+                }
+                if (f.farm_location) {
+                    locationsSet.add(f.farm_location.trim());
+                }
+            });
+
+            // Crop filter
+            cropFilter.innerHTML = '<option value="">All Crops</option>';
+            [...cropsSet].sort().forEach(crop => {
+                const opt = document.createElement('option');
+                opt.value = crop;
+                opt.textContent = crop;
+                cropFilter.appendChild(opt);
+            });
+
+            // Location filter
+            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            [...locationsSet].sort().forEach(loc => {
+                const opt = document.createElement('option');
+                opt.value = loc;
+                opt.textContent = loc;
+                locationFilter.appendChild(opt);
+            });
+        }
+
+        // --- Filter & Render ---
+        function applyFilters() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const cropVal = cropFilter.value.toLowerCase();
+            const locVal = locationFilter.value.toLowerCase();
+
+            filteredFarmers = allFarmers.filter(farmer => {
+                // Search: name, farm name, crops, location
+                const nameMatch = (farmer.author_name || '').toLowerCase().includes(searchTerm);
+                const farmMatch = (farmer.farm_name || '').toLowerCase().includes(searchTerm);
+                const cropMatch = (farmer.crop_specialization || '').toLowerCase().includes(searchTerm);
+                const locMatch = (farmer.farm_location || '').toLowerCase().includes(searchTerm);
+                const searchPass = searchTerm === '' || nameMatch || farmMatch || cropMatch || locMatch;
+
+                // Crop filter (exact match on crop_specialization field)
+                let cropPass = true;
+                if (cropVal !== '') {
+                    const farmerCrops = (farmer.crop_specialization || '').split(',').map(c => c.trim().toLowerCase());
+                    cropPass = farmerCrops.includes(cropVal);
                 }
 
-                // Get first crop for tag
-                const firstCrop = farmer.crop_specialization ? farmer.crop_specialization.split(',')[0].trim() : '';
+                // Location filter
+                const locationPass = locVal === '' || (farmer.farm_location || '').toLowerCase() === locVal;
 
-                return `
-                    <div class="farmer-card">
-                        <div class="card-image">
-                            <img src="${profilePic}" alt="${name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'default-icon\\'><i class=\\'fas fa-user-circle\\'></i></div>'">
-                            ${isExpert ? '<span class="expert-badge"><i class="fas fa-star"></i> Expert</span>' : ''}
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-title">${farmer.farm_name || 'Farm'}</h3>
-                            <div class="card-subtitle">${name}</div>
-                            <div class="card-details">
-                                <p><strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
-                                <p><strong>Location:</strong> ${farmLocation}</p>
-                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
-                            </div>
-                            <div class="card-tags">
-                                ${firstCrop ? `<span class="tag tag-crop"><i class="fas fa-seedling"></i> ${firstCrop}</span>` : ''}
-                                ${isExpert ? '<span class="tag tag-expert"><i class="fas fa-star"></i> Expert</span>' : ''}
-                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs exp</span>` : ''}
-                            </div>
-                            <div class="card-actions">
-                                <div class="btn-profile-wrapper">
-                                    <button class="btn-profile contact-profile-link" ${dataAttrs}>
-                                        <i class="fas fa-user"></i> View Profile
-                                    </button>
+                return searchPass && cropPass && locationPass;
+            });
+
+            renderFarmers(filteredFarmers);
+            farmerCountSpan.textContent = filteredFarmers.length;
+        }
+
+        // --- Render cards ---
+        function renderFarmers(farmers) {
+            if (!farmers.length) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-tractor"></i>
+                        No farmers match your filters.<br />
+                        <span style="font-size:0.9rem; color:#6e8b6e;">Try adjusting your search criteria.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            farmers.forEach(f => {
+                // Profile picture fallback
+                const avatar = f.profile_picture_url && f.profile_picture_url.startsWith('http')
+                    ? f.profile_picture_url
+                    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(f.author_name || f.farm_name || 'Farmer') + '&background=dce8d4&color=1f4a1f&size=58';
+
+                // Format crops as tags
+                let cropTags = '';
+                if (f.crop_specialization) {
+                    const crops = f.crop_specialization.split(',').map(c => c.trim()).filter(Boolean);
+                    cropTags = crops.map(c => `<span class="crop-tag">${c}</span>`).join(' ');
+                }
+
+                // Expert badge if experience >= 7
+                const exp = parseInt(f.years_experience) || 0;
+                const expertBadge = exp >= 7 ? `<span class="expert-badge"><i class="fas fa-star" style="font-size:0.6rem;"></i> Expert</span>` : '';
+
+                // Contact info for button
+                const contactNumber = f.contact_number || '';
+                const email = f.email || f.contact_email || '';
+
+                html += `
+                    <div class="farmer-card" data-id="${f.id || ''}">
+                        <div class="card-header">
+                            <img class="avatar" src="${avatar}" alt="${f.author_name || f.farm_name}" />
+                            <div>
+                                <div class="farm-name">
+                                    ${f.farm_name || 'Unnamed Farm'}
+                                    ${expertBadge}
+                                    <small>${f.author_name || 'Farmer'}</small>
                                 </div>
-                                ${farmer.contact_number ? `
-                                    <a href="${whatsappLink}" target="_blank" class="btn-whatsapp">
-                                        <i class="fab fa-whatsapp"></i>
-                                    </a>
-                                ` : ''}
                             </div>
+                        </div>
+
+                        <div class="detail-row">
+                            <i class="fas fa-seedling"></i>
+                            <span>${cropTags || '—'}</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <i class="fas fa-map-pin"></i>
+                            <span>${f.farm_location || 'Location not listed'}</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>${exp} years experience</span>
+                        </div>
+
+                        <div class="card-footer">
+                            <span class="exp-text"><i class="far fa-clock"></i> Active farmer</span>
+                            <button class="contact-btn" 
+                                    data-name="${f.author_name || f.farm_name}" 
+                                    data-email="${email}" 
+                                    data-contact="${contactNumber}"
+                                    data-experience="${exp}"
+                                    data-location="${f.farm_location || ''}"
+                                    data-pic="${avatar}">
+                                <i class="fas fa-phone-alt"></i> Contact
+                            </button>
                         </div>
                     </div>
                 `;
-            }
-
-            // --- Render Pagination ---
-            function renderPagination(totalPages) {
-                if (totalPages <= 1) {
-                    pagination.innerHTML = '';
-                    return;
-                }
-
-                let html = '';
-                html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
-                    <i class="fas fa-chevron-left"></i>
-                </button>`;
-
-                let startPage = Math.max(1, currentPage - 2);
-                let endPage = Math.min(totalPages, currentPage + 2);
-
-                if (startPage > 1) {
-                    html += `<button onclick="goToPage(1)">1</button>`;
-                    if (startPage > 2) html += `<button disabled>...</button>`;
-                }
-
-                for (let i = startPage; i <= endPage; i++) {
-                    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-                }
-
-                if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) html += `<button disabled>...</button>`;
-                    html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
-                }
-
-                html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
-                    <i class="fas fa-chevron-right"></i>
-                </button>`;
-
-                pagination.innerHTML = html;
-            }
-
-            // --- Go to Page ---
-            window.goToPage = function(page) {
-                const totalPages = Math.ceil(filteredFarmers.length / itemsPerPage);
-                if (page < 1 || page > totalPages) return;
-                currentPage = page;
-                renderFarmers();
-            };
-
-            // --- Reset Filters ---
-            window.resetFilters = function() {
-                searchInput.value = '';
-                cropFilter.value = '';
-                locationFilter.value = '';
-                applyFilters();
-            };
-
-            // --- Event Listeners ---
-            searchBtn.addEventListener('click', applyFilters);
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') applyFilters();
             });
-            cropFilter.addEventListener('change', applyFilters);
-            locationFilter.addEventListener('change', applyFilters);
-            clearFilters.addEventListener('click', resetFilters);
 
-            // --- Profile Viewer Redirect ---
-            farmerList.addEventListener('click', function(e) {
-                const target = e.target.closest('.contact-profile-link');
-                if (target) {
-                    e.preventDefault();
+            grid.innerHTML = html;
 
+            // --- Attach click listeners for "Contact" buttons ---
+            document.querySelectorAll('.contact-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+
+                    // Check if user is logged in (optional)
                     const userData = localStorage.getItem('agriUser');
                     if (!userData) {
-                        alert('Please login to view farmer profiles.');
+                        alert('Please login to view farmer contact details.');
                         return;
                     }
 
+                    // Gather data attributes
                     const profile = {
-                        name: target.dataset.name || 'Farmer',
-                        email: target.dataset.email || '',
-                        contact: target.dataset.contact || '',
-                        pic: target.dataset.pic || '/uploads/default.png',
-                        experience: target.dataset.experience || '0',
-                        location: target.dataset.location || '',
-                        isExpert: target.dataset.isExpert === 'true'
+                        name: this.dataset.name || 'Farmer',
+                        email: this.dataset.email || 'Not Listed',
+                        contact: this.dataset.contact || '',
+                        experience: this.dataset.experience || '',
+                        location: this.dataset.location || '',
+                        pic: this.dataset.pic || '',
+                        isExpert: (parseInt(this.dataset.experience) || 0) >= 7
                     };
 
+                    // Redirect to profile viewer (like your original agri.js logic)
                     const params = new URLSearchParams(profile);
                     window.location.href = `profile-viewer.html?${params.toString()}`;
-                }
+                });
             });
+        }
 
-            // --- Initialize ---
-            fetchFarmers();
+        // --- Event listeners ---
+        searchInput.addEventListener('input', applyFilters);
+        cropFilter.addEventListener('change', applyFilters);
+        locationFilter.addEventListener('change', applyFilters);
 
-            window.refreshFarmers = fetchFarmers;
-            window.applyFilters = applyFilters;
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            cropFilter.value = '';
+            locationFilter.value = '';
+            applyFilters();
         });
-    </script>
+
+        // --- Start ---
+        fetchFarmers();
+
+    })();
+</script>
 
 </body>
 </html>
