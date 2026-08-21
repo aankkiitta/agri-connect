@@ -1310,20 +1310,34 @@
             </div>
         </section>
 
-    
-    <!-- Farmer Directory Section -->
-    <section id="farmers" class="container">
-        <h2>Farmer Directory</h2>
-        <div class="search-container">
-            <input type="text" id="farmerSearch" placeholder="Search by name, crop, or location..." class="search-input">
-            <button class="search-button">
-                Search Farmers
-            </button>
-        </div>
-        <div id="farmerList" class="grid-container">
-            <!-- Farmer cards will be injected here by JavaScript -->
-        </div>
-    </section>
+   <!-- Farmer Directory Section -->
+<section id="farmers" class="container">
+    <h2>Farmer Directory</h2>
+
+    <div class="search-container">
+        <input
+            type="text"
+            id="farmerSearch"
+            placeholder="Search by name, crop, or location..."
+            class="search-input"
+        >
+
+        <button class="search-button" onclick="searchFarmers()">
+            Search Farmers
+        </button>
+    </div>
+
+    <div id="farmerList" class="grid-container">
+        <!-- First 6 farmer cards will be shown here -->
+    </div>
+
+    <!-- View More Button -->
+    <div class="view-more-container">
+        <button id="viewMoreFarmers" class="view-more-btn">
+            View More Farmers
+        </button>
+    </div>
+</section>
 
     <!-- Equipment Marketplace Section -->
     <section id="equipment" class="marketplace-section">

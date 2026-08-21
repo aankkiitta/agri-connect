@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
    if (document.getElementById('farmerList')) {
         
         let allFarmers = []; // This will hold the data fetched from the DB
+        let showAllFarmers = false;
         const farmerListDiv = document.getElementById('farmerList');
         const farmerSearchInput = document.getElementById('farmerSearch');
         const searchButton = document.querySelector('#farmers .search-button');
@@ -28,47 +29,89 @@ async function fetchFarmers() {
     }
 }
         function renderFarmers(farmerArray) {
-            farmerListDiv.innerHTML = '';
-            if (farmerArray.length === 0) {
-                farmerListDiv.innerHTML = '<p class="no-results-message">No farmers found matching your search criteria.</p>';
-                return;
-            }
-            // CRITICAL: Use properties returned by the server API 
-            farmerArray.forEach(farmer => {
-                // Prepare data attributes for the contact button, ensuring defaults if listing fields are empty
-                const userEmail = farmer.contact_email || farmer.email || 'Not Listed'; 
+    farmerListDiv.innerHTML = '';
 
-                // CRITICAL: Data attributes for profile redirection (based on agrii.js logic)
-                const dataAttributes = `
-                    data-name="${farmer.author_name || farmer.farm_name}" 
-                    data-email="${userEmail}" 
-                    data-contact="${farmer.contact_number || ''}" 
-                    data-experience="${farmer.years_experience || ''}"
-                    data-location="${farmer.user_location || farmer.farm_location}"
-                    data-pic="${farmer.profile_picture_url || '/agri-images/default.png'}"
-                `;
+    if (farmerArray.length === 0) {
+        farmerListDiv.innerHTML =
+            '<p class="no-results-message">No farmers found matching your search criteria.</p>';
+        return;
+    }
 
-                farmerListDiv.innerHTML += `
-                    <div class="card">
-                        <h3>${farmer.farm_name}</h3>
-                        <p><strong>Crops:</strong> ${farmer.crop_specialization}</p>
-                        <p><strong>Location:</strong> ${farmer.farm_location}</p>
-                        <button class="view-details-button contact-profile-link" ${dataAttributes}>Contact Farmer</button>
-                    </div>`;
+    // Show only 6 farmers initially
+    const farmersToShow = showAllFarmers
+        ? farmerArray
+        : farmerArray.slice(0, 6);
+
+    farmersToShow.forEach(farmer => {
+
+        const userEmail =
+            farmer.contact_email || farmer.email || 'Not Listed';
+
+        const dataAttributes = `
+            data-name="${farmer.author_name || farmer.farm_name}"
+            data-email="${userEmail}"
+            data-contact="${farmer.contact_number || ''}"
+            data-experience="${farmer.years_experience || ''}"
+            data-location="${farmer.user_location || farmer.farm_location}"
+            data-pic="${farmer.profile_picture_url || '/agri-images/default.png'}"
+        `;
+
+        farmerListDiv.innerHTML += `
+            <div class="card">
+                <h3>${farmer.farm_name}</h3>
+                <p><strong>Crops:</strong> ${farmer.crop_specialization}</p>
+                <p><strong>Location:</strong> ${farmer.farm_location}</p>
+                <button class="view-details-button contact-profile-link" ${dataAttributes}>
+                    Contact Farmer
+                </button>
+            </div>
+        `;
+    });
+
+    // View More button
+    let viewMoreBtn = document.getElementById('viewMoreFarmersBtn');
+
+    if (farmerArray.length > 6) {
+
+        if (!viewMoreBtn) {
+            viewMoreBtn = document.createElement('button');
+            viewMoreBtn.id = 'viewMoreFarmersBtn';
+            viewMoreBtn.className = 'hero-button';
+            viewMoreBtn.style.display = 'block';
+            viewMoreBtn.style.margin = '25px auto';
+
+            farmerListDiv.parentNode.appendChild(viewMoreBtn);
+
+            viewMoreBtn.addEventListener('click', () => {
+                showAllFarmers = !showAllFarmers;
+                renderFarmers(farmerArray);
             });
         }
 
-        window.filterFarmers = function() {
-            if (!farmerSearchInput) return;
-            const searchTerm = farmerSearchInput.value.toLowerCase();
-            const filtered = allFarmers.filter(f => 
-                f.farm_name.toLowerCase().includes(searchTerm) || 
-                f.crop_specialization.toLowerCase().includes(searchTerm) || 
-                f.farm_location.toLowerCase().includes(searchTerm)
-            );
-            renderFarmers(filtered);
-        }
-        
+        viewMoreBtn.textContent = showAllFarmers
+            ? 'Show Less'
+            : 'View More Farmers';
+
+    } else if (viewMoreBtn) {
+        viewMoreBtn.remove();
+    }
+}
+     window.filterFarmers = function() {
+    if (!farmerSearchInput) return;
+
+    const searchTerm = farmerSearchInput.value.toLowerCase();
+
+    const filtered = allFarmers.filter(f =>
+        (f.farm_name || '').toLowerCase().includes(searchTerm) ||
+        (f.crop_specialization || '').toLowerCase().includes(searchTerm) ||
+        (f.farm_location || '').toLowerCase().includes(searchTerm)
+    );
+
+    // Search result starts from first 6 again
+    showAllFarmers = false;
+
+    renderFarmers(filtered);
+}
         // This handles the profile viewer redirection when "Contact Farmer" is clicked
         farmerListDiv.addEventListener('click', (e) => {
             const target = e.target;
