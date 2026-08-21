@@ -1956,7 +1956,7 @@ document.getElementById('addSchemeForm').addEventListener('submit', async (e) =>
 async function loadManagementTable() {
     const tableBody = document.getElementById('adminSchemeTableBody');
     try {
-        const res = await fetch('http://localhost:3000/api/schemes');
+        const res = await fetch(`${API_BASE_URL}/api/schemes`);
         const schemes = await res.json();
         
         tableBody.innerHTML = schemes.map(s => `
@@ -2002,7 +2002,7 @@ function fillFormForEdit(scheme) {
 async function confirmDelete(id) {
     if (!confirm("Are you sure? This will permanently remove the scheme.")) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/admin/schemes/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE_URL}/api/admin/schemes/${id}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
             alert("Scheme deleted!");
@@ -2035,7 +2035,7 @@ async function refreshArticleList() {
     if (!tableBody) return;
 
     try {
-        const res = await fetch('http://localhost:3000/api/articles'); 
+        const res = await fetch(`${API_BASE_URL}/api/articles`); 
         const articles = await res.json();
         
         if (articles.length === 0) {
@@ -2066,7 +2066,7 @@ async function loadArticlesToMainPage() {
     if (!articleGrid) return;
 
     try {
-        const res = await fetch('http://localhost:3000/api/articles');
+        const res = await fetch(`${API_BASE_URL}/api/articles`);
         const articles = await res.json();
         
         if (articles.length === 0) {
