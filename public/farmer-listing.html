@@ -325,113 +325,22 @@
         }
 
         /* =======================================================
-           7. GRID CONTAINER - SMALL CARDS
+           7. FARMER GRID - 3 COLUMN RESPONSIVE
            ======================================================= */
-        .grid-container {
+        .farmer-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.2rem;
-        }
-
-        .list-view .grid-container {
-            grid-template-columns: 1fr;
-        }
-
-        .list-view .card {
-            display: flex;
-            gap: 1.2rem;
-            align-items: center;
-            padding: 0.8rem 1.2rem;
-            flex-direction: row;
-        }
-
-        .list-view .card .card-image {
-            width: 70px;
-            height: 70px;
-            flex-shrink: 0;
-            border-radius: 50%;
-        }
-
-        .list-view .card .card-image img {
-            border-radius: 50%;
-        }
-
-        .list-view .card .card-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-
-        .list-view .card .card-body .card-title {
-            font-size: 1rem;
-            margin-bottom: 0;
-        }
-
-        .list-view .card .card-body .card-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem 1rem;
-            margin-bottom: 0;
-        }
-
-        .list-view .card .card-body .card-details p {
-            font-size: 0.8rem;
-            margin-bottom: 0;
-        }
-
-        .list-view .card .card-body .card-tags {
-            margin-bottom: 0;
-        }
-
-        .list-view .card .card-actions {
-            flex-shrink: 0;
-            display: flex;
-            gap: 0.4rem;
-        }
-
-        .list-view .card .card-actions .btn-primary {
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            min-width: auto;
-        }
-
-        .list-view .card .card-actions .btn-whatsapp {
-            padding: 6px 12px;
-        }
-
-        @media (max-width: 768px) {
-            .list-view .card {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 1rem;
-            }
-            .list-view .card .card-image {
-                width: 100%;
-                height: 120px;
-                border-radius: 8px;
-            }
-            .list-view .card .card-image img {
-                border-radius: 8px;
-            }
-            .list-view .card .card-actions {
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-            .list-view .card .card-actions .btn-primary {
-                flex: 1;
-                min-width: auto;
-            }
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.5rem;
         }
 
         /* =======================================================
-           8. CARDS - SMALL & PROFESSIONAL
+           8. FARMER CARD - COMPACT & PROFESSIONAL
            ======================================================= */
-        .card {
+        .farmer-card {
             background: var(--bg-card);
             border-radius: var(--card-radius);
-            box-shadow: var(--shadow);
             overflow: hidden;
+            box-shadow: var(--shadow);
             transition: all var(--transition);
             border: 1px solid var(--border);
             display: flex;
@@ -439,37 +348,42 @@
             animation: fadeInUp 0.4s ease-out forwards;
         }
 
-        .card:hover {
+        .farmer-card:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-hover);
             border-color: var(--primary);
         }
 
-        .card-image {
+        /* Card Image - Fixed Height 150px */
+        .farmer-card .card-image {
             width: 100%;
-            height: 160px;
-            object-fit: cover;
-            background: var(--bg-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+            height: 150px;
             overflow: hidden;
+            background: var(--bg-light);
+            position: relative;
+            flex-shrink: 0;
         }
 
-        .card-image img {
+        .farmer-card .card-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
+            display: block;
         }
 
-        .card-image .default-icon {
+        .farmer-card .card-image .default-icon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 3rem;
             color: var(--primary);
             opacity: 0.3;
         }
 
-        .expert-badge {
+        .farmer-card .expert-badge {
             position: absolute;
             top: 8px;
             right: 8px;
@@ -482,54 +396,56 @@
             display: flex;
             align-items: center;
             gap: 3px;
+            z-index: 2;
         }
 
-        .card-body {
-            padding: 1rem 1.2rem 1.2rem;
+        /* Card Content - Compact Padding */
+        .farmer-card .card-content {
+            padding: 0.9rem 1rem 1rem;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
         }
 
-        .card-body .card-title {
+        .farmer-card .card-content .card-title {
             font-size: 1.05rem;
             font-weight: 700;
             color: var(--text-dark);
-            margin: 0;
+            margin: 0 0 0.1rem 0;
             line-height: 1.3;
         }
 
-        .card-body .card-subtitle {
+        .farmer-card .card-content .card-subtitle {
             color: var(--text-muted);
             font-size: 0.8rem;
-            margin: 0;
+            margin: 0 0 0.4rem 0;
         }
 
-        .card-body .card-details {
-            margin: 0.2rem 0 0.3rem;
+        .farmer-card .card-content .card-details {
+            margin: 0 0 0.3rem 0;
         }
 
-        .card-body .card-details p {
+        .farmer-card .card-content .card-details p {
             margin: 0;
             font-size: 0.82rem;
             color: var(--text-muted);
             line-height: 1.4;
         }
 
-        .card-body .card-details p strong {
+        .farmer-card .card-content .card-details p strong {
             color: var(--text-dark);
             font-weight: 600;
         }
 
-        .card-body .card-tags {
+        /* Tags */
+        .farmer-card .card-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 0.3rem;
-            margin: 0.2rem 0 0.4rem;
+            margin: 0.2rem 0 0.5rem;
         }
 
-        .tag {
+        .farmer-card .tag {
             background: var(--bg-light);
             padding: 2px 10px;
             border-radius: 50px;
@@ -539,25 +455,27 @@
             border: 1px solid var(--border);
         }
 
-        .tag-expert {
+        .farmer-card .tag-expert {
             background: #fef3c7;
             color: #d97706;
             border-color: #fde68a;
         }
 
-        .tag-experience {
+        .farmer-card .tag-experience {
             background: #dbeafe;
             color: #1d4ed8;
             border-color: #bfdbfe;
         }
 
-        .card-actions {
+        /* Action Buttons */
+        .farmer-card .card-actions {
             display: flex;
             gap: 0.5rem;
-            margin-top: 0.3rem;
+            margin-top: auto;
+            padding-top: 0.5rem;
         }
 
-        .btn-primary {
+        .farmer-card .btn-primary {
             flex: 1;
             padding: 6px 12px;
             background: var(--primary);
@@ -575,20 +493,20 @@
             font-size: 0.8rem;
         }
 
-        .btn-primary:hover {
+        .farmer-card .btn-primary:hover {
             background: var(--primary-dark);
             transform: scale(1.02);
         }
 
-        .btn-whatsapp {
+        .farmer-card .btn-whatsapp {
             background: #25D366;
             color: white;
             border: none;
             flex: 0.4;
-            min-width: 40px;
+            min-width: 38px;
         }
 
-        .btn-whatsapp:hover {
+        .farmer-card .btn-whatsapp:hover {
             background: #1da851;
         }
 
@@ -715,12 +633,12 @@
         }
 
         /* =======================================================
-           12. RESPONSIVE
+           12. RESPONSIVE - 3 COLUMN TO 2 TO 1
            ======================================================= */
-        @media (max-width: 1024px) {
-            .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1rem;
+        @media (max-width: 992px) {
+            .farmer-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1.2rem;
             }
         }
 
@@ -752,22 +670,27 @@
             }
             .view-toggle button { flex: 1; text-align: center; }
 
-            .grid-container {
+            .farmer-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
 
-            .card-image { height: 140px; }
+            .farmer-card .card-image {
+                height: 160px;
+            }
         }
 
         @media (max-width: 480px) {
             .page-header h1 { font-size: 1.3rem; }
             .page-header h1 i { font-size: 1.3rem; }
-            .card-body .card-title { font-size: 0.95rem; }
-            .card-body .card-details p { font-size: 0.75rem; }
-            .btn-primary { font-size: 0.75rem; padding: 5px 10px; }
+            .farmer-card .card-content .card-title { font-size: 0.95rem; }
+            .farmer-card .card-content .card-details p { font-size: 0.75rem; }
+            .farmer-card .btn-primary { font-size: 0.75rem; padding: 5px 10px; }
             .pagination button { padding: 5px 10px; font-size: 0.75rem; }
             .stats-badge { font-size: 0.75rem; padding: 4px 12px; }
+            .farmer-card .card-image {
+                height: 160px;
+            }
         }
 
         /* =======================================================
@@ -777,7 +700,7 @@
             button, .search-btn, .btn-primary, .clear-filters {
                 min-height: 40px;
             }
-            .card:hover { transform: none !important; }
+            .farmer-card:hover { transform: none !important; }
             .btn-primary:hover { transform: none !important; }
         }
     </style>
@@ -849,7 +772,7 @@
         </div>
 
         <!-- ===== FARMER GRID ===== -->
-        <div id="farmerList" class="grid-container">
+        <div id="farmerList" class="farmer-grid">
             <!-- Populated by JavaScript -->
             <div class="loading-spinner">
                 <i class="fas fa-spinner"></i>
@@ -1022,7 +945,7 @@
                 farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            // --- Create Farmer Card ---
+            // --- Create Farmer Card - Compact with 150px Image ---
             function createFarmerCard(farmer) {
                 const isExpert = (parseInt(farmer.years_experience) || 0) >= 7;
                 const profilePic = farmer.profile_picture_url || '/uploads/default.png';
@@ -1050,12 +973,12 @@
                 }
 
                 return `
-                    <div class="card">
+                    <div class="farmer-card">
                         <div class="card-image">
                             <img src="${profilePic}" alt="${name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'default-icon\\'><i class=\\'fas fa-user-circle\\'></i></div>'">
                             ${isExpert ? '<span class="expert-badge"><i class="fas fa-star"></i> Expert</span>' : ''}
                         </div>
-                        <div class="card-body">
+                        <div class="card-content">
                             <h3 class="card-title">${farmer.farm_name || 'Farm'}</h3>
                             <div class="card-subtitle">${name}</div>
                             <div class="card-details">
