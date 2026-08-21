@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Farmers - AgriConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* =======================================================
+           1. VARIABLES & CONFIGURATION
+           ======================================================= */
+        :root {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --primary-light: #dcfce7;
+            --secondary: #facc15;
+            --secondary-dark: #eab308;
+            --bg-body: #f0fdf4;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --bg-card: #ffffff;
+            --bg-dropdown: #ffffff;
+            --text-main: #2d3748;
+            --text-dark: #1f2937;
+            --text-muted: #4b5563;
+            --border: #e5e7eb;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-stack: 'Inter', sans-serif;
+            --shadow-md: 0 4px 6px -1px var(--shadow-color);
+            --card-radius: 16px;
+            --shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --primary-light: #064e3b;
+            --bg-body: #0f172a;
+            --bg-light: #1e293b;
+            --bg-white: #1e293b;
+            --bg-card: #1e293b;
+            --bg-dropdown: #334155;
+            --text-main: #f1f5f9;
+            --text-dark: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* =======================================================
+           2. ANIMATIONS
+           ======================================================= */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate3d(0, 30px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* =======================================================
+           3. GLOBAL RESET
+           ======================================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        /* =======================================================
+           4. HEADER
+           ======================================================= */
+        header {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            color: var(--secondary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 50px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(-4px);
+        }
+
+        /* =======================================================
+           5. PAGE HEADER
+           ======================================================= */
+        .page-header {
+            padding: 2rem 0 1.5rem 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 0;
+        }
+
+        .page-header h1 i {
+            color: var(--secondary);
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 0.3rem;
+        }
+
+        .stats-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* =======================================================
+           6. CONTROLS BAR
+           ======================================================= */
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-white);
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            align-items: center;
+        }
+
+        .search-wrapper {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+            min-width: 150px;
+            background: var(--bg-white);
+            color: var(--text-main);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+
+        .filter-select {
+            padding: 12px 18px;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-size: 1rem;
+            background: var(--bg-white);
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            min-width: 150px;
+            transition: border-color 0.3s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+        }
+
+        .clear-filters {
+            padding: 12px 20px;
+            background: var(--bg-light);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .clear-filters:hover {
+            background: var(--border);
+            color: var(--text-dark);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .view-toggle button {
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            background: var(--bg-white);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .view-toggle button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .view-toggle button:hover:not(.active) {
+            background: var(--bg-light);
+        }
+
+        /* =======================================================
+           7. GRID & LIST VIEWS
+           ======================================================= */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .list-view .grid-container {
+            grid-template-columns: 1fr;
+        }
+
+        .list-view .card {
+            display: flex;
+            gap: 1.5rem;
+            align-items: stretch;
+            padding: 1.2rem 1.8rem;
+            flex-direction: row;
+        }
+
+        .list-view .card .card-image {
+            width: 140px;
+            height: 140px;
+            flex-shrink: 0;
+        }
+
+        .list-view .card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-view .card .card-actions {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .list-view .card .card-actions .btn-primary {
+            min-width: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .list-view .card {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1.2rem;
+            }
+            .list-view .card .card-image {
+                width: 100%;
+                height: 160px;
+            }
+            .list-view .card .card-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .list-view .card .card-actions .btn-primary {
+                min-width: auto;
+                flex: 1;
+            }
+        }
+
+        /* =======================================================
+           8. CARDS
+           ======================================================= */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-image .default-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            opacity: 0.3;
+        }
+
+        .expert-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-body .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.3rem;
+        }
+
+        .card-body .card-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-body .card-details {
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+
+        .card-body .card-details p {
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .card-body .card-details p strong {
+            color: var(--text-dark);
+        }
+
+        .card-body .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            background: var(--bg-light);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .tag-expert {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-experience {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: auto;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            border: none;
+            flex: 0.5;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1da851;
+        }
+
+        /* =======================================================
+           9. LOADING & NO RESULTS
+           ======================================================= */
+        .loading-spinner {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .loading-spinner i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .no-results i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        .no-results h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-results p {
+            color: var(--text-muted);
+        }
+
+        .no-results .retry-btn {
+            margin-top: 1rem;
+            padding: 10px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .no-results .retry-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* =======================================================
+           10. PAGINATION
+           ======================================================= */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: var(--bg-white);
+            color: var(--text-main);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .pagination button:hover:not(.active):not(:disabled) {
+            background: var(--bg-light);
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* =======================================================
+           11. FOOTER
+           ======================================================= */
+        .footer {
+            background: var(--primary-dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .footer a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* =======================================================
+           12. RESPONSIVE
+           ======================================================= */
+        @media (max-width: 992px) {
+            .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .back-link {
+                font-size: 0.85rem;
+                padding: 0.4rem 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .search-wrapper {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .search-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .view-toggle {
+                margin-left: 0;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .view-toggle button {
+                flex: 1;
+                text-align: center;
+            }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+
+            .card-image {
+                height: 160px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .card-body .card-title {
+                font-size: 1.1rem;
+            }
+
+            .card-body .card-details p {
+                font-size: 0.85rem;
+            }
+
+            .btn-primary {
+                font-size: 0.85rem;
+                padding: 8px 16px;
+            }
+
+            .pagination button {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+
+            .stats-badge {
+                font-size: 0.8rem;
+                padding: 4px 12px;
+            }
+        }
+
+        /* =======================================================
+           13. TOUCH DEVICE OPTIMIZATIONS
+           ======================================================= */
+        @media (hover: none) and (pointer: coarse) {
+            button, .search-btn, .btn-primary, .clear-filters {
+                min-height: 44px;
+            }
+            .card:hover {
+                transform: none !important;
+            }
+            .btn-primary:hover {
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="container">
+            <a href="/agri2.html" class="logo">
+                <i class="fas fa-seedling"></i>
+                Agri<span>Connect</span>
+            </a>
+            <a href="/agri2.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="container">
+
+        <!-- ===== PAGE HEADER ===== -->
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-users"></i> Farmer Directory
+            </h1>
+            <p>Connect with verified farmers across India. Browse, search, and contact farmers directly.</p>
+            <div class="stats-badge">
+                <i class="fas fa-check-circle"></i>
+                <span id="totalFarmersCount">0</span> Approved Farmers
+            </div>
+        </div>
+
+        <!-- ===== CONTROLS BAR ===== -->
+        <div class="controls-bar">
+            <div class="search-wrapper">
+                <input
+                    type="text"
+                    id="farmerSearch"
+                    placeholder="Search by farm name, crop, or location..."
+                    class="search-input"
+                >
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+
+            <select class="filter-select" id="cropFilter">
+                <option value="">All Crops</option>
+            </select>
+
+            <select class="filter-select" id="locationFilter">
+                <option value="">All Locations</option>
+            </select>
+
+            <button class="clear-filters" id="clearFilters">
+                <i class="fas fa-times"></i> Clear
+            </button>
+
+            <div class="view-toggle">
+                <button id="gridViewBtn" class="active" title="Grid View">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button id="listViewBtn" title="List View">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== FARMER GRID ===== -->
+        <div id="farmerList" class="grid-container">
+            <!-- Populated by JavaScript -->
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+                Loading farmers...
+            </div>
+        </div>
+
+        <!-- ===== PAGINATION ===== -->
+        <div class="pagination" id="pagination">
+            <!-- Populated by JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                &copy; 2026 <a href="/agri2.html">AgriConnect</a> - Empowering Farmers, Growing Communities.
+            </p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8;">
+                <i class="fas fa-leaf"></i> Built with ❤️ for Indian Farmers
+            </p>
+        </div>
+    </footer>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        // ============================================================
+        // FARMER DIRECTORY - STANDALONE PAGE
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DOM Elements ---
+            const farmerList = document.getElementById('farmerList');
+            const searchInput = document.getElementById('farmerSearch');
+            const searchBtn = document.getElementById('searchBtn');
+            const cropFilter = document.getElementById('cropFilter');
+            const locationFilter = document.getElementById('locationFilter');
+            const clearFilters = document.getElementById('clearFilters');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            const listViewBtn = document.getElementById('listViewBtn');
+            const pagination = document.getElementById('pagination');
+            const totalCount = document.getElementById('totalFarmersCount');
+
+            // --- State ---
+            let allFarmers = [];
+            let filteredFarmers = [];
+            let currentPage = 1;
+            const itemsPerPage = 12;
+            let currentView = 'grid';
+
+            // --- API Fetch ---
+            async function fetchFarmers() {
+                try {
+                    farmerList.innerHTML = `
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner"></i>
+                            Loading farmers...
+                        </div>
+                    `;
+
+                    const response = await fetch('/api/approved-farmers', {
+                        method: 'GET',
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    allFarmers = await response.json();
+                    console.log(`✅ Loaded ${allFarmers.length} approved farmers`);
+
+                    // Update total count
+                    totalCount.textContent = allFarmers.length;
+
+                    // Populate filter dropdowns
+                    populateFilters();
+
+                    // Apply initial filtering
+                    applyFilters();
+
+                } catch (error) {
+                    console.error('❌ Error fetching farmers:', error);
+                    farmerList.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Unable to Load Farmers</h3>
+                            <p>Please try again later. If the problem persists, contact support.</p>
+                            <button onclick="location.reload()" class="retry-btn">
+                                <i class="fas fa-sync"></i> Retry
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
+            // --- Populate Filters ---
+            function populateFilters() {
+                // Crop filter
+                const crops = [...new Set(allFarmers.map(f => f.crop_specialization).filter(Boolean))];
+                cropFilter.innerHTML = '<option value="">All Crops</option>';
+                crops.forEach(crop => {
+                    const option = document.createElement('option');
+                    option.value = crop;
+                    option.textContent = crop;
+                    cropFilter.appendChild(option);
+                });
+
+                // Location filter
+                const locations = [...new Set(allFarmers.map(f => f.farm_location || f.user_location).filter(Boolean))];
+                locationFilter.innerHTML = '<option value="">All Locations</option>';
+                locations.forEach(loc => {
+                    const option = document.createElement('option');
+                    option.value = loc;
+                    option.textContent = loc;
+                    locationFilter.appendChild(option);
+                });
+            }
+
+            // --- Apply Filters ---
+            function applyFilters() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const cropValue = cropFilter.value;
+                const locationValue = locationFilter.value;
+
+                filteredFarmers = allFarmers.filter(farmer => {
+                    // Search filter
+                    if (searchTerm) {
+                        const searchable = [
+                            farmer.farm_name,
+                            farmer.crop_specialization,
+                            farmer.farm_location,
+                            farmer.user_location,
+                            farmer.author_name
+                        ].filter(Boolean).join(' ').toLowerCase();
+                        if (!searchable.includes(searchTerm)) return false;
+                    }
+
+                    // Crop filter
+                    if (cropValue && farmer.crop_specialization !== cropValue) {
+                        return false;
+                    }
+
+                    // Location filter
+                    if (locationValue) {
+                        const farmerLocation = farmer.farm_location || farmer.user_location;
+                        if (farmerLocation !== locationValue) return false;
+                    }
+
+                    return true;
+                });
+
+                currentPage = 1;
+                renderFarmers();
+            }
+
+            // --- Render Farmers ---
+            function renderFarmers() {
+                const totalItems = filteredFarmers.length;
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+                if (totalItems === 0) {
+                    farmerList.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-search"></i>
+                            <h3>No Farmers Found</h3>
+                            <p>Try adjusting your search or filters to find what you're looking for.</p>
+                            <button onclick="resetFilters()" class="retry-btn">
+                                <i class="fas fa-undo"></i> Reset Filters
+                            </button>
+                        </div>
+                    `;
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = Math.min(start + itemsPerPage, totalItems);
+                const pageItems = filteredFarmers.slice(start, end);
+
+                // Render cards
+                farmerList.innerHTML = pageItems.map(farmer => createFarmerCard(farmer)).join('');
+
+                // Render pagination
+                renderPagination(totalPages);
+
+                // Scroll to top of results
+                farmerList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // --- Create Farmer Card ---
+            function createFarmerCard(farmer) {
+                const isExpert = (parseInt(farmer.years_experience) || 0) >= 7;
+                const profilePic = farmer.profile_picture_url || '/uploads/default.png';
+                const farmLocation = farmer.farm_location || farmer.user_location || 'Location not specified';
+                const name = farmer.author_name || farmer.farm_name || 'Anonymous Farmer';
+
+                // Build data attributes for profile viewer
+                const dataAttrs = `
+                    data-id="${farmer.id || ''}"
+                    data-name="${name}"
+                    data-email="${farmer.contact_email || farmer.email || ''}"
+                    data-contact="${farmer.contact_number || ''}"
+                    data-pic="${profilePic}"
+                    data-experience="${farmer.years_experience || 0}"
+                    data-location="${farmLocation}"
+                    data-is-expert="${isExpert}"
+                    data-farm="${farmer.farm_name || ''}"
+                    data-crop="${farmer.crop_specialization || ''}"
+                `;
+
+                // Create WhatsApp link
+                let whatsappLink = '#';
+                if (farmer.contact_number) {
+                    let cleaned = farmer.contact_number.replace(/[^0-9]/g, '');
+                    if (cleaned.length === 10) cleaned = '91' + cleaned;
+                    whatsappLink = `https://wa.me/${cleaned}`;
+                }
+
+                return `
+                    <div class="card">
+                        <div class="card-image">
+                            <img src="${profilePic}" alt="${name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'default-icon\\'><i class=\\'fas fa-user-circle\\'></i></div>'">
+                            ${isExpert ? '<span class="expert-badge"><i class="fas fa-star"></i> Expert</span>' : ''}
+                        </div>
+                        <div class="card-body">
+                            <h3 class="card-title">${farmer.farm_name || 'Farm'}</h3>
+                            <div class="card-subtitle">${name}</div>
+                            <div class="card-details">
+                                <p><strong>Crops:</strong> ${farmer.crop_specialization || 'Not specified'}</p>
+                                <p><strong>Location:</strong> ${farmLocation}</p>
+                                ${farmer.years_experience ? `<p><strong>Experience:</strong> ${farmer.years_experience} years</p>` : ''}
+                            </div>
+                            <div class="card-tags">
+                                ${farmer.crop_specialization ? `<span class="tag">🌾 ${farmer.crop_specialization.split(',')[0]}</span>` : ''}
+                                ${isExpert ? '<span class="tag tag-expert"><i class="fas fa-star"></i> Expert</span>' : ''}
+                                ${farmer.years_experience ? `<span class="tag tag-experience">${farmer.years_experience} yrs exp</span>` : ''}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-primary contact-profile-link" ${dataAttrs}>
+                                    <i class="fas fa-user"></i> View Profile
+                                </button>
+                                ${farmer.contact_number ? `
+                                    <a href="${whatsappLink}" target="_blank" class="btn-primary btn-whatsapp">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- Render Pagination ---
+            function renderPagination(totalPages) {
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+                    <i class="fas fa-chevron-left"></i>
+                </button>`;
+
+                // Show page numbers
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
+
+                if (startPage > 1) {
+                    html += `<button onclick="goToPage(1)">1</button>`;
+                    if (startPage > 2) html += `<button disabled>...</button>`;
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) html += `<button disabled>...</button>`;
+                    html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
+                }
+
+                html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+                    <i class="fas fa-chevron-right"></i>
+                </button>`;
+
+                pagination.innerHTML = html;
+            }
+
+            // --- Go to Page ---
+            window.goToPage = function(page) {
+                const totalPages = Math.ceil(filteredFarmers.length / itemsPerPage);
+                if (page < 1 || page > totalPages) return;
+                currentPage = page;
+                renderFarmers();
+            };
+
+            // --- Reset Filters ---
+            window.resetFilters = function() {
+                searchInput.value = '';
+                cropFilter.value = '';
+                locationFilter.value = '';
+                applyFilters();
+            };
+
+            // --- Toggle View ---
+            function setView(view) {
+                currentView = view;
+                const container = document.querySelector('main');
+                if (view === 'list') {
+                    container.classList.add('list-view');
+                    gridViewBtn.classList.remove('active');
+                    listViewBtn.classList.add('active');
+                } else {
+                    container.classList.remove('list-view');
+                    gridViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                }
+                // Re-render with same data
+                renderFarmers();
+            }
+
+            // --- Event Listeners ---
+            searchBtn.addEventListener('click', applyFilters);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') applyFilters();
+            });
+            cropFilter.addEventListener('change', applyFilters);
+            locationFilter.addEventListener('change', applyFilters);
+            clearFilters.addEventListener('click', resetFilters);
+
+            gridViewBtn.addEventListener('click', () => setView('grid'));
+            listViewBtn.addEventListener('click', () => setView('list'));
+
+            // --- Profile Viewer Redirect ---
+            farmerList.addEventListener('click', function(e) {
+                const target = e.target.closest('.contact-profile-link');
+                if (target) {
+                    e.preventDefault();
+
+                    const userData = localStorage.getItem('agriUser');
+                    if (!userData) {
+                        alert('Please login to view farmer profiles.');
+                        return;
+                    }
+
+                    const profile = {
+                        name: target.dataset.name || 'Farmer',
+                        email: target.dataset.email || '',
+                        contact: target.dataset.contact || '',
+                        pic: target.dataset.pic || '/uploads/default.png',
+                        experience: target.dataset.experience || '0',
+                        location: target.dataset.location || '',
+                        isExpert: target.dataset.isExpert === 'true'
+                    };
+
+                    const params = new URLSearchParams(profile);
+                    window.location.href = `profile-viewer.html?${params.toString()}`;
+                }
+            });
+
+            // --- Initialize ---
+            fetchFarmers();
+
+            // --- Expose for debugging ---
+            window.refreshFarmers = fetchFarmers;
+            window.applyFilters = applyFilters;
+        });
+    </script>
+
+</body>
+</html>
