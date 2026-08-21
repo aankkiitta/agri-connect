@@ -347,28 +347,48 @@ app.post('/login', async (req, res) => {
 
 // Admin Login
 app.post('/api/admin/login', async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (email !== ADMIN_EMAIL) {
-        return res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
-    }
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
 
-    const ADMIN_CLEAR_PASSWORD = 'admin123';
-    const isMatch = (password === ADMIN_CLEAR_PASSWORD);
+        if (!adminEmail || !adminPassword) {
+            console.error('❌ ADMIN_EMAIL or ADMIN_PASSWORD missing');
+            return res.status(500).json({
+                success: false,
+                message: 'Admin credentials are not configured on server.'
+            });
+        }
 
-    if (isMatch) {
-        const adminUser = {
-            id: ADMIN_USER_ID,
-            name: 'Agri Admin',
-            email: ADMIN_EMAIL,
-            isAuthenticated: true
-        };
-        res.status(200).json({ success: true, message: 'Admin login successful!', user: adminUser });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid Admin credentials.' });
+        if (
+            email.trim().toLowerCase() !== adminEmail.trim().toLowerCase() ||
+            password !== adminPassword
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Admin credentials.'
+            });
+        }
+
+        return res.json({
+            success: true,
+            user: {
+                id: 99999,
+                name: 'Agri Admin',
+                email: adminEmail
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Admin login error:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Admin login failed.'
+        });
     }
 });
-
 // ======== USER PROFILE ROUTES ========
 
 // Upload Profile Picture
