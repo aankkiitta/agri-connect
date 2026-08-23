@@ -9,6 +9,8 @@ const multer = require('multer');
 const fs = require('fs');
 const cors = require('cors');
 const axios = require('axios');
+const http = require('http'); // ADDED FOR CHAT
+const socketIo = require('socket.io'); // ADDED FOR CHAT
 
 // --- Configuration ---
 const saltRounds = 10;
@@ -49,7 +51,17 @@ const db = pool;
 // --- MULTER STORAGE CONFIGURATION ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = path.join(__dirname, 'public/uploads');
+        let dir = path.join(__dirname, 'public/uploads');
+        
+        // Create subdirectories based on file type
+        if (file.fieldname === 'image' || file.fieldname === 'audio') {
+            dir = path.join(__dirname, 'public/uploads/chat');
+        } else if (file.fieldname === 'profileImage') {
+            dir = path.join(__dirname, 'public/uploads/profiles');
+        } else {
+            dir = path.join(__dirname, 'public/uploads');
+        }
+        
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -67,7 +79,9 @@ const allowedOrigins = [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000'
 ].filter(Boolean);
 
 app.use(cors({
@@ -269,6 +283,135 @@ async function initializeDatabase() {
 
 initializeDatabase();
 
+// ==================================================
+// CHAT STATE
+// ==================================================
+const chatUsers = new Map(); // socketId -> userData
+const chatMessages = [];
+
+// ==================================================
+// CHAT ROUTE
+// ==================================================
+app.get('/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
+// ==================================================
+// CHAT SOCKET EVENTS
+// ==================================================
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log('👤 New client connected:', socket.id);
+
+    socket.on('new-user-joined', (userData) => {
+        console.log('📝 User joined:', userData);
+        
+        let userInfo = {
+            id: socket.id,
+            name: 'Unknown User',
+            city: 'Unknown',
+            profile: null
+        };
+
+        if (typeof userData === 'string') {
+            userInfo.name = userData;
+        } else if (typeof userData === 'object' && userData !== null) {
+            userInfo.name = userData.name || 'Unknown User';
+            userInfo.city = userData.city || 'Unknown';
+            userInfo.profile = userData;
+        }
+
+        chatUsers.set(socket.id, userInfo);
+
+        socket.broadcast.emit('user-joined', userInfo.name);
+        
+        const userList = Array.from(chatUsers.values()).map(u => u.name);
+        io.emit('user-list-update', userList);
+        
+        socket.emit('chat-history', chatMessages);
+    });
+
+    socket.on('send', (data) => {
+        const user = chatUsers.get(socket.id);
+        const messageData = {
+            name: user ? user.name : 'Unknown',
+            city: user ? user.city : 'Unknown',
+            message: data.message,
+            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            userProfile: user ? user.profile : null
+        };
+        
+        chatMessages.push(messageData);
+        if (chatMessages.length > 100) chatMessages.shift();
+        
+        socket.broadcast.emit('receive', messageData);
+    });
+
+    socket.on('send-image', (data) => {
+        const user = chatUsers.get(socket.id);
+        const messageData = {
+            name: user ? user.name : 'Unknown',
+            city: user ? user.city : 'Unknown',
+            filePath: data.filePath,
+            isImage: true,
+            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            userProfile: user ? user.profile : null
+        };
+        
+        chatMessages.push(messageData);
+        if (chatMessages.length > 100) chatMessages.shift();
+        
+        socket.broadcast.emit('receive-image', messageData);
+    });
+
+    socket.on('send-audio', (data) => {
+        const user = chatUsers.get(socket.id);
+        const messageData = {
+            name: user ? user.name : 'Unknown',
+            city: user ? user.city : 'Unknown',
+            filePath: data.filePath,
+            isAudio: true,
+            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            userProfile: user ? user.profile : null
+        };
+        
+        chatMessages.push(messageData);
+        if (chatMessages.length > 100) chatMessages.shift();
+        
+        socket.broadcast.emit('receive-audio', messageData);
+    });
+
+    socket.on('typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', user.name);
+        }
+    });
+
+    socket.on('stop-typing', () => {
+        socket.broadcast.emit('user-stop-typing');
+    });
+
+    socket.on('disconnect', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            chatUsers.delete(socket.id);
+            io.emit('user-left', user.name);
+            
+            const userList = Array.from(chatUsers.values()).map(u => u.name);
+            io.emit('user-list-update', userList);
+        }
+        console.log('👋 Client disconnected:', socket.id);
+    });
+});
+
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
     res.json({
@@ -389,6 +532,7 @@ app.post('/api/admin/login', async (req, res) => {
         });
     }
 });
+
 // ======== USER PROFILE ROUTES ========
 
 // Upload Profile Picture
@@ -1030,7 +1174,7 @@ app.post('/upload/image', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).send({ error: 'No file uploaded.' });
     }
-    const filePath = getPublicUrl(req, `/uploads/${req.file.filename}`);
+    const filePath = getPublicUrl(req, `/uploads/chat/${req.file.filename}`);
     res.send({ filePath: filePath });
 });
 
@@ -1039,7 +1183,7 @@ app.post('/upload/audio', upload.single('audio'), (req, res) => {
     if (!req.file) {
         return res.status(400).send({ error: 'No file uploaded.' });
     }
-    const filePath = getPublicUrl(req, `/uploads/${req.file.filename}`);
+    const filePath = getPublicUrl(req, `/uploads/chat/${req.file.filename}`);
     res.send({ filePath: filePath });
 });
 
@@ -1580,9 +1724,11 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
 // ======== SERVER START ========
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, '0.0.0.0', () => {
+// REPLACE: app.listen with server.listen
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
     console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
+    console.log(`💬 Chat available at: /chat`);
 });
