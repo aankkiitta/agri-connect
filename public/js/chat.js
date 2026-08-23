@@ -221,6 +221,7 @@
         // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨📨📨 MESSAGE RECEIVED:', data);
+            console.log('📨 From:', data.name, 'Message:', data.message);
             
             const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
             const position = isOwn ? 'right' : 'left';
@@ -268,7 +269,7 @@
         });
 
         // ========================================
-        // SEND MESSAGE - FIXED
+        // SEND MESSAGE
         // ========================================
         if (elements.form) {
             // Remove any existing listeners by cloning
@@ -324,7 +325,7 @@
                 };
                 appendMessage(displayData, 'right', elements.messageContainer);
                 
-                // Send to server
+                // ✅ Send to server
                 socket.emit('send-message', messageData);
                 console.log('📤 Message sent to server');
                 

@@ -286,8 +286,8 @@ initializeDatabase();
 // ==================================================
 // CHAT STATE - GROUP CHAT
 // ==================================================
-const chatUsers = new Map();
-const messageCache = [];
+const chatUsers = new Map(); // socketId -> user data
+const messageCache = []; // Array for messages
 
 // ==================================================
 // CHAT ROUTE
@@ -297,7 +297,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS
+// CHAT SOCKET EVENTS - FIXED
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -313,6 +313,9 @@ io.on('connection', (socket) => {
     
     let currentUser = null;
 
+    // ========================================
+    // USER JOINS CHAT
+    // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
         
@@ -336,6 +339,7 @@ io.on('connection', (socket) => {
         
         console.log(`✅ User joined: ${name} (${email || userId})`);
         
+        // ✅ Send online users list to ALL clients
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
             id: u.id,
             email: u.email,
@@ -343,24 +347,30 @@ io.on('connection', (socket) => {
         }));
         io.emit('online-users', onlineUsers);
         
+        // ✅ Send chat history to the new user only
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
             socket.emit('chat-history', recentMessages);
         } else {
             socket.emit('chat-history', []);
         }
         
+        // ✅ Notify everyone that user joined
         io.emit('user-joined', {
             name: name,
             message: `${name} joined the chat`
         });
     });
 
+    // ========================================
+    // SEND MESSAGE - CRITICAL FIX
+    // ========================================
     socket.on('send-message', (data) => {
         try {
             const user = chatUsers.get(socket.id);
             if (!user) {
-                console.error('❌ User not found');
+                console.error('❌ User not found for socket:', socket.id);
                 return;
             }
             
@@ -376,19 +386,75 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             };
             
+            // ✅ Store in cache
             messageCache.push(messageData);
             if (messageCache.length > 100) {
                 messageCache.shift();
             }
             
+            // ✅ CRITICAL: Broadcast to ALL connected users
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
+            socket.emit('message-error', { error: 'Failed to send message' });
         }
     });
 
+    // ========================================
+    // IMAGE UPLOAD
+    // ========================================
+    socket.on('send-image', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'image',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        io.emit('receive-message', messageData);
+    });
+
+    // ========================================
+    // AUDIO UPLOAD
+    // ========================================
+    socket.on('send-audio', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'audio',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        io.emit('receive-message', messageData);
+    });
+
+    // ========================================
+    // TYPING INDICATOR
+    // ========================================
     socket.on('typing', () => {
         const user = chatUsers.get(socket.id);
         if (user) {
@@ -409,6 +475,9 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ========================================
+    // DISCONNECT
+    // ========================================
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
@@ -416,6 +485,7 @@ io.on('connection', (socket) => {
         if (user) {
             chatUsers.delete(socket.id);
             
+            // ✅ Send updated online users list
             const onlineUsers = Array.from(chatUsers.values()).map(u => ({
                 id: u.id,
                 email: u.email,
@@ -423,6 +493,7 @@ io.on('connection', (socket) => {
             }));
             io.emit('online-users', onlineUsers);
             
+            // ✅ Notify everyone that user left
             io.emit('user-left', {
                 name: user.name,
                 message: `${user.name} left the chat`
@@ -430,6 +501,7 @@ io.on('connection', (socket) => {
         }
     });
 });
+
 
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
@@ -1740,11 +1812,10 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
     }
 });
 
+// ==================================================
+// SERVER START - ONLY ONE
+// ==================================================
 const PORT = process.env.PORT || 3000;
-// ==================================================
-// SERVER START
-// ==================================================
-
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
