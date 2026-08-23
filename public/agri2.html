@@ -4,65 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgriConnect Hub</title>
-    <link rel="stylesheet" href="agri.css">
+     <link rel="stylesheet" href="agri.css">
+
+
+  
      
-    <!-- Google Fonts for a professional look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Icon Library for Filters & Documents -->
+     <!-- Google Fonts for a professional look -->
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+     <!-- Icon Library for Filters & Documents -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 <body>
 
-<!-- ========================================== -->
-<!-- HEADER SECTION -->
-<!-- ========================================== -->
+<!-- Header Section -->
 <header>
     <div class="container">
         <h1>AgriConnect Hub</h1>
 
-        <div class="auth-slot">
+           <div class="auth-slot">
             <a href="login.html" class="btn-login-signup">
                 LOGIN / SIGN UP
             </a>
         </div>
-        
         <nav id="mainNav" class="main-nav">
+   
             <a href="#farmers">Farmers</a>
             <a href="#equipment">Equipment</a>
             <a href="#schemes">Schemes</a>
             <a href="#articles">Articles</a>
             <a href="hub.html">Hub</a>
             <a href="index.html">Mandi</a>
+           
         </nav>
+
+     
     </div>
 </header>
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h2>Empowering Farmers, Growing Communities</h2>
+            <p>Your one-stop platform for connecting, sharing knowledge, and accessing essential farming resources.</p>
+            <button class="hero-button">
+                Join Our Community
+            </button>
+        </div>
+    </section>
 
-<!-- ========================================== -->
-<!-- HERO SECTION -->
-<!-- ========================================== -->
-<section id="home" class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <h2>Empowering Farmers, Growing Communities</h2>
-        <p>Your one-stop platform for connecting, sharing knowledge, and accessing essential farming resources.</p>
-        <button class="hero-button">
-            Join Our Community
-        </button>
-    </div>
-</section>
 
-<!-- ========================================== -->
-<!-- WEATHER SECTION -->
-<!-- ========================================== -->
+
+<!-- Google Fonts + Font Awesome -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 
 <div class="container">
     <div class="weather-hero-card">
@@ -81,34 +83,37 @@
         </div>
     </div>
 
-    <div class="weather-hub-container master-column">
-        <div class="forecast-header">
-            <div id="location-display" class="location-badge">
-                <i class="fas fa-map-marker-alt"></i> Detecting Location...
-            </div>
-            <div class="weather-search-box">
-                <input type="text" id="citySearchInput" placeholder="Search City...">
-                <button onclick="handleManualSearch()">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
+   <div class="weather-hub-container master-column">
+    
+    <div class="forecast-header">
+        <div id="location-display" class="location-badge">
+            <i class="fas fa-map-marker-alt"></i> Detecting Location...
         </div>
 
-        <div class="forecast-control-wrapper">
-            <div id="hourly-forecast-new" class="hourly-scroll-container"></div>
-            <div class="side-action-area">
-                <a href="weather-news/index.html" style="text-decoration: none;">
-                    <button class="small-vertical-btn">
-                        <i class="fas fa-plus"></i>
-                        <span class="v-text">MORE</span>
-                    </button>
-                </a>
-            </div>
+        <div class="weather-search-box">
+            <input type="text" id="citySearchInput" placeholder="Search City...">
+            <button onclick="handleManualSearch()">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
+    </div>
+
+    <div class="forecast-control-wrapper">
+        <div id="hourly-forecast-new" class="hourly-scroll-container">
+            </div>
+    <div class="side-action-area">
+    <a href="weather-news/index.html" style="text-decoration: none;">
+        <button class="small-vertical-btn">
+            <i class="fas fa-plus"></i>
+            <span class="v-text">MORE</span>
+        </button>
+    </a>
+</div>
+    </div>
+</div>
     </div>
 </div>
 
-<!-- Weather Overlay -->
 <div id="weather-full-overlay" class="weather-overlay-page" style="display: none;">
     <header class="overlay-header">
         <button class="back-btn" onclick="toggleAdvancedForecast()">
@@ -119,17 +124,18 @@
             <p id="full-date-display">--</p>
         </div>
     </header>
+
     <div class="overlay-container">
         <div class="forecast-main-card">
             <h2>5-Day Hourly Forecast</h2>
-            <div id="full-weather-list"></div>
+            <div id="full-weather-list">
+                </div>
         </div>
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- SMART FARM INTELLIGENCE -->
-<!-- ========================================== -->
+
+
 <div class="farm-card">
     <div class="card-header">
         <span class="farm-badge"><i class="fas fa-microchip"></i> AI POWERED FARMING SUITE</span>
@@ -255,10 +261,7 @@
         </div>
     </div>
 </div>
-
-<!-- ========================================== -->
-<!-- FARMER'S DECISION ASSISTANT -->
-<!-- ========================================== -->
+<!-- Practical Farming Assistant Dashboard - UPDATED -->
 <div class="farming-assistant-dashboard">
     <div class="assistant-header">
         <h2>
@@ -344,259 +347,1158 @@
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- AI CROP DOCTOR SECTION -->
-<!-- ========================================== -->
-<section id="crop-doctor">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <span style="background: #dbeafe; color: #1e40af; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
-            ✨ NEW: BETA FEATURE
-        </span>
-        <h2 style="margin-top: 10px;">📸 AI Crop Doctor</h2>
-        <p style="color: #64748b; max-width: 600px; margin: 0 auto;">
-            Upload a photo of your affected crop. Our AI will analyze the leaf patterns to detect diseases and suggest immediate remedies.
-        </p>
-    </div>
+<style>
+/* Farming Assistant Dashboard Styles - COMPLETE */
+.farming-assistant-dashboard {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+}
 
-    <div class="grid-container">
-        <!-- LEFT: Upload Card -->
-        <div class="doctor-card" onclick="document.getElementById('leafUpload').click()">
-            <div id="scanOverlay" class="scan-overlay">
-                <div class="scan-line"></div>
-                <p style="color: white; font-weight: 700; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                    🤖 AI Analyzing...
+.assistant-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.assistant-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1f5e2a, #2e7d32);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.assistant-header p {
+    color: #64748b;
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+.assistant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 25px;
+}
+
+.action-card, .alert-card, .harvest-card, 
+.fertilizer-card, .irrigation-card, .weather-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e9ecef;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-card:hover, .alert-card:hover, .harvest-card:hover,
+.fertilizer-card:hover, .irrigation-card:hover, .weather-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+}
+
+.action-header, .alert-header, .harvest-header,
+.fertilizer-header, .irrigation-header, .weather-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.action-header i:first-child, .alert-header i:first-child,
+.harvest-header i:first-child, .fertilizer-header i:first-child,
+.irrigation-header i:first-child, .weather-header i:first-child {
+    font-size: 1.3rem;
+    color: #2e7d32;
+    background: #e8f5e9;
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.action-header h3, .alert-header h3, .harvest-header h3,
+.fertilizer-header h3, .irrigation-header h3, .weather-header h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+#currentDate {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Actions List */
+.action-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: flex-start;
+}
+
+.action-icon {
+    width: 32px;
+    height: 32px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-title {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.action-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.action-priority {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.priority-high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.priority-medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.priority-low {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Alert Items */
+.alert-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.alert-title {
+    font-weight: 700;
+    color: #dc2626;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.alert-desc {
+    font-size: 0.8rem;
+    color: #475569;
+    margin-top: 4px;
+}
+
+.alert-solution {
+    font-size: 0.75rem;
+    color: #16a34a;
+    margin-top: 5px;
+    background: #f0fdf4;
+    padding: 5px 8px;
+    border-radius: 8px;
+}
+
+/* Harvest Content */
+.harvest-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.harvest-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.harvest-ready {
+    color: #16a34a;
+}
+
+.harvest-wait {
+    color: #f59e0b;
+}
+
+.harvest-days {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.price-trend {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    margin-top: 6px;
+}
+
+.price-up {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.price-down {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.price-stable {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* Fertilizer Schedule */
+.fertilizer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fertilizer-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.fertilizer-dosage {
+    font-size: 0.8rem;
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.fertilizer-timing {
+    font-size: 0.7rem;
+    color: #64748b;
+    width: 100%;
+}
+
+/* Irrigation Content */
+.irrigation-status {
+    text-align: center;
+    padding: 15px;
+    background: #f0fdf4;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.water-need {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.soil-moisture {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 5px;
+}
+
+.moisture-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.moisture-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    width: 0%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Weather Content */
+.weather-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.weather-temp {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.weather-condition {
+    font-size: 0.9rem;
+    color: #64748b;
+    text-transform: capitalize;
+}
+
+.weather-details {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    justify-content: space-around;
+}
+
+.weather-detail-item {
+    text-align: center;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 10px;
+    flex: 1;
+}
+
+.weather-detail-item i {
+    font-size: 1rem;
+    color: #2e7d32;
+}
+
+.weather-detail-item span {
+    display: block;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #2e7d32;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 850px) {
+    .assistant-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .farming-assistant-dashboard {
+        padding: 0 15px;
+        margin: 30px auto;
+    }
+    
+    .assistant-header h2 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .fertilizer-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .weather-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .weather-details {
+        flex-wrap: wrap;
+    }
+}
+</style>
+
+<script>
+// ==============================================
+// COMPLETE FARMING ASSISTANT DASHBOARD
+// ==============================================
+
+(function() {
+    const WEATHER_API_KEY = "d200fbc7d6cf3b10cc4274565f695a55";
+    let cachedWeather = null;
+    let weatherFetchTime = null;
+    
+    // Get current date
+    const dateElem = document.getElementById('currentDate');
+    if (dateElem) {
+        const today = new Date();
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        dateElem.textContent = today.toLocaleDateString('en-IN', options);
+    }
+    
+    // Fetch real weather data
+    async function fetchWeather() {
+        // Return cached weather if less than 10 minutes old
+        if (cachedWeather && weatherFetchTime && (Date.now() - weatherFetchTime) < 600000) {
+            return cachedWeather;
+        }
+        
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(getDefaultWeather());
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&units=metric&appid=${WEATHER_API_KEY}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    cachedWeather = {
+                        temp: Math.round(data.main.temp),
+                        humidity: data.main.humidity,
+                        condition: data.weather[0].main,
+                        description: data.weather[0].description,
+                        windSpeed: Math.round(data.wind.speed * 3.6),
+                        pressure: data.main.pressure,
+                        icon: data.weather[0].icon
+                    };
+                    weatherFetchTime = Date.now();
+                    resolve(cachedWeather);
+                } catch (error) {
+                    console.error("Weather fetch error:", error);
+                    resolve(getDefaultWeather());
+                }
+            }, () => {
+                resolve(getDefaultWeather());
+            });
+        });
+    }
+    
+    function getDefaultWeather() {
+        return {
+            temp: 28,
+            humidity: 65,
+            condition: "Clear",
+            description: "clear sky",
+            windSpeed: 12,
+            pressure: 1013
+        };
+    }
+    
+    // Get season based on month
+    function getSeason() {
+        const month = new Date().getMonth() + 1;
+        if (month >= 6 && month <= 10) return { name: "Kharif", icon: "🌾", crops: ["Rice", "Cotton", "Sugarcane", "Maize"] };
+        if (month >= 11 || month <= 3) return { name: "Rabi", icon: "🌿", crops: ["Wheat", "Mustard", "Chickpea", "Barley"] };
+        return { name: "Zaid", icon: "🌻", crops: ["Watermelon", "Cucumber", "Muskmelon"] };
+    }
+    
+    // Get today's actions based on weather and season
+    function getTodayActions(weather, season) {
+        const actions = [];
+        
+        // Weather-based actions
+        if (weather && weather.temp > 38) {
+            actions.push({
+                icon: "🔥",
+                title: "Extreme Heat Alert!",
+                desc: `Temperature at ${weather.temp}°C. Irrigate immediately in early morning (5-7 AM).`,
+                priority: "high"
+            });
+        } else if (weather && weather.temp > 32) {
+            actions.push({
+                icon: "💧",
+                title: "High Temperature",
+                desc: `Temperature ${weather.temp}°C. Water crops every 3-4 days. Use mulching.`,
+                priority: "high"
+            });
+        } else if (weather && weather.temp < 12) {
+            actions.push({
+                icon: "❄️",
+                title: "Cold Wave Alert",
+                desc: `Low temperature ${weather.temp}°C. Protect sensitive crops with covers.`,
+                priority: "high"
+            });
+        }
+        
+        // Humidity-based actions
+        if (weather && weather.humidity > 85) {
+            actions.push({
+                icon: "💨",
+                title: "High Humidity Risk",
+                desc: `Humidity ${weather.humidity}%. Check for fungal diseases. Ensure air circulation.`,
+                priority: "medium"
+            });
+        } else if (weather && weather.humidity < 35 && weather.temp > 28) {
+            actions.push({
+                icon: "🏜️",
+                title: "Dry Conditions",
+                desc: "Low humidity with high temperature. Increase irrigation frequency.",
+                priority: "high"
+            });
+        }
+        
+        // Rain check
+        if (weather && weather.condition && weather.condition.toLowerCase().includes('rain')) {
+            actions.push({
+                icon: "☔",
+                title: "Rain Expected",
+                desc: "Delay fertilizer application. Ensure proper drainage in fields.",
+                priority: "high"
+            });
+        }
+        
+        // Seasonal actions
+        const month = new Date().getMonth() + 1;
+        if (month >= 2 && month <= 3) {
+            actions.push({
+                icon: "🌾",
+                title: "Rabi Harvest Season",
+                desc: "Prepare for wheat and mustard harvest. Check grain moisture.",
+                priority: "medium"
+            });
+        }
+        
+        if (month >= 5 && month <= 6) {
+            actions.push({
+                icon: "🌱",
+                title: "Kharif Sowing",
+                desc: "Prepare fields for paddy, cotton, and maize sowing.",
+                priority: "high"
+            });
+        }
+        
+        if (month >= 10 && month <= 11) {
+            actions.push({
+                icon: "🌿",
+                title: "Rabi Sowing",
+                desc: "Start sowing wheat, mustard, and gram.",
+                priority: "high"
+            });
+        }
+        
+        if (actions.length === 0) {
+            actions.push({
+                icon: "✅",
+                title: "Regular Maintenance",
+                desc: "Check for pests, maintain irrigation, and monitor crop growth.",
+                priority: "low"
+            });
+        }
+        
+        return actions.slice(0, 5);
+    }
+    
+    // Get pest alerts based on weather
+    function getPestAlerts(weather, season) {
+        const alerts = [];
+        
+        if (weather && weather.humidity > 80) {
+            alerts.push({
+                pest: "🍄 Fungal Diseases (Blast, Mildew)",
+                desc: `High humidity (${weather.humidity}%) creates perfect conditions for fungal growth.`,
+                solution: "Apply preventive fungicide (Mancozeb or Copper Oxychloride). Remove infected leaves."
+            });
+        }
+        
+        if (weather && weather.temp > 28 && weather.temp < 34 && weather.humidity > 60) {
+            alerts.push({
+                pest: "🐛 Armyworm / Stem Borer",
+                desc: "Warm and humid conditions favor pest outbreak.",
+                solution: "Regular field scouting. Use pheromone traps. Apply neem oil (5ml/L)."
+            });
+        }
+        
+        if (weather && weather.humidity < 45 && weather.temp > 30) {
+            alerts.push({
+                pest: "🕷️ Spider Mites / Thrips",
+                desc: "Hot and dry conditions promote mite infestation.",
+                solution: "Increase irrigation. Apply sulfur-based miticide. Use sticky traps."
+            });
+        }
+        
+        if (weather && weather.condition && weather.condition.toLowerCase().includes('rain')) {
+            alerts.push({
+                pest: "🌧️ Post-Rain Diseases",
+                desc: "Rain increases risk of bacterial leaf spot and downy mildew.",
+                solution: "Apply copper-based fungicide after rain stops. Avoid overhead irrigation."
+            });
+        }
+        
+        if (alerts.length === 0) {
+            alerts.push({
+                pest: "✅ Low Pest Risk",
+                desc: "Current weather conditions are not favorable for major pest outbreaks.",
+                solution: "Continue regular monitoring. Maintain field hygiene."
+            });
+        }
+        
+        return alerts;
+    }
+    
+    // Get harvest advice
+    function getHarvestAdvice(weather, season) {
+        const month = new Date().getMonth() + 1;
+        const crops = [];
+        
+        // Rabi crops (Nov-Mar)
+        if (month >= 2 && month <= 4) {
+            crops.push(
+                { name: "Wheat", readiness: month === 3 ? 95 : month === 2 ? 80 : 60, price: "₹2,850-3,100", trend: "up" },
+                { name: "Mustard", readiness: month === 2 ? 90 : month === 3 ? 100 : 70, price: "₹5,200-5,800", trend: "up" },
+                { name: "Chickpea", readiness: month === 3 ? 85 : 65, price: "₹5,500-6,000", trend: "stable" }
+            );
+        }
+        
+        // Kharif crops (Jun-Oct)
+        if (month >= 9 && month <= 11) {
+            crops.push(
+                { name: "Paddy (Rice)", readiness: month === 10 ? 90 : month === 9 ? 70 : 50, price: "₹2,200-2,600", trend: "stable" },
+                { name: "Cotton", readiness: month === 10 ? 85 : 60, price: "₹6,500-7,200", trend: "up" },
+                { name: "Sugarcane", readiness: 75, price: "₹3,500-3,800", trend: "stable" }
+            );
+        }
+        
+        // Year-round crops
+        crops.push(
+            { name: "Tomato", readiness: 65, price: "₹1,500-2,800", trend: "down" },
+            { name: "Onion", readiness: 55, price: "₹2,800-3,500", trend: "up" },
+            { name: "Potato", readiness: month >= 2 && month <= 3 ? 85 : 45, price: "₹1,200-1,800", trend: "down" }
+        );
+        
+        return crops.slice(0, 4).map(crop => {
+            let status = "";
+            let days = "";
+            
+            if (crop.readiness >= 90) {
+                status = "Ready for Harvest";
+                days = "Harvest now!";
+            } else if (crop.readiness >= 70) {
+                status = "Almost Ready";
+                days = `${Math.round((100 - crop.readiness) / 2)}-${Math.round((100 - crop.readiness))} days to harvest`;
+            } else if (crop.readiness >= 50) {
+                status = "Maturing";
+                days = `${Math.round((100 - crop.readiness) / 1.5)} days remaining`;
+            } else {
+                status = "Early Growth";
+                days = `${Math.round((100 - crop.readiness) / 0.8)} days to harvest`;
+            }
+            
+            return {
+                name: crop.name,
+                status: status,
+                days: days,
+                price: crop.price,
+                trend: crop.trend,
+                readiness: crop.readiness
+            };
+        });
+    }
+    
+    // Get fertilizer schedule
+    function getFertilizerSchedule(season) {
+        const month = new Date().getMonth() + 1;
+        let schedule = [];
+        
+        // Rabi season (Oct-Mar)
+        if (month >= 10 || month <= 3) {
+            if (month == 11 || month == 12) {
+                schedule = [
+                    { name: "DAP (Di-Ammonium Phosphate)", dosage: "50-60 kg/acre", timing: "At sowing time" },
+                    { name: "Urea (Nitrogen)", dosage: "40-50 kg/acre", timing: "25-30 days after sowing" },
+                    { name: "Potash (MOP)", dosage: "25-30 kg/acre", timing: "At flowering stage" },
+                    { name: "Zinc Sulphate", dosage: "10-15 kg/acre", timing: "As basal dose" }
+                ];
+            } else if (month == 1 || month == 2) {
+                schedule = [
+                    { name: "Urea (Top Dressing)", dosage: "30-40 kg/acre", timing: "Apply now for wheat" },
+                    { name: "NPK 20:20:20", dosage: "2-3 kg/acre", timing: "Foliar spray" },
+                    { name: "Micronutrients", dosage: "As needed", timing: "Based on deficiency" }
+                ];
+            } else {
+                schedule = [
+                    { name: "Organic Manure", dosage: "2-3 tons/acre", timing: "Mix in soil" },
+                    { name: "NPK (Basal)", dosage: "40:40:20 kg/acre", timing: "Before sowing" }
+                ];
+            }
+        }
+        // Kharif season (Jun-Sep)
+        else if (month >= 6 && month <= 9) {
+            schedule = [
+                { name: "Urea", dosage: "60-70 kg/acre", timing: "At sowing / 20-25 days after" },
+                { name: "DAP", dosage: "40-50 kg/acre", timing: "At sowing time" },
+                { name: "Potash", dosage: "25-30 kg/acre", timing: "At tillering stage" },
+                { name: "Zinc", dosage: "10-12 kg/acre", timing: "As basal dose" }
+            ];
+        }
+        // Zaid/Summer season (Apr-May)
+        else {
+            schedule = [
+                { name: "NPK 10:26:26", dosage: "40-50 kg/acre", timing: "Apply now" },
+                { name: "Organic Compost", dosage: "1-2 tons/acre", timing: "Mix in soil" },
+                { name: "Foliar Fertilizer", dosage: "2-3 ml/L", timing: "Every 10 days" }
+            ];
+        }
+        
+        return schedule;
+    }
+    
+    // Get irrigation guide
+    function getIrrigationGuide(weather, season) {
+        let waterNeed = "Moderate";
+        let moisture = 55;
+        let advice = "";
+        let frequency = "";
+        
+        if (weather && weather.temp > 38) {
+            waterNeed = "Very High";
+            moisture = 30;
+            frequency = "Every 2-3 days";
+            advice = "🔥 Severe heat! Irrigate immediately. Best time: Early morning (5-7 AM). Use drip irrigation if available.";
+        } else if (weather && weather.temp > 32) {
+            waterNeed = "High";
+            moisture = 40;
+            frequency = "Every 4-5 days";
+            advice = "🌡️ Hot conditions. Water in early morning. Avoid afternoon irrigation to prevent leaf burn.";
+        } else if (weather && weather.temp > 25) {
+            waterNeed = "Moderate";
+            moisture = 55;
+            frequency = "Every 7-8 days";
+            advice = "✅ Normal conditions. Maintain regular schedule. Check soil moisture before irrigation.";
+        } else if (weather && weather.temp < 15) {
+            waterNeed = "Low";
+            moisture = 65;
+            frequency = "Every 12-15 days";
+            advice = "❄️ Cold conditions. Reduce irrigation frequency. Water only if soil is dry.";
+        }
+        
+        if (weather && weather.condition && weather.condition.toLowerCase().includes('rain')) {
+            advice = "☔ Rain expected. Skip irrigation for 3-4 days. Ensure proper drainage.";
+            moisture = 70;
+            frequency = "No irrigation needed";
+        }
+        
+        if (weather && weather.humidity < 35) {
+            advice += " Low humidity causing evaporation. Increase irrigation efficiency with mulching.";
+        }
+        
+        return { waterNeed, moisture, advice, frequency };
+    }
+    
+    // Render weather forecast
+    function renderWeather(weather) {
+        if (!weather) return '<div class="info-text">Weather data unavailable</div>';
+        
+        let weatherIcon = "☀️";
+        if (weather.condition.toLowerCase().includes('cloud')) weatherIcon = "☁️";
+        else if (weather.condition.toLowerCase().includes('rain')) weatherIcon = "🌧️";
+        else if (weather.condition.toLowerCase().includes('thunder')) weatherIcon = "⛈️";
+        else if (weather.condition.toLowerCase().includes('clear')) weatherIcon = "☀️";
+        else if (weather.condition.toLowerCase().includes('mist') || weather.condition.toLowerCase().includes('fog')) weatherIcon = "🌫️";
+        
+        return `
+            <div class="weather-info">
+                <div class="weather-temp">${weather.temp}°C</div>
+                <div>
+                    <div style="font-size: 2rem;">${weatherIcon}</div>
+                    <div class="weather-condition">${weather.description || weather.condition}</div>
+                </div>
+            </div>
+            <div class="weather-details">
+                <div class="weather-detail-item">
+                    <i class="fas fa-tint"></i>
+                    <span>${weather.humidity}%<br>Humidity</span>
+                </div>
+                <div class="weather-detail-item">
+                    <i class="fas fa-wind"></i>
+                    <span>${weather.windSpeed}<br>km/h</span>
+                </div>
+                <div class="weather-detail-item">
+                    <i class="fas fa-compress-alt"></i>
+                    <span>${weather.pressure}<br>hPa</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Main render function
+    async function renderDashboard() {
+        const weather = await fetchWeather();
+        const season = getSeason();
+        
+        // Today's Actions
+        const actions = getTodayActions(weather, season);
+        const actionsContainer = document.getElementById('todayActions');
+        if (actionsContainer) {
+            actionsContainer.innerHTML = actions.map(action => `
+                <div class="action-item">
+                    <div class="action-icon">${action.icon}</div>
+                    <div class="action-content">
+                        <div class="action-title">${action.title}</div>
+                        <div class="action-desc">${action.desc}</div>
+                        <span class="action-priority priority-${action.priority}">
+                            ${action.priority === 'high' ? 'URGENT' : action.priority === 'medium' ? 'RECOMMENDED' : 'OPTIONAL'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Pest Alerts
+        const pestAlerts = getPestAlerts(weather, season);
+        const pestContainer = document.getElementById('pestAlerts');
+        if (pestContainer) {
+            pestContainer.innerHTML = pestAlerts.map(alert => `
+                <div class="alert-item">
+                    <div class="alert-title">${alert.pest}</div>
+                    <div class="alert-desc">⚠️ ${alert.desc}</div>
+                    <div class="alert-solution">💡 SOLUTION: ${alert.solution}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Harvest Advice
+        const harvestAdvice = getHarvestAdvice(weather, season);
+        const harvestContainer = document.getElementById('harvestAdvice');
+        if (harvestContainer) {
+            harvestContainer.innerHTML = harvestAdvice.map(crop => `
+                <div class="harvest-item">
+                    <div class="harvest-status ${crop.readiness >= 90 ? 'harvest-ready' : crop.readiness >= 70 ? 'harvest-wait' : ''}">
+                        🌾 ${crop.name}: ${crop.status}
+                    </div>
+                    <div class="harvest-days">⏰ ${crop.days}</div>
+                    <div class="harvest-days">💰 Market Price: ${crop.price}/q</div>
+                    <span class="price-trend price-${crop.trend}">
+                        ${crop.trend === 'up' ? '📈 Price Increasing - Good time to sell' : crop.trend === 'down' ? '📉 Price Dropping - Consider storing' : '➡️ Price Stable'}
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        // Fertilizer Schedule
+        const fertilizerSchedule = getFertilizerSchedule(season);
+        const fertContainer = document.getElementById('fertilizerSchedule');
+        if (fertContainer) {
+            fertContainer.innerHTML = fertilizerSchedule.map(fert => `
+                <div class="fertilizer-item">
+                    <span class="fertilizer-name">🌱 ${fert.name}</span>
+                    <span class="fertilizer-dosage">${fert.dosage}</span>
+                    <span class="fertilizer-timing">📅 ${fert.timing}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Irrigation Guide
+        const irrigation = getIrrigationGuide(weather, season);
+        const irrContainer = document.getElementById('irrigationGuide');
+        if (irrContainer) {
+            irrContainer.innerHTML = `
+                <div class="irrigation-status">
+                    <div class="water-need">💧 Water Need: ${irrigation.waterNeed}</div>
+                    <div class="soil-moisture">Soil Moisture: ${irrigation.moisture}%</div>
+                    <div class="moisture-bar">
+                        <div class="moisture-fill" style="width: ${irrigation.moisture}%"></div>
+                    </div>
+                    <div style="font-size:0.8rem; margin-top:8px;">⏰ Frequency: ${irrigation.frequency}</div>
+                    <div style="font-size:0.8rem; margin-top:5px; color:#475569;">💡 ${irrigation.advice}</div>
+                </div>
+            `;
+        }
+        
+        // Weather Forecast
+        const weatherContainer = document.getElementById('weatherForecast');
+        if (weatherContainer) {
+            weatherContainer.innerHTML = renderWeather(weather);
+        }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', renderDashboard);
+})();
+</script>
+
+        <!-- ==================== AI CROP DOCTOR SECTION ==================== -->
+        <section id="crop-doctor">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span style="background: #dbeafe; color: #1e40af; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                    ✨ NEW: BETA FEATURE
+                </span>
+                <h2 style="margin-top: 10px;">📸 AI Crop Doctor</h2>
+                <p style="color: #64748b; max-width: 600px; margin: 0 auto;">
+                    Upload a photo of your affected crop. Our AI will analyze the leaf patterns to detect diseases and suggest immediate remedies.
                 </p>
             </div>
-            
-            <i class="fas fa-camera upload-icon" id="uploadIcon"></i>
-            <h3 id="uploadText">Click to Upload Leaf Photo</h3>
-            <p style="font-size: 0.9rem; color: #94a3b8;">Supports JPG, PNG (Max 5MB)</p>
-            <input type="file" id="leafUpload" accept="image/*" style="display: none;">
-            
-            <img id="leafPreview" style="max-width: 100%; max-height: 220px; border-radius: 16px; display: none; margin-top: 10px;">
-        </div>
 
-        <!-- RIGHT: Diagnosis Panel -->
-        <div id="diagnosisResult" class="diagnosis-result">
-            <div class="diagnosis-header">
-                <div class="diagnosis-header-left">
-                    <h3 id="diseaseName" style="margin: 0; color: #16a34a;">💚 Healthy Leaf (Optimal Condition)</h3>
-                    <p><i class="fas fa-microchip"></i> Detected via Image Analysis</p>
-                </div>
-                <span class="confidence-score" id="confidenceScore">
-                    <i class="fas fa-chart-line"></i> 99% Match
-                </span>
-            </div>
-            <div class="diagnosis-body">
-                <div class="diagnosis-inner-grid">
-                    <!-- Symptoms Column -->
-                    <div class="symptoms-section">
-                        <h4><i class="fas fa-search-plus"></i> Symptoms Identified</h4>
-                        <ul class="symptom-list" id="symptomsList">
-                            <li><i class="fas fa-circle" style="color: #16a34a;"></i> Vibrant green color</li>
-                            <li><i class="fas fa-circle" style="color: #16a34a;"></i> Uniform blade texture</li>
-                            <li><i class="fas fa-circle" style="color: #16a34a;"></i> No spots, curling or lesions</li>
-                            <li><i class="fas fa-circle" style="color: #16a34a;"></i> Strong turgor pressure</li>
-                        </ul>
+            <div class="grid-container">
+                <!-- LEFT: Upload Card -->
+                <div class="doctor-card" onclick="document.getElementById('leafUpload').click()">
+                    <div id="scanOverlay" class="scan-overlay">
+                        <div class="scan-line"></div>
+                        <p style="color: white; font-weight: 700; margin-top: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                            🤖 AI Analyzing...
+                        </p>
                     </div>
-                    <!-- Cure Column -->
-                    <div class="cure-section">
-                        <h4><i class="fas fa-syringe"></i> Recommended Cure</h4>
-                        <div id="cureText">
-                            ✅ No treatment required! Continue balanced irrigation, monitor for pests, and maintain soil health.
-                        </div>
-                        <div class="disclaimer-box">
-                            <i class="fas fa-shield-alt"></i>
-                            <small><strong>Note:</strong> Verify with a local expert before applying chemicals.</small>
-                        </div>
-                    </div>
+                    
+                    <i class="fas fa-camera upload-icon" id="uploadIcon"></i>
+                    <h3 id="uploadText">Click to Upload Leaf Photo</h3>
+                    <p style="font-size: 0.9rem; color: #94a3b8;">Supports JPG, PNG (Max 5MB)</p>
+                    <input type="file" id="leafUpload" accept="image/*" style="display: none;">
+                    
+                    <img id="leafPreview" style="max-width: 100%; max-height: 220px; border-radius: 16px; display: none; margin-top: 10px;">
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- ========================================== -->
-<!-- FARMER DIRECTORY SECTION -->
-<!-- ========================================== -->
+                <!-- RIGHT: Diagnosis Panel - IMPROVED STRUCTURE -->
+                <div id="diagnosisResult" class="diagnosis-result">
+                    <div class="diagnosis-header">
+                        <div class="diagnosis-header-left">
+                            <h3 id="diseaseName" style="margin: 0; color: #16a34a;">💚 Healthy Leaf (Optimal Condition)</h3>
+                            <p><i class="fas fa-microchip"></i> Detected via Image Analysis</p>
+                        </div>
+                        <span class="confidence-score" id="confidenceScore">
+                            <i class="fas fa-chart-line"></i> 99% Match
+                        </span>
+                    </div>
+                    <div class="diagnosis-body">
+                        <div class="diagnosis-inner-grid">
+                            <!-- Symptoms Column -->
+                            <div class="symptoms-section">
+                                <h4><i class="fas fa-search-plus"></i> Symptoms Identified</h4>
+                                <ul class="symptom-list" id="symptomsList">
+                                    <li><i class="fas fa-circle" style="color: #16a34a;"></i> Vibrant green color</li>
+                                    <li><i class="fas fa-circle" style="color: #16a34a;"></i> Uniform blade texture</li>
+                                    <li><i class="fas fa-circle" style="color: #16a34a;"></i> No spots, curling or lesions</li>
+                                    <li><i class="fas fa-circle" style="color: #16a34a;"></i> Strong turgor pressure</li>
+                                </ul>
+                            </div>
+                            <!-- Cure Column -->
+                            <div class="cure-section">
+                                <h4><i class="fas fa-syringe"></i> Recommended Cure</h4>
+                                <div id="cureText">
+                                    ✅ No treatment required! Continue balanced irrigation, monitor for pests, and maintain soil health.
+                                </div>
+                                <div class="disclaimer-box">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <small><strong>Note:</strong> Verify with a local expert before applying chemicals.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+   <!-- Farmer Directory Section -->
 <section id="farmers" class="container">
     <h2>Farmer Directory</h2>
 
     <div class="search-container">
-        <input type="text" id="farmerSearch" placeholder="Search by name, crop, or location..." class="search-input">
-        <button class="search-button" onclick="searchFarmers()">Search Farmers</button>
+        <input
+            type="text"
+            id="farmerSearch"
+            placeholder="Search by name, crop, or location..."
+            class="search-input"
+        >
+
+        <button class="search-button" onclick="searchFarmers()">
+            Search Farmers
+        </button>
     </div>
 
     <div id="farmerList" class="grid-container">
         <!-- First 6 farmer cards will be shown here -->
     </div>
 
+    <!-- View More Button -->
     <div class="view-more-container">
-        <button id="viewMoreFarmers" class="view-more-btn">View More Farmers</button>
+        <button id="viewMoreFarmers" class="view-more-btn">
+            View More Farmers
+        </button>
     </div>
 </section>
 
-<!-- ========================================== -->
-<!-- EQUIPMENT MARKETPLACE SECTION -->
-<!-- ========================================== -->
-<section id="equipment" class="marketplace-section">
-    <div class="container">
-        <div class="marketplace-header">
-            <h2>Agriculture Equipment Marketplace</h2>
-            <p>Find the best tools and machinery from trusted sellers to boost your farm's productivity.</p>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <a href="dashboard.html#equipmentListingSubmission" id="listEquipmentBtn" class="section-button" style="display: none;">
-                List Your Equipment for Sale
-            </a>
-        </div>
-
-        <div class="filter-controls">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search for equipment (e.g., 'John Deere Tractor')">
+    <!-- Equipment Marketplace Section -->
+    <section id="equipment" class="marketplace-section">
+        <div class="container">
+            <div class="marketplace-header">
+                <h2>Agriculture Equipment Marketplace</h2>
+                <p>Find the best tools and machinery from trusted sellers to boost your farm's productivity.</p>
             </div>
-            <div class="filter-options">
-                <div class="filter-dropdown">
-                    <i class="fas fa-tags"></i>
-                    <select id="categoryFilter">
-                        <option value="all">All Categories</option>
-                        <option value="Tractor">Tractors</option>
-                        <option value="Soil Preparation">Soil Preparation</option>
-                        <option value="Irrigation">Irrigation</option>
-                        <option value="Harvesting">Harvesting</option>
-                        <option value="Planting & Seeding">Planting & Seeding</option>
-                        <option value="Sprayers">Sprayers</option>
-                        <option value="Transport">Transport</option>
-                    </select>
-                </div>
-                <div class="filter-dropdown">
-                    <i class="fas fa-sort-amount-down"></i>
-                    <select id="sortFilter">
-                        <option value="default">Sort By</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="rating-desc">Rating: High to Low</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div id="productGrid" class="equipment-grid-container">
-            <!-- Equipment cards will be injected here -->
-        </div>
-        <p id="noResultsMessage" class="no-results-message" style="display: none;">No equipment found.</p>
-    </div>
-</section>
 
-<!-- ========================================== -->
-<!-- GOVERNMENT SCHEMES SECTION -->
-<!-- ========================================== -->
-<section id="schemes" class="schemes-section">
-    <div class="container">
-        <div class="marketplace-header">
-            <h2>Government Schemes for Farmers</h2>
-            <p>Explore central and state government schemes to support your agricultural needs.</p>
-        </div>
-
-        <!-- Saved Schemes Section -->
-        <div id="savedSchemesSection" class="saved-schemes-section" style="display: none;">
-            <h3 class="section-title-small">★ Your Saved Schemes</h3>
-            <div id="savedSchemesGrid" class="schemes-grid-container"></div>
-            <button id="clearSavedBtn" class="btn-clear-saved">Clear All</button>
-        </div>
-
-        <!-- Search and Filter Controls for Schemes -->
-        <div class="filter-controls">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="schemeSearchInput" placeholder="Search for a scheme (e.g., 'PM-Kisan')">
-            </div>
-            <div class="filter-options">
-                <div class="filter-dropdown">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <select id="stateFilter">
-                        <option value="all">All States</option>
-                        <option value="Central">Central Scheme</option>
-                        <option value="Maharashtra">Maharashtra</option>
-                    </select>
+ <div style="text-align: center; margin-bottom: 2rem;">
+    <a href="dashboard.html#equipmentListingSubmission" id="listEquipmentBtn" class="section-button" style="display: none;">
+        List Your Equipment for Sale
+    </a>
+</div>
+            </div> 
+            <div class="filter-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search for equipment (e.g., 'John Deere Tractor')">
                 </div>
-                <div class="filter-dropdown">
-                    <i class="fas fa-tags"></i>
-                    <select id="schemeCategoryFilter">
-                        <option value="all">All Categories</option>
-                    </select>
+                <div class="filter-options">
+                    <div class="filter-dropdown">
+                        <i class="fas fa-tags"></i>
+                        <select id="categoryFilter">
+                            <option value="all">All Categories</option>
+                            <option value="Tractor">Tractors</option>
+                            <option value="Soil Preparation">Soil Preparation</option>
+                            <option value="Irrigation">Irrigation</option>
+                            <option value="Harvesting">Harvesting</option>
+                            <option value="Planting & Seeding">Planting & Seeding</option>
+                            <option value="Sprayers">Sprayers</option>
+                            <option value="Transport">Transport</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <i class="fas fa-sort-amount-down"></i>
+                        <select id="sortFilter">
+                            <option value="default">Sort By</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="rating-desc">Rating: High to Low</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+            <div id="productGrid" class="equipment-grid-container">
+                <!-- Equipment cards will be injected here -->
+            </div>
+            <p id="noResultsMessage" class="no-results-message" style="display: none;">No equipment found.</p>
         </div>
+    </section>
 
-        <!-- Schemes Grid -->
-        <div id="schemesGrid" class="schemes-grid-container">
-            <!-- Scheme cards will be dynamically inserted here by JavaScript -->
-        </div>
-        <p id="noSchemesMessage" class="no-results-message" style="display: none;">No schemes found matching your criteria.</p>
-    </div>
-</section>
+    <!-- ======== GOVERNMENT SCHEMES SECTION ======== -->
+    <section id="schemes" class="schemes-section">
+        <div class="container">
+            <div class="marketplace-header">
+                <h2>Government Schemes for Farmers</h2>
+                <p>Explore central and state government schemes to support your agricultural needs.</p>
+            </div>
 
-<!-- ========================================== -->
-<!-- SUCCESS STORIES SECTION -->
-<!-- ========================================== -->
-<section class="testimonials-section">
-    <div class="container">
-        <h2 class="section-title">What Our Farmers Say</h2>
-        
-        <div class="testimonial-grid">
-            <div class="testimonial-card">
-                <p></p>
-                <div class="testimonial-author">
-                    <button class="story-author-link"></button>
-                    <span></span>
+            <!-- Saved Schemes Section (Initially Hidden) -->
+            <div id="savedSchemesSection" class="saved-schemes-section" style="display: none;">
+                <h3 class="section-title-small">★ Your Saved Schemes</h3>
+                <div id="savedSchemesGrid" class="schemes-grid-container">
+                    </div>
+                <button id="clearSavedBtn" class="btn-clear-saved">Clear All</button>
+            </div>
+
+            
+            <!-- Search and Filter Controls for Schemes -->
+            <div class="filter-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="schemeSearchInput" placeholder="Search for a scheme (e.g., 'PM-Kisan')">
+                </div>
+                <div class="filter-options">
+                    <div class="filter-dropdown">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select id="stateFilter">
+                            <option value="all">All States</option>
+                            <option value="Central">Central Scheme</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <i class="fas fa-tags"></i>
+                        <select id="schemeCategoryFilter">
+                            <option value="all">All Categories</option>
+                            {/* Categories will be dynamically inserted here */}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="testimonial-card">
-                <p></p>
-                <div class="testimonial-author">
-                    <button class="story-author-link"></button>
-                    <span></span>
+            <!-- Schemes Grid -->
+            <div id="schemesGrid" class="schemes-grid-container">
+                <!-- Scheme cards will be dynamically inserted here by JavaScript -->
+            </div>
+            <p id="noSchemesMessage" class="no-results-message" style="display: none;">No schemes found matching your criteria.</p>
+
+        </div>
+    </section>
+
+    <!-- Success Stories Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title">What Our Farmers Say</h2>
+            
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <p></p>
+                    <div class="testimonial-author">
+                        <button class="story-author-link">
+                            
+                        </button>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p></p>
+                    <div class="testimonial-author">
+                        <button class="story-author-link">
+                            
+                        </button>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+     
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <button class="faq-question">
+                    How do I apply for these schemes?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Each scheme has an "Apply Now" button that directs you to the official government portal. You can also visit your nearest Common Service Centre (CSC) for assistance.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    Are these schemes available in my state?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Most schemes listed are central government initiatives and are available nationwide. Some state-specific schemes are also listed. Use the state filter to find schemes relevant to you.</p>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ========================================== -->
-<!-- FAQ SECTION -->
-<!-- ========================================== -->
-<section class="faq-section">
-    <div class="container">
-        <h2 class="section-title">Frequently Asked Questions</h2>
-        <div class="faq-item">
-            <button class="faq-question">
-                How do I apply for these schemes?
-                <i class="fas fa-chevron-down"></i>
-            </button>
-            <div class="faq-answer">
-                <p>Each scheme has an "Apply Now" button that directs you to the official government portal. You can also visit your nearest Common Service Centre (CSC) for assistance.</p>
-            </div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-question">
-                Are these schemes available in my state?
-                <i class="fas fa-chevron-down"></i>
-            </button>
-            <div class="faq-answer">
-                <p>Most schemes listed are central government initiatives and are available nationwide. Some state-specific schemes are also listed. Use the state filter to find schemes relevant to you.</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- ========================================== -->
-<!-- COMMUNITY DISCUSSION SECTION -->
-<!-- ========================================== -->
-<section id="comments-section" class="community-discussion-section container">
+    <section id="comments-section" class="community-discussion-section container">
     <h2>💬 Community Discussion</h2>
     <p>Share your experiences, ask questions, and connect with fellow farmers.</p>
 
@@ -614,24 +1516,22 @@
     <div id="commentsList" class="comments-list-container">
         <p class="no-results-message">Loading comments...</p>
     </div>
-</section>
+    
+    </section>
 
-<!-- ========================================== -->
-<!-- MODAL FOR SCHEME DETAILS -->
-<!-- ========================================== -->
-<div id="schemeModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <button id="closeModalBtn" class="modal-close-btn">&times;</button>
-        <div id="modalBody">
-            <!-- Scheme details will be injected here -->
+
+    <!-- Modal for Scheme Details -->
+    <div id="schemeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button id="closeModalBtn" class="modal-close-btn">&times;</button>
+            <div id="modalBody">
+                <!-- Scheme details will be injected here -->
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ========================================== -->
-<!-- ARTICLES/INFORMATION SECTION -->
-<!-- ========================================== -->
-<section id="articles" class="container">
+    <!-- Articles/Information Section -->
+    <section id="articles" class="container">
     <h2>Latest Articles & Resources</h2>
     <div class="grid-container">
         <div class="card">
@@ -642,29 +1542,23 @@
             <p>Explore innovative techniques for eco-friendly agriculture.</p>
             <a href="#" class="article-link">Read More &rarr;</a>
         </div>
-    </div>
+        </div>
 </section>
+<!-- Tell reviews system what page this is -->
+<!-- ⭐ Review System (Unique Page) -->
+<script>
+  window.customPageName = "agri2";  <!-- this page name -->
+</script>
 
-<!-- ========================================== -->
-<!-- REVIEW SYSTEM -->
-<!-- ========================================== -->
-<script>window.customPageName = "agri2";</script>
 <link rel="stylesheet" href="reviews.css">
 <div id="reviews-container"></div>
 <script src="reviews.js"></script>
-
-<!-- ========================================== -->
-<!-- VOICE ASSISTANT -->
-<!-- ========================================== -->
 <div id="voice-assistant-btn" class="voice-assistant-float" title="Speak Commands">
     <i class="fas fa-microphone"></i>
     <div class="voice-waves"></div>
 </div>
-
-<!-- ========================================== -->
-<!-- FOOTER SECTION -->
-<!-- ========================================== -->
-<footer class="main-footer">
+    <!-- Footer Section -->
+  <footer class="main-footer">
     <div class="footer-top-accent"></div>
     
     <div class="footer-grid">
@@ -693,33 +1587,34 @@
             </ul>
         </div>
     </div>
+
+    
 </footer>
 
-<!-- ========================================== -->
-<!-- SCRIPTS -->
-<!-- ========================================== -->
 <script type="text/javascript">
 function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,hi,mr',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
+  new google.translate.TranslateElement({
+      pageLanguage: 'en',
+      // This line restricts the languages
+      includedLanguages: 'en,hi,mr', 
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 <script src="../agri.js"></script>
+
 <script src="/js/client.js"></script>
 
+
 <!-- ========================================== -->
-<!-- FLOATING CHAT ICON - Clean Version -->
+<!-- FLOATING CHAT ICON -->
 <!-- ========================================== -->
 
 <style>
-/* ============================================
-   FLOATING CHAT ICON STYLES
-   ============================================ */
+/* Floating Chat Icon */
 .floating-chat-icon {
     position: fixed;
     bottom: 30px;
@@ -729,7 +1624,7 @@ function googleTranslateElementInit() {
     background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
     border-radius: 50%;
     cursor: pointer;
-    z-index: 999;
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -766,9 +1661,7 @@ function googleTranslateElementInit() {
     display: none;
 }
 
-/* ============================================
-   CHAT WIDGET CONTAINER
-   ============================================ */
+/* Chat Widget Container */
 #chat-widget-container {
     position: fixed;
     bottom: 100px;
@@ -781,14 +1674,13 @@ function googleTranslateElementInit() {
     display: none;
     flex-direction: column;
     overflow: hidden;
-    z-index: 1000;
+    z-index: 9999;
 }
 
 #chat-widget-container.active {
     display: flex;
 }
 
-/* Chat Header */
 #chat-widget-container nav {
     display: flex;
     align-items: center;
@@ -805,31 +1697,6 @@ function googleTranslateElementInit() {
     color: white;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     font-weight: 600;
-}
-
-#chat-widget-container #user-count-container {
-    display: flex;
-    align-items: center;
-    margin-right: 10px;
-    padding: 3px 10px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-}
-
-#chat-widget-container #user-count-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-    background-color: #ffaa00;
-}
-
-#chat-widget-container #user-count-text {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: white;
-    white-space: nowrap;
 }
 
 #chat-widget-close {
@@ -961,7 +1828,6 @@ function googleTranslateElementInit() {
     border-radius: 20px;
     border: 1px solid #ccc;
     outline: none;
-    font-family: 'Poppins', sans-serif;
 }
 
 #messageimp:focus {
@@ -1000,39 +1866,7 @@ function googleTranslateElementInit() {
     transform: scale(1.05);
 }
 
-#chat-widget-container .message-image {
-    max-width: 200px;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-/* Login Prompt */
-#join-modal {
-    background: white;
-    color: #333;
-    padding: 30px;
-    text-align: center;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#join-box h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.25rem;
-}
-
-#join-box p {
-    margin: 0 0 15px 0;
-    font-size: 0.9rem;
-    color: #666;
-}
-
-/* ============================================
-   MOBILE RESPONSIVE
-   ============================================ */
+/* Mobile Responsive */
 @media (max-width: 480px) {
     #chat-widget-container {
         width: 95vw;
@@ -1068,10 +1902,6 @@ function googleTranslateElementInit() {
 <div id="chat-widget-container">
     <nav>
         <h1>💬 KISAN CIRCLE</h1>
-        <div id="user-count-container">
-            <span id="user-count-dot"></span>
-            <span id="user-count-text">Connecting...</span>
-        </div>
         <button id="chat-widget-close" onclick="toggleChat()">&times;</button>
     </nav>
     <div class="container active" id="chatMessages"></div>
@@ -1088,10 +1918,6 @@ function googleTranslateElementInit() {
 </div>
 
 <script>
-// ==============================================
-// CHAT WIDGET - Floating Icon Functions
-// ==============================================
-
 // Toggle chat widget
 function toggleChat() {
     const container = document.getElementById('chat-widget-container');
@@ -1136,6 +1962,5 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
-
 </body>
 </html>
