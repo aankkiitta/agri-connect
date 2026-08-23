@@ -284,11 +284,10 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ==================================================
-// CHAT STATE - ID TO ID CHAT
+// CHAT STATE - GROUP CHAT (FIXED)
 // ==================================================
-const chatUsers = new Map(); // socketId -> { userId, name, email, socketId }
-const userPresence = new Map(); // userId -> { socketIds: Set, online: boolean }
-const messageCache = new Map(); // roomId -> [messages]
+const chatUsers = new Map(); // socketId -> user data
+const messageCache = []; // Array for messages
 
 // ==================================================
 // CHAT ROUTE
@@ -298,7 +297,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - ID TO ID (FIXED)
+// CHAT SOCKET EVENTS - COMPLETE FIX
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -311,19 +310,15 @@ const io = socketIo(server, {
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
+    console.log(`📊 Total connections: ${io.engine.clientsCount}`);
     
-    let currentUserId = null;
+    let currentUser = null;
 
     // ========================================
-    // USER CONNECTS
+    // USER JOINS CHAT
     // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
-        
-        if (!data) {
-            console.error('❌ No data received');
-            return;
-        }
         
         const userId = data.userId || data.id || null;
         const email = data.email || null;
@@ -334,156 +329,102 @@ io.on('connection', (socket) => {
             return;
         }
         
-        currentUserId = userId;
-        
-        // Store user
-        chatUsers.set(socket.id, {
-            userId: userId,
+        currentUser = {
+            id: userId,
             email: email,
             name: name,
             socketId: socket.id
-        });
+        };
         
-        // Update presence
-        if (!userPresence.has(userId)) {
-            userPresence.set(userId, {
-                socketIds: new Set(),
-                online: false
-            });
-        }
-        userPresence.get(userId).socketIds.add(socket.id);
-        userPresence.get(userId).online = true;
+        chatUsers.set(socket.id, currentUser);
         
-        console.log(`✅ User ${name} (ID: ${userId}) is ONLINE`);
-        console.log(`📊 Total users online: ${userPresence.size}`);
+        console.log(`✅ User joined: ${name} (${email})`);
+        console.log(`📊 Total users online: ${chatUsers.size}`);
         
-        // Broadcast online users list
-        const onlineUsers = Array.from(userPresence.entries())
-            .filter(([id, presence]) => presence.online)
-            .map(([id, presence]) => ({
-                id: id,
-                name: chatUsers.get(Array.from(presence.socketIds)[0])?.name || 'User',
-                online: true
-            }));
+        // ✅ Send updated online users list to ALL clients
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
         io.emit('online-users', onlineUsers);
+        console.log(`📤 Sent online users: ${onlineUsers.length} users`);
         
-        // Send chat history if any
-        socket.emit('chat-history', []);
-    });
-
-    // ========================================
-    // JOIN CONVERSATION ROOM
-    // ========================================
-    socket.on('join-conversation', (data) => {
-        if (!data || !data.userId || !data.receiverId) {
-            console.error('❌ Invalid join-conversation data:', data);
-            return;
+        // ✅ Send chat history to the new user
+        if (messageCache.length > 0) {
+            const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
+            socket.emit('chat-history', recentMessages);
+        } else {
+            console.log(`📨 No cached messages for ${name}`);
+            socket.emit('chat-history', []);
         }
         
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        
-        console.log(`🔵 User ${userId} joining conversation with ${receiverId}`);
-        
-        if (!userId || !receiverId) {
-            console.error('❌ Invalid user IDs');
-            return;
-        }
-        
-        // Create deterministic room ID
-        const roomId = [userId, receiverId].sort((a, b) => a - b).join('_');
-        
-        // Leave all previous rooms
-        if (socket.rooms) {
-            socket.rooms.forEach(room => {
-                if (room !== socket.id) {
-                    socket.leave(room);
-                    console.log(`📤 Left room: ${room}`);
-                }
-            });
-        }
-        
-        // Join the room
-        socket.join(roomId);
-        console.log(`📥 Joined room: ${roomId}`);
-        
-        // Send cached messages if any
-        if (messageCache.has(roomId)) {
-            const messages = messageCache.get(roomId).slice(-50);
-            socket.emit('chat-history', messages);
-        }
-        
-        // Send receiver presence
-        const isReceiverOnline = userPresence.has(receiverId) && userPresence.get(receiverId).online;
-        socket.emit('receiver-presence', {
-            userId: receiverId,
-            online: isReceiverOnline
+        // ✅ Broadcast user joined message
+        io.emit('user-joined', {
+            name: name,
+            message: `${name} joined the chat`
         });
         
-        socket.emit('conversation-joined', {
-            roomId: roomId,
-            userId: userId,
-            receiverId: receiverId
+        // ✅ Send the user their own info for debugging
+        socket.emit('user-joined-confirm', {
+            success: true,
+            user: currentUser,
+            usersOnline: chatUsers.size
         });
     });
 
     // ========================================
-    // SEND MESSAGE - ID TO ID
+    // SEND MESSAGE - CRITICAL FIX
     // ========================================
     socket.on('send-message', (data) => {
         try {
             console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
             console.log('📨 Data:', data);
+            console.log('📨 Socket ID:', socket.id);
             
-            if (!data || !data.sender_id || !data.receiver_id || !data.message) {
-                console.error('❌ Invalid message data:', data);
+            const user = chatUsers.get(socket.id);
+            if (!user) {
+                console.error('❌ User not found for socket:', socket.id);
+                // Try to find user by socket id in chatUsers
+                console.log('📊 Current chatUsers:', Array.from(chatUsers.keys()));
                 return;
             }
             
-            const senderId = parseInt(data.sender_id);
-            const receiverId = parseInt(data.receiver_id);
-            const message = data.message;
-            
-            if (!senderId || !receiverId || !message) {
-                console.error('❌ Invalid message data');
-                return;
-            }
-            
-            const sender = chatUsers.get(socket.id);
-            if (!sender) {
-                console.error('❌ Sender not found');
-                return;
-            }
-            
-            // Create room ID
-            const roomId = [senderId, receiverId].sort((a, b) => a - b).join('_');
-            
-            console.log(`📨 Message from ${sender.name} (${senderId}) to ${receiverId}: "${message}"`);
+            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+            console.log(`📊 Users online: ${chatUsers.size}`);
             
             const messageData = {
                 id: Date.now(),
-                sender_id: senderId,
-                receiver_id: receiverId,
-                name: sender.name,
-                email: sender.email,
-                message: message,
+                userId: user.id,
+                email: user.email,
+                name: user.name,
+                message: data.message,
                 message_type: data.message_type || 'text',
                 timestamp: new Date().toISOString()
             };
             
             // Store in cache
-            if (!messageCache.has(roomId)) {
-                messageCache.set(roomId, []);
-            }
-            messageCache.get(roomId).push(messageData);
-            if (messageCache.get(roomId).length > 100) {
-                const msgs = messageCache.get(roomId);
-                messageCache.set(roomId, msgs.slice(-100));
+            messageCache.push(messageData);
+            if (messageCache.length > 100) {
+                messageCache.shift();
             }
             
-            // Send to ALL users in the room (including sender)
-            io.to(roomId).emit('receive-message', messageData);
-            console.log(`📨 Broadcasted to room ${roomId}`);
+            console.log(`📨 Message cached, total: ${messageCache.length}`);
+            
+            // ✅ BROADCAST TO ALL CONNECTED USERS
+            io.emit('receive-message', messageData);
+            console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+            
+            // ✅ Also send to sender to confirm
+            socket.emit('message-sent-confirm', {
+                success: true,
+                message: messageData
+            });
+            
+            // Log all connected sockets
+            const socketIds = Array.from(chatUsers.keys());
+            console.log(`📨 Active sockets: ${socketIds.join(', ')}`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
@@ -492,138 +433,88 @@ io.on('connection', (socket) => {
     });
 
     // ========================================
-    // GET RECEIVER PRESENCE
-    // ========================================
-    socket.on('get-user-presence', (data) => {
-        if (!data || !data.userId) {
-            console.log('⚠️ get-user-presence missing userId:', data);
-            return;
-        }
-        
-        const userId = parseInt(data.userId);
-        if (!userId) return;
-        
-        const isOnline = userPresence.has(userId) && userPresence.get(userId).online;
-        socket.emit('receiver-presence', {
-            userId: userId,
-            online: isOnline
-        });
-    });
-
-    // ========================================
-    // TYPING INDICATOR - FIXED
-    // ========================================
-    socket.on('typing', (data) => {
-        if (!data || !data.userId || !data.receiverId) {
-            console.log('⚠️ Typing event missing data:', data);
-            return;
-        }
-        
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        if (!userId || !receiverId) return;
-        
-        const roomId = [userId, receiverId].sort((a, b) => a - b).join('_');
-        socket.to(roomId).emit('user-typing', {
-            userId: userId,
-            name: chatUsers.get(socket.id)?.name || 'User',
-            isTyping: true
-        });
-    });
-
-    socket.on('stop-typing', (data) => {
-        if (!data || !data.userId || !data.receiverId) {
-            console.log('⚠️ Stop-typing event missing data:', data);
-            return;
-        }
-        
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        if (!userId || !receiverId) return;
-        
-        const roomId = [userId, receiverId].sort((a, b) => a - b).join('_');
-        socket.to(roomId).emit('user-typing', {
-            userId: userId,
-            isTyping: false
-        });
-    });
-
-    // ========================================
     // IMAGE UPLOAD
     // ========================================
     socket.on('send-image', (data) => {
-        if (!data || !data.sender_id || !data.receiver_id || !data.filePath) {
-            console.log('⚠️ send-image missing data:', data);
-            return;
-        }
-        
-        const sender = chatUsers.get(socket.id);
-        if (!sender) return;
-        
-        const senderId = parseInt(data.sender_id);
-        const receiverId = parseInt(data.receiver_id);
-        const roomId = [senderId, receiverId].sort((a, b) => a - b).join('_');
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
         
         const messageData = {
             id: Date.now(),
-            sender_id: senderId,
-            receiver_id: receiverId,
-            name: sender.name,
-            email: sender.email,
+            userId: user.id,
+            email: user.email,
+            name: user.name,
             message: data.filePath,
             message_type: 'image',
             timestamp: new Date().toISOString()
         };
         
-        if (!messageCache.has(roomId)) {
-            messageCache.set(roomId, []);
-        }
-        messageCache.get(roomId).push(messageData);
-        if (messageCache.get(roomId).length > 100) {
-            const msgs = messageCache.get(roomId);
-            messageCache.set(roomId, msgs.slice(-100));
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
         }
         
-        io.to(roomId).emit('receive-message', messageData);
+        io.emit('receive-message', messageData);
     });
 
     // ========================================
     // AUDIO UPLOAD
     // ========================================
     socket.on('send-audio', (data) => {
-        if (!data || !data.sender_id || !data.receiver_id || !data.filePath) {
-            console.log('⚠️ send-audio missing data:', data);
-            return;
-        }
-        
-        const sender = chatUsers.get(socket.id);
-        if (!sender) return;
-        
-        const senderId = parseInt(data.sender_id);
-        const receiverId = parseInt(data.receiver_id);
-        const roomId = [senderId, receiverId].sort((a, b) => a - b).join('_');
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
         
         const messageData = {
             id: Date.now(),
-            sender_id: senderId,
-            receiver_id: receiverId,
-            name: sender.name,
-            email: sender.email,
+            userId: user.id,
+            email: user.email,
+            name: user.name,
             message: data.filePath,
             message_type: 'audio',
             timestamp: new Date().toISOString()
         };
         
-        if (!messageCache.has(roomId)) {
-            messageCache.set(roomId, []);
-        }
-        messageCache.get(roomId).push(messageData);
-        if (messageCache.get(roomId).length > 100) {
-            const msgs = messageCache.get(roomId);
-            messageCache.set(roomId, msgs.slice(-100));
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
         }
         
-        io.to(roomId).emit('receive-message', messageData);
+        io.emit('receive-message', messageData);
+    });
+
+    // ========================================
+    // TYPING INDICATOR
+    // ========================================
+    socket.on('typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: true
+            });
+        }
+    });
+
+    socket.on('stop-typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: false
+            });
+        }
+    });
+
+    // ========================================
+    // GET ONLINE USERS (manual request)
+    // ========================================
+    socket.on('get-online-users', () => {
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
+        socket.emit('online-users', onlineUsers);
     });
 
     // ========================================
@@ -634,38 +525,28 @@ io.on('connection', (socket) => {
         
         const user = chatUsers.get(socket.id);
         if (user) {
-            const userId = user.userId;
-            
-            // Remove socket from presence
-            if (userPresence.has(userId)) {
-                userPresence.get(userId).socketIds.delete(socket.id);
-                if (userPresence.get(userId).socketIds.size === 0) {
-                    userPresence.get(userId).online = false;
-                    console.log(`❌ User ${user.name} (ID: ${userId}) is OFFLINE`);
-                    
-                    // Broadcast updated online users
-                    const onlineUsers = Array.from(userPresence.entries())
-                        .filter(([id, presence]) => presence.online)
-                        .map(([id, presence]) => ({
-                            id: id,
-                            name: user.name,
-                            online: true
-                        }));
-                    io.emit('online-users', onlineUsers);
-                    
-                    // Broadcast user left
-                    io.emit('user-left', {
-                        userId: userId,
-                        name: user.name,
-                        message: `${user.name} left the chat`
-                    });
-                }
-            }
-            
             chatUsers.delete(socket.id);
+            console.log(`❌ User removed: ${user.name}`);
+            console.log(`📊 Users online: ${chatUsers.size}`);
+            
+            // ✅ Send updated online users list
+            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+                id: u.id,
+                email: u.email,
+                name: u.name
+            }));
+            io.emit('online-users', onlineUsers);
+            
+            // ✅ Broadcast user left message
+            io.emit('user-left', {
+                name: user.name,
+                message: `${user.name} left the chat`
+            });
         }
     });
 });
+
+
 
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
