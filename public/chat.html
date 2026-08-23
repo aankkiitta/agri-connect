@@ -8,9 +8,47 @@
     <link rel="stylesheet" href="/css/chat.css">
 </head>
 <body>
-    <div id="chat-page-container">
-        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-        <script src="/js/chat.js"></script>
+    <!-- Full Page Chat - No Header, No Navigation -->
+    <div id="chat-full-page">
+        <!-- Chat Widget Container (Full Page) -->
+        <div id="chat-widget-container" class="full-page active">
+            <!-- Header -->
+            <nav>
+                <h1>💬 KISAN CIRCLE GROUP</h1>
+                <div id="user-count-container">
+                    <span id="user-count-dot"></span>
+                    <span id="user-count-text">Connecting...</span>
+                </div>
+            </nav>
+
+            <!-- Messages Area -->
+            <div class="container active" id="messageContainer"></div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator"></div>
+
+            <!-- Message Input Area -->
+            <div class="send active">
+                <input type="file" id="image-input" accept="image/*" style="display: none;">
+                <form action="#" id="send-container">
+                    <button type="button" class="btn-icon" id="attach-file-btn">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+                    <button class="btn" type="submit" id="send-btn" style="display: none;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <button type="button" class="btn" id="record-btn">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <!-- Load Socket.IO -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <!-- Load Chat JavaScript -->
+    <script src="/js/chat.js"></script>
 </body>
 </html>
