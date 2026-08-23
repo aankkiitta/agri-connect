@@ -298,8 +298,7 @@ app.get('/chat', (req, res) => {
 // ==================================================
 // CHAT STATE - GROUP CHAT
 // ==================================================
-const chatUsers = new Map(); // socketId -> { userId, email, name, socketId }
-const messageCache = []; // All messages (group chat)
+
 
 // ==================================================
 // CHAT ROUTE
