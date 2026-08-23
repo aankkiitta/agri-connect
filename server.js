@@ -284,21 +284,11 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ==================================================
-// CHAT STATE
+// CHAT STATE - GROUP CHAT (FIXED)
 // ==================================================
-const chatUsers = new Map(); // socketId -> { userId, socketId }
+const chatUsers = new Map(); // socketId -> user data
 const chatRooms = new Map(); // roomId -> Set of socketIds
-const messageCache = new Map(); // roomId -> [messages]
-// ==================================================
-// CHAT ROUTE
-// ==================================================
-app.get('/chat', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
-});
-// ==================================================
-// CHAT STATE - GROUP CHAT
-// ==================================================
-
+const messageCache = []; // ✅ ARRAY for messages
 
 // ==================================================
 // CHAT ROUTE
@@ -308,7 +298,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - GROUP CHAT
+// CHAT SOCKET EVENTS - GROUP CHAT (COMPLETE WORKING)
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -324,7 +314,9 @@ io.on('connection', (socket) => {
     
     let currentUser = null;
 
-    // User joins the group chat
+    // ========================================
+    // USER JOINS GROUP CHAT
+    // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
         
@@ -347,7 +339,7 @@ io.on('connection', (socket) => {
         
         chatUsers.set(socket.id, currentUser);
         
-        console.log(`✅ User joined group chat: ${name} (${email})`);
+        console.log(`✅ User joined group chat: ${name} (${email || userId})`);
         
         // Send online users list to everyone
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
@@ -357,8 +349,15 @@ io.on('connection', (socket) => {
         }));
         io.emit('online-users', onlineUsers);
         
-        // Send chat history to new user
-        socket.emit('chat-history', messageCache.slice(-50));
+        // ✅ FIXED: Send chat history (messageCache is an array)
+        if (messageCache.length > 0) {
+            const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
+            socket.emit('chat-history', recentMessages);
+        } else {
+            console.log(`📨 No cached messages for ${name}`);
+            socket.emit('chat-history', []);
+        }
         
         // Broadcast user joined message
         io.emit('user-joined', {
@@ -367,7 +366,9 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Send message to group
+    // ========================================
+    // SEND MESSAGE TO GROUP
+    // ========================================
     socket.on('send-message', (data) => {
         try {
             const user = chatUsers.get(socket.id);
@@ -388,11 +389,13 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             };
             
-            // Store in cache
+            // ✅ Store in cache (array)
             messageCache.push(messageData);
-            if (messageCache.length > 100) messageCache.shift();
+            if (messageCache.length > 100) {
+                messageCache.shift();
+            }
             
-            // Broadcast to ALL users in the group
+            // ✅ Broadcast to ALL users in the group
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
@@ -402,7 +405,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Image upload for group chat
+    // ========================================
+    // IMAGE UPLOAD
+    // ========================================
     socket.on('send-image', (data) => {
         const user = chatUsers.get(socket.id);
         if (!user) return;
@@ -418,12 +423,16 @@ io.on('connection', (socket) => {
         };
         
         messageCache.push(messageData);
-        if (messageCache.length > 100) messageCache.shift();
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
         
         io.emit('receive-message', messageData);
     });
 
-    // Audio upload for group chat
+    // ========================================
+    // AUDIO UPLOAD
+    // ========================================
     socket.on('send-audio', (data) => {
         const user = chatUsers.get(socket.id);
         if (!user) return;
@@ -439,12 +448,16 @@ io.on('connection', (socket) => {
         };
         
         messageCache.push(messageData);
-        if (messageCache.length > 100) messageCache.shift();
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
         
         io.emit('receive-message', messageData);
     });
 
-    // Typing indicator
+    // ========================================
+    // TYPING INDICATOR
+    // ========================================
     socket.on('typing', () => {
         const user = chatUsers.get(socket.id);
         if (user) {
@@ -465,7 +478,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Disconnect
+    // ========================================
+    // DISCONNECT
+    // ========================================
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
@@ -489,6 +504,7 @@ io.on('connection', (socket) => {
         }
     });
 });
+
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
     res.json({
@@ -1800,14 +1816,13 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
 
 // ======== SERVER START ========
 const PORT = process.env.PORT || 3000;
-
-// REPLACE: app.listen(PORT, ...) with:
+// ==================================================
+// SERVER START
+// ==================================================
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
     console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
-    console.log(`💬 Chat available at: /chat`);
-       console.log(`🚀 Server running on port ${PORT}`);
     console.log(`💬 Chat available at: /chat`);
 });
