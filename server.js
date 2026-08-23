@@ -309,108 +309,169 @@ const io = socketIo(server, {
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
+    
+    let currentUserId = null;
+    let currentRoomId = null;
 
-    socket.on('new-user-joined', (userData) => {
-        console.log('📝 User joined:', userData);
+    // User joins with their ID
+    socket.on('user-connected', (data) => {
+        const userId = parseInt(data.userId);
+        if (!userId) return;
         
-        let userInfo = {
-            id: socket.id,
-            name: 'Unknown User',
-            city: 'Unknown',
-            profile: null
-        };
+        currentUserId = userId;
+        chatUsers.set(socket.id, { userId, socketId: socket.id });
+        
+        console.log(`✅ User ${userId} connected with socket ${socket.id}`);
+        
+        // Send online status
+        const onlineUsers = Array.from(chatUsers.values()).map(u => u.userId);
+        io.emit('online-users', onlineUsers);
+    });
 
-        if (typeof userData === 'string') {
-            userInfo.name = userData;
-        } else if (typeof userData === 'object' && userData !== null) {
-            userInfo.name = userData.name || 'Unknown User';
-            userInfo.city = userData.city || 'Unknown';
-            userInfo.profile = userData;
+    // User joins a conversation room
+    socket.on('join-conversation', (data) => {
+        const userId = parseInt(data.userId);
+        const receiverId = parseInt(data.receiverId);
+        
+        if (!userId || !receiverId) return;
+        
+        // Create deterministic room ID
+        const roomId = [userId, receiverId].sort().join('_');
+        currentRoomId = roomId;
+        
+        // Leave previous room
+        if (socket.rooms) {
+            socket.rooms.forEach(room => {
+                if (room !== socket.id) {
+                    socket.leave(room);
+                }
+            });
         }
-
-        chatUsers.set(socket.id, userInfo);
-
-        socket.broadcast.emit('user-joined', userInfo.name);
         
-        const userList = Array.from(chatUsers.values()).map(u => u.name);
-        io.emit('user-list-update', userList);
+        socket.join(roomId);
         
-        // Send chat history to new user
-        socket.emit('chat-history', chatMessages);
-    });
-
-    socket.on('send', (data) => {
-        const user = chatUsers.get(socket.id);
-        const messageData = {
-            name: user ? user.name : 'Unknown',
-            city: user ? user.city : 'Unknown',
-            message: data.message,
-            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-            userProfile: user ? user.profile : null
-        };
-        
-        chatMessages.push(messageData);
-        if (chatMessages.length > 100) chatMessages.shift();
-        
-        // Broadcast to all clients including sender
-        io.emit('receive', messageData);
-    });
-
-    socket.on('send-image', (data) => {
-        const user = chatUsers.get(socket.id);
-        const messageData = {
-            name: user ? user.name : 'Unknown',
-            city: user ? user.city : 'Unknown',
-            filePath: data.filePath,
-            isImage: true,
-            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-            userProfile: user ? user.profile : null
-        };
-        
-        chatMessages.push(messageData);
-        if (chatMessages.length > 100) chatMessages.shift();
-        
-        io.emit('receive-image', messageData);
-    });
-
-    socket.on('send-audio', (data) => {
-        const user = chatUsers.get(socket.id);
-        const messageData = {
-            name: user ? user.name : 'Unknown',
-            city: user ? user.city : 'Unknown',
-            filePath: data.filePath,
-            isAudio: true,
-            time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-            userProfile: user ? user.profile : null
-        };
-        
-        chatMessages.push(messageData);
-        if (chatMessages.length > 100) chatMessages.shift();
-        
-        io.emit('receive-audio', messageData);
-    });
-
-    socket.on('typing', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            socket.broadcast.emit('user-typing', user.name);
+        if (!chatRooms.has(roomId)) {
+            chatRooms.set(roomId, new Set());
         }
+        chatRooms.get(roomId).add(socket.id);
+        
+        console.log(`🔵 User ${userId} joined room: ${roomId}`);
+        
+        // Send recent messages if any (auto-deleted after seen)
+        if (messageCache.has(roomId)) {
+            const recentMessages = messageCache.get(roomId).slice(-20);
+            socket.emit('chat-history', recentMessages);
+        }
+        
+        socket.emit('conversation-joined', { 
+            roomId, 
+            userId, 
+            receiverId,
+            success: true 
+        });
     });
 
-    socket.on('stop-typing', () => {
-        socket.broadcast.emit('user-stop-typing');
-    });
-
-    socket.on('disconnect', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            chatUsers.delete(socket.id);
-            io.emit('user-left', user.name);
+    // Send message
+    socket.on('send-message', (data) => {
+        try {
+            const senderId = parseInt(data.sender_id);
+            const receiverId = parseInt(data.receiver_id);
+            const message = data.message;
+            const messageType = data.message_type || 'text';
             
-            const userList = Array.from(chatUsers.values()).map(u => u.name);
-            io.emit('user-list-update', userList);
+            if (!senderId || !receiverId || !message) return;
+            
+            const roomId = [senderId, receiverId].sort().join('_');
+            
+            const messageData = {
+                id: Date.now(),
+                sender_id: senderId,
+                receiver_id: receiverId,
+                message: message,
+                message_type: messageType,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Store in cache temporarily (will auto-delete)
+            if (!messageCache.has(roomId)) {
+                messageCache.set(roomId, []);
+            }
+            messageCache.get(roomId).push(messageData);
+            
+            // Keep only last 50 messages per room
+            if (messageCache.get(roomId).length > 50) {
+                messageCache.set(roomId, messageCache.get(roomId).slice(-50));
+            }
+            
+            // Emit to room
+            io.to(roomId).emit('receive-message', messageData);
+            
+            console.log(`📨 Message from ${senderId} to ${receiverId}: "${message}"`);
+            
+        } catch (error) {
+            console.error('❌ Error sending message:', error);
         }
+    });
+
+    // Mark messages as seen (auto-delete after seen)
+    socket.on('messages-seen', (data) => {
+        const userId = parseInt(data.userId);
+        const receiverId = parseInt(data.receiverId);
+        
+        if (!userId || !receiverId) return;
+        
+        const roomId = [userId, receiverId].sort().join('_');
+        
+        // Clear cache for this room after messages are seen
+        if (messageCache.has(roomId)) {
+            // Keep only messages sent by current user (for their own reference)
+            const userMessages = messageCache.get(roomId).filter(
+                msg => msg.sender_id === userId
+            );
+            messageCache.set(roomId, userMessages);
+            console.log(`🗑️ Messages cleared for room ${roomId} after being seen`);
+        }
+    });
+
+    // Typing indicator
+    socket.on('typing', (data) => {
+        const userId = parseInt(data.userId);
+        const receiverId = parseInt(data.receiverId);
+        if (!userId || !receiverId) return;
+        const roomId = [userId, receiverId].sort().join('_');
+        socket.to(roomId).emit('user-typing', { userId, isTyping: true });
+    });
+
+    socket.on('stop-typing', (data) => {
+        const userId = parseInt(data.userId);
+        const receiverId = parseInt(data.receiverId);
+        if (!userId || !receiverId) return;
+        const roomId = [userId, receiverId].sort().join('_');
+        socket.to
+        (roomId).emit('user-typing', { userId, isTyping: false });
+    });
+
+    // Disconnect
+    socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
+        
+        if (currentUserId) {
+            chatUsers.delete(socket.id);
+            const onlineUsers = Array.from(chatUsers.values()).map(u => u.userId);
+            io.emit('online-users', onlineUsers);
+        }
+        
+        if (currentRoomId && chatRooms.has(currentRoomId)) {
+            chatRooms.get(currentRoomId).delete(socket.id);
+            if (chatRooms.get(currentRoomId).size === 0) {
+                chatRooms.delete(currentRoomId);
+                // Auto-delete messages when room is empty
+                if (messageCache.has(currentRoomId)) {
+                    messageCache.delete(currentRoomId);
+                    console.log(`🗑️ Room ${currentRoomId} emptied, messages auto-deleted`);
+                }
+            }
+        }
     });
 });
 // --- HEALTH ENDPOINT ---
@@ -1731,5 +1792,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
     console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
+     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`💬 Chat available at: /chat`);
 });

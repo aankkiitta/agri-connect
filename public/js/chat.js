@@ -1,34 +1,39 @@
 (function() {
-    // Auto-detect server URL
     const SERVER_URL = window.location.origin;
     
-    let userCity = "Unknown";
-    let userName = "";
     let socket = null;
+    let currentUserId = null;
+    let currentReceiverId = null;
+    let currentRoomId = null;
     let isConnected = false;
     
-    let isLoggedIn = false;
+    // Get current user
     let agriUser = null;
-    
-    const userData = localStorage.getItem('agriUser');
-    if (userData) {
-        try {
+    try {
+        const userData = localStorage.getItem('agriUser');
+        if (userData) {
             agriUser = JSON.parse(userData);
-            isLoggedIn = true;
-            userName = agriUser.name || "Farmer";
-        } catch (e) {
-            console.error("Failed to parse agriUser:", e);
+            currentUserId = agriUser.id || agriUser.user_id || null;
         }
+    } catch (e) {
+        console.error('Failed to parse user data:', e);
     }
 
-    // Create widget based on login status
-    if (isLoggedIn) {
-        createWidget();
+    function getReceiverIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('userId') || params.get('receiverId') || params.get('id');
+    }
+
+    const receiverId = getReceiverIdFromURL();
+    if (currentUserId && receiverId) {
+        currentReceiverId = parseInt(receiverId);
+        initializeChatWidget();
     } else {
         createLoginPromptWidget();
     }
-    
+
     function createLoginPromptWidget() {
+        // ... (keep existing login prompt code) ...
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
         launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
@@ -64,7 +69,7 @@
         });
     }
 
-    function createWidget() {
+    function initializeChatWidget() {
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
         launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
@@ -96,22 +101,8 @@
         document.body.appendChild(widgetContainer);
         initializeChat(widgetContainer, launcher);
     }
-    
-    function getUserLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                    const data = await response.json();
-                    if (data.address) userCity = data.address.city || data.address.state || "Unknown";
-                } catch (e) { console.warn("Could not fetch city."); }
-            }, () => {});
-        }
-    }
 
     function initializeChat(widget, launcher) {
-        // Connect to socket.io on the same server
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -138,19 +129,23 @@
         let isTyping = false;
         let typingTimer;
         let unreadCount = 0;
+        let hasReceivedMessages = false;
 
-        // Socket connection events
         socket.on('connect', () => {
             console.log('✅ Connected to chat server');
             isConnected = true;
             userCountDot.style.backgroundColor = '#32CD32';
             userCountText.textContent = 'Online';
             
-            // Send user data to server
-            if (isLoggedIn && agriUser) {
-                socket.emit('new-user-joined', agriUser);
-            } else if (userName) {
-                socket.emit('new-user-joined', userName);
+            if (currentUserId) {
+                socket.emit('user-connected', { userId: currentUserId });
+            }
+            
+            if (currentUserId && currentReceiverId) {
+                socket.emit('join-conversation', {
+                    userId: currentUserId,
+                    receiverId: currentReceiverId
+                });
             }
         });
 
@@ -167,91 +162,49 @@
             userCountText.textContent = 'Reconnecting...';
         });
 
-        launcher.addEventListener('click', () => { 
-            widget.classList.add('active'); 
-            launcher.style.display = 'none'; 
-            unreadCount = 0; 
-            unreadBadge.style.display = 'none'; 
-        });
-        
-        closeBtn.addEventListener('click', () => { 
-            widget.classList.remove('active'); 
-            launcher.style.display = 'flex'; 
+        socket.on('conversation-joined', (data) => {
+            console.log('✅ Joined conversation:', data);
+            currentRoomId = data.roomId;
         });
 
-        const append = (data, position) => {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(position);
-
-            if (position === 'middle') {
-                messageElement.innerText = data.message;
-            } else {
-                const time = data.time || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-                const name = data.name || '';
-                const city = data.city || 'Unknown';
-                
-                let messageContent = '';
-                if (data.isImage) {
-                    messageContent = `<a href="${data.filePath}" target="_blank"><img src="${data.filePath}" class="message-image" /></a>`;
-                } else if (data.isAudio) {
-                    messageContent = `<audio controls src="${data.filePath}"></audio>`;
-                } else {
-                    messageContent = data.message;
-                }
-
-                let nameHtml = `<span class="message-name">${name}</span>`;
-
-                // If it's an incoming message (left) and we have profile data
-                if (position === 'left' && data.userProfile) {
-                    const u = data.userProfile;
-                    const isExpert = (parseInt(u.years_experience) || 0) >= 7;
-                    
-                    const params = new URLSearchParams({
-                        name: u.name,
-                        email: u.email || 'Not Listed',
-                        contact: u.contact_number || '',
-                        pic: u.profile_picture_url || '/uploads/default.png',
-                        experience: u.years_experience || '0',
-                        location: u.location || city,
-                        isExpert: isExpert
-                    });
-                    
-                    nameHtml = `<a href="/profile-viewer.html?${params.toString()}" class="message-name" style="text-decoration: underline; cursor: pointer;" title="View Profile">${name}</a>`;
-                }
-
-                messageElement.innerHTML = `
-                    <div class="message-body">${messageContent}</div>
-                    <div class="message-header">
-                        ${position === 'right' ? '' : nameHtml}
-                        <span class="message-info">${position === 'right' ? '' : (city + ' · ')} ${time}</span>
-                    </div>
-                `;
-            }
-            messageContainer.append(messageElement);
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-        };
-
-        // Receive chat history
+        // Load recent messages (auto-deleted after seen)
         socket.on('chat-history', (messages) => {
             messageContainer.innerHTML = '';
             if (messages && messages.length > 0) {
                 messages.forEach(msg => {
-                    if (msg.message) {
-                        append(msg, 'left');
-                    } else if (msg.isImage) {
-                        append(msg, 'left');
-                    } else if (msg.isAudio) {
-                        append(msg, 'left');
-                    }
+                    const position = msg.sender_id === currentUserId ? 'right' : 'left';
+                    appendMessage(msg, position);
+                });
+                // Mark messages as seen (auto-delete)
+                socket.emit('messages-seen', {
+                    userId: currentUserId,
+                    receiverId: currentReceiverId
                 });
             }
         });
 
-        // Handle real-time message receiving
-        socket.on('receive', (data) => {
-            if (data.name) {
-                append(data, 'left');
+        socket.on('online-users', (users) => {
+            const isReceiverOnline = users.includes(currentReceiverId);
+            if (isReceiverOnline) {
+                userCountText.textContent = 'Online';
+                userCountDot.style.backgroundColor = '#32CD32';
+            }
+        });
+
+        socket.on('receive-message', (data) => {
+            console.log('📨 New message received:', data);
+            
+            if ((data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
+                (data.sender_id === currentReceiverId && data.receiver_id === currentUserId)) {
+                
+                appendMessage(data, 'left');
+                
+                // Auto-delete: Mark as seen immediately when received
+                socket.emit('messages-seen', {
+                    userId: currentUserId,
+                    receiverId: currentReceiverId
+                });
+                
                 if (!widget.classList.contains('active')) {
                     unreadCount++;
                     unreadBadge.innerText = unreadCount;
@@ -260,127 +213,89 @@
             }
         });
 
-        socket.on('receive-image', (data) => {
-            if (data.name) {
-                data.isImage = true;
-                append(data, 'left');
-                if (!widget.classList.contains('active')) {
-                    unreadCount++;
-                    unreadBadge.innerText = unreadCount;
-                    unreadBadge.style.display = 'flex';
+        socket.on('user-typing', (data) => {
+            if (data.userId === currentReceiverId) {
+                if (data.isTyping) {
+                    typingIndicator.innerText = 'User is typing...';
+                } else {
+                    typingIndicator.innerText = '';
                 }
             }
         });
 
-        socket.on('receive-audio', (data) => {
-            if (data.name) {
-                data.isAudio = true;
-                append(data, 'left');
-                if (!widget.classList.contains('active')) {
-                    unreadCount++;
-                    unreadBadge.innerText = unreadCount;
-                    unreadBadge.style.display = 'flex';
-                }
+        function appendMessage(data, position) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(position);
+
+            const time = data.timestamp 
+                ? new Date(data.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+                : new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            let messageContent = data.message || data.text || '';
+            
+            // Handle image/audio
+            if (data.message_type === 'image') {
+                messageContent = `<a href="${data.message}" target="_blank"><img src="${data.message}" class="message-image" /></a>`;
+            } else if (data.message_type === 'audio') {
+                messageContent = `<audio controls src="${data.message}"></audio>`;
             }
-        });
+            
+            messageElement.innerHTML = `
+                <div class="message-body">${messageContent}</div>
+                <div class="message-header">
+                    <span class="message-info">${time}</span>
+                </div>
+            `;
+            
+            messageContainer.append(messageElement);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
 
-        socket.on('user-joined', (name) => {
-            if (name) append({ message: `${name} joined the chat` }, 'middle');
-        });
-
-        socket.on('user-left', (name) => {
-            if (name) append({ message: `${name} left the chat` }, 'middle');
-        });
-
-        socket.on('user-list-update', (users) => {
-            userCountText.textContent = `${users.length} Online`;
-        });
-
-        socket.on('user-typing', (name) => {
-            typingIndicator.innerText = `${name} is typing...`;
-        });
-
-        socket.on('user-stop-typing', () => {
-            typingIndicator.innerText = '';
-        });
-
-        // Send message
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const message = messageInput.value;
-            if (message.trim() === '' || !socket) return;
+            const message = messageInput.value.trim();
+            if (!message || !socket || !currentUserId || !currentReceiverId) return;
             
             const messageData = {
+                sender_id: currentUserId,
+                receiver_id: currentReceiverId,
                 message: message,
-                city: userCity,
-                name: "You"
+                message_type: 'text',
+                timestamp: new Date().toISOString()
             };
             
-            // Display message immediately for sender
-            append(messageData, 'right');
-            
-            // Send to server
-            socket.emit('send', { message: message, city: userCity });
+            appendMessage(messageData, 'right');
+            socket.emit('send-message', messageData);
             
             messageInput.value = '';
-            socket.emit('stop-typing');
+            socket.emit('stop-typing', { 
+                userId: currentUserId, 
+                receiverId: currentReceiverId 
+            });
             isTyping = false;
             recordBtn.style.display = 'flex';
             sendBtn.style.display = 'none';
         });
 
-        // Image upload
-        attachFileBtn.addEventListener('click', () => { imageInput.click(); });
-        
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            append({ message: 'Uploading image...', name: 'You', city: userCity }, 'right');
-            
-            fetch(`${SERVER_URL}/upload/image`, { 
-                method: 'POST', 
-                body: formData 
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.filePath) {
-                    // Remove upload message
-                    const lastMsg = messageContainer.lastChild;
-                    if (lastMsg && lastMsg.textContent.includes('Uploading image...')) {
-                        messageContainer.removeChild(lastMsg);
-                    }
-                    
-                    const imageData = {
-                        filePath: data.filePath,
-                        isImage: true,
-                        city: userCity,
-                        name: "You"
-                    };
-                    append(imageData, 'right');
-                    socket.emit('send-image', { filePath: data.filePath, city: userCity });
-                }
-            })
-            .catch(err => {
-                console.error('Upload error:', err);
-                alert('Failed to upload image');
-            });
-            e.target.value = null;
-        });
-
         // Typing indicator
         messageInput.addEventListener('input', () => {
-            if (!isTyping && socket) { 
+            if (!isTyping && socket && currentUserId && currentReceiverId) { 
                 isTyping = true; 
-                socket.emit('typing'); 
+                socket.emit('typing', { 
+                    userId: currentUserId, 
+                    receiverId: currentReceiverId 
+                });
             }
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => { 
                 isTyping = false; 
-                if (socket) socket.emit('stop-typing'); 
+                if (socket && currentUserId && currentReceiverId) {
+                    socket.emit('stop-typing', { 
+                        userId: currentUserId, 
+                        receiverId: currentReceiverId 
+                    });
+                }
             }, 2000);
             
             if (messageInput.value.trim() !== '') { 
@@ -390,6 +305,42 @@
                 recordBtn.style.display = 'flex'; 
                 sendBtn.style.display = 'none'; 
             }
+        });
+
+        // Image upload
+        attachFileBtn.addEventListener('click', () => { imageInput.click(); });
+        
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentUserId || !currentReceiverId) return;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/upload/image`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await response.json();
+                
+                if (data.filePath) {
+                    const messageData = {
+                        sender_id: currentUserId,
+                        receiver_id: currentReceiverId,
+                        message: data.filePath,
+                        message_type: 'image',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    appendMessage(messageData, 'right');
+                    socket.emit('send-message', messageData);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Failed to upload image');
+            }
+            e.target.value = null;
         });
 
         // Audio recording
@@ -415,48 +366,53 @@
                 });
         });
 
-        recordBtn.addEventListener('mouseup', () => {
+        recordBtn.addEventListener('mouseup', async () => {
             if (!isRecording || !mediaRecorder) return;
             isRecording = false; 
             mediaRecorder.stop(); 
             recordBtn.classList.remove('recording');
             
-            mediaRecorder.addEventListener("stop", () => {
+            mediaRecorder.addEventListener("stop", async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const formData = new FormData();
                 formData.append('audio', audioBlob, `audio-${Date.now()}.webm`);
                 
-                append({ message: 'Sending audio...', name: 'You', city: userCity }, 'right');
-                
-                fetch(`${SERVER_URL}/upload/audio`, { 
-                    method: 'POST', 
-                    body: formData 
-                })
-                .then(res => res.json())
-                .then(data => {
+                try {
+                    const response = await fetch(`${SERVER_URL}/upload/audio`, { 
+                        method: 'POST', 
+                        body: formData 
+                    });
+                    const data = await response.json();
+                    
                     if (data.filePath) {
-                        const lastMsg = messageContainer.lastChild;
-                        if (lastMsg && lastMsg.textContent.includes('Sending audio...')) {
-                            messageContainer.removeChild(lastMsg);
-                        }
-                        
-                        const audioData = {
-                            filePath: data.filePath,
-                            isAudio: true,
-                            city: userCity,
-                            name: "You"
+                        const messageData = {
+                            sender_id: currentUserId,
+                            receiver_id: currentReceiverId,
+                            message: data.filePath,
+                            message_type: 'audio',
+                            timestamp: new Date().toISOString()
                         };
-                        append(audioData, 'right');
-                        socket.emit('send-audio', { filePath: data.filePath, city: userCity });
+                        
+                        appendMessage(messageData, 'right');
+                        socket.emit('send-message', messageData);
                     }
-                })
-                .catch(err => {
-                    console.error('Audio upload error:', err);
+                } catch (error) {
+                    console.error('Audio upload error:', error);
                     alert('Failed to upload audio');
-                });
+                }
             });
         });
+
+        launcher.addEventListener('click', () => { 
+            widget.classList.add('active'); 
+            launcher.style.display = 'none'; 
+            unreadCount = 0; 
+            unreadBadge.style.display = 'none'; 
+        });
+        
+        closeBtn.addEventListener('click', () => { 
+            widget.classList.remove('active'); 
+            launcher.style.display = 'flex'; 
+        });
     }
-    
-    getUserLocation(); 
 })();
