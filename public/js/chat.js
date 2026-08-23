@@ -1,5 +1,8 @@
 (function() {
-    const SERVER_URL = window.location.origin;
+    // ========================================
+    // AUTO-DETECT SERVER URL (Works on both local and live)
+    // ========================================
+    const SERVER_URL = window.location.origin; // https://agri-connect-2kik.onrender.com
     
     let socket = null;
     let currentUserId = null;
@@ -8,11 +11,11 @@
     let isConnected = false;
     
     // ========================================
-    // FIX: Get user ID from localStorage properly
+    // GET USER ID FROM localStorage
     // ========================================
     function getCurrentUser() {
         try {
-            // Try different possible storage keys
+            // Check all possible storage keys
             const keys = ['agriUser', 'user', 'userData', 'authUser'];
             
             for (const key of keys) {
@@ -20,21 +23,19 @@
                 if (data) {
                     try {
                         const user = JSON.parse(data);
-                        console.log(`✅ Found user data in localStorage key: ${key}`, user);
+                        console.log(`✅ Found user in localStorage key: ${key}`, user);
                         
-                        // Try different possible ID fields
+                        // Try all possible ID fields
                         const userId = user.id || user.user_id || user.userId || user._id || null;
                         if (userId) {
-                            console.log(`✅ User ID found: ${userId}`);
+                            console.log(`✅ User ID: ${userId}`);
                             return user;
                         }
-                    } catch (e) {
-                        // Continue to next key
-                    }
+                    } catch (e) {}
                 }
             }
             
-            // If no user found in localStorage, try sessionStorage
+            // Check sessionStorage
             const sessionData = sessionStorage.getItem('user');
             if (sessionData) {
                 try {
@@ -47,26 +48,24 @@
                 } catch (e) {}
             }
             
-            console.warn('⚠️ No user data found in localStorage or sessionStorage');
+            console.warn('⚠️ No user data found');
             return null;
         } catch (error) {
-            console.error('Error getting current user:', error);
+            console.error('Error getting user:', error);
             return null;
         }
     }
 
-    // Get user data
+    // Get current user
     const agriUser = getCurrentUser();
     if (agriUser) {
         currentUserId = agriUser.id || agriUser.user_id || agriUser.userId || agriUser._id || null;
         console.log('👤 Current User:', agriUser);
         console.log('🆔 Current User ID:', currentUserId);
-    } else {
-        console.warn('⚠️ No user logged in');
     }
 
     // ========================================
-    // Get receiver ID from URL
+    // GET RECEIVER ID FROM URL
     // ========================================
     function getReceiverIdFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -83,25 +82,23 @@
     const receiverId = getReceiverIdFromURL();
     
     // ========================================
-    // Initialize chat if both IDs exist
+    // START CHAT
     // ========================================
     if (currentUserId && receiverId) {
         currentReceiverId = parseInt(receiverId);
         console.log(`✅ Starting chat: User ${currentUserId} with User ${currentReceiverId}`);
         initializeChatWidget();
     } else {
-        console.log('❌ Missing user IDs. Current:', currentUserId, 'Receiver:', receiverId);
+        console.log('❌ Missing user IDs');
         if (!currentUserId) {
-            console.warn('⚠️ User not logged in. Please login first.');
             createLoginPromptWidget();
         } else if (!receiverId) {
-            console.warn('⚠️ No receiver ID in URL. Use: /chat?userId=2');
             createNoReceiverWidget();
         }
     }
 
     // ========================================
-    // Create login prompt widget
+    // CREATE WIDGETS
     // ========================================
     function createLoginPromptWidget() {
         const launcher = document.createElement('div');
@@ -121,7 +118,7 @@
                 <h2>🔐 LOGIN REQUIRED</h2>
                 <p>Please login to access Kisan Circle chat.</p>
                 <div style="margin-top: 20px;">
-                    <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600; font-size: 1.1rem;">Go to Login</a>
+                    <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600;">Go to Login</a>
                 </div>
               </div>
             </div>`;
@@ -138,9 +135,6 @@
         });
     }
 
-    // ========================================
-    // Create no receiver widget
-    // ========================================
     function createNoReceiverWidget() {
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
@@ -157,10 +151,7 @@
             <div id="join-modal">
               <div id="join-box">
                 <h2>👤 SELECT A USER</h2>
-                <p>Please specify who you want to chat with.</p>
-                <div style="margin-top: 20px; font-size: 0.9rem; color: #666;">
-                    <p>Use: <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px;">/chat?userId=2</code></p>
-                </div>
+                <p>Use: <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px;">/chat?userId=2</code></p>
               </div>
             </div>`;
         document.body.appendChild(widgetContainer);
@@ -177,7 +168,7 @@
     }
 
     // ========================================
-    // Initialize chat widget
+    // INITIALIZE CHAT
     // ========================================
     function initializeChatWidget() {
         const launcher = document.createElement('div');
@@ -188,7 +179,7 @@
         widgetContainer.id = 'chat-widget-container';
         widgetContainer.innerHTML = `
             <nav>
-              <h1>💬 CHAT WITH USER ${currentReceiverId}</h1>
+              <h1>💬 CHAT</h1>
               <div id="user-count-container">
                   <span id="user-count-dot"></span>
                   <span id="user-count-text">Connecting...</span>
@@ -213,11 +204,12 @@
     }
 
     // ========================================
-    // Main chat initialization
+    // MAIN CHAT LOGIC
     // ========================================
     function initializeChat(widget, launcher) {
         console.log('🔄 Initializing chat...');
         console.log(`👤 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
+        console.log(`🔗 Server URL: ${SERVER_URL}`);
         
         // Connect to Socket.IO
         socket = io(SERVER_URL, {
@@ -248,7 +240,7 @@
         let unreadCount = 0;
 
         // ========================================
-        // Socket connection events
+        // SOCKET EVENTS
         // ========================================
         socket.on('connect', () => {
             console.log('✅ Connected to chat server');
@@ -283,27 +275,20 @@
             userCountText.textContent = 'Reconnecting...';
         });
 
-        // ========================================
-        // Conversation joined
-        // ========================================
         socket.on('conversation-joined', (data) => {
             console.log('✅ Conversation joined:', data);
             currentRoomId = data.roomId;
-            userCountText.textContent = `Chatting with User ${currentReceiverId}`;
+            userCountText.textContent = `Chatting`;
         });
 
-        // ========================================
-        // Receive chat history
-        // ========================================
         socket.on('chat-history', (messages) => {
-            console.log(`📨 Received ${messages ? messages.length : 0} chat history messages`);
+            console.log(`📨 Received ${messages ? messages.length : 0} messages`);
             messageContainer.innerHTML = '';
             if (messages && messages.length > 0) {
                 messages.forEach(msg => {
                     const position = msg.sender_id === currentUserId ? 'right' : 'left';
                     appendMessage(msg, position);
                 });
-                // Mark messages as seen
                 socket.emit('messages-seen', {
                     userId: currentUserId,
                     receiverId: currentReceiverId
@@ -311,9 +296,6 @@
             }
         });
 
-        // ========================================
-        // Online users update
-        // ========================================
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const isReceiverOnline = users.includes(currentReceiverId);
@@ -327,12 +309,10 @@
         });
 
         // ========================================
-        // Receive message - CRITICAL FIX
+        // RECEIVE MESSAGE - CRITICAL
         // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨 New message received:', data);
-            console.log(`📨 From: ${data.sender_id}, To: ${data.receiver_id}`);
-            console.log(`📨 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
             
             // Check if message belongs to this conversation
             const isForThisConversation = 
@@ -344,7 +324,6 @@
                 const position = data.sender_id === currentUserId ? 'right' : 'left';
                 appendMessage(data, position);
                 
-                // Auto-delete: Mark as seen
                 socket.emit('messages-seen', {
                     userId: currentUserId,
                     receiverId: currentReceiverId
@@ -355,28 +334,17 @@
                     unreadBadge.innerText = unreadCount;
                     unreadBadge.style.display = 'flex';
                 }
-            } else {
-                console.log('❌ Message NOT for this conversation');
-                console.log(`Expected: ${currentUserId}->${currentReceiverId} or ${currentReceiverId}->${currentUserId}`);
-                console.log(`Got: ${data.sender_id}->${data.receiver_id}`);
             }
         });
 
-        // ========================================
-        // Typing indicator
-        // ========================================
         socket.on('user-typing', (data) => {
             if (data.userId === currentReceiverId) {
-                if (data.isTyping) {
-                    typingIndicator.innerText = 'User is typing...';
-                } else {
-                    typingIndicator.innerText = '';
-                }
+                typingIndicator.innerText = data.isTyping ? 'User is typing...' : '';
             }
         });
 
         // ========================================
-        // Append message to UI
+        // APPEND MESSAGE
         // ========================================
         function appendMessage(data, position) {
             const messageElement = document.createElement('div');
@@ -389,7 +357,6 @@
 
             let messageContent = data.message || data.text || '';
             
-            // Handle image/audio
             if (data.message_type === 'image') {
                 messageContent = `<a href="${data.message}" target="_blank"><img src="${data.message}" class="message-image" /></a>`;
             } else if (data.message_type === 'audio') {
@@ -408,17 +375,14 @@
         }
 
         // ========================================
-        // Send message
+        // SEND MESSAGE
         // ========================================
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = messageInput.value.trim();
             
-            console.log(`📤 Sending message: "${message}"`);
-            console.log(`📤 From: ${currentUserId}, To: ${currentReceiverId}`);
-            
             if (!message || !socket || !currentUserId || !currentReceiverId) {
-                console.error('❌ Cannot send message - missing data');
+                console.error('❌ Cannot send message');
                 return;
             }
             
@@ -430,11 +394,8 @@
                 timestamp: new Date().toISOString()
             };
             
-            // Display immediately for sender
+            console.log('📤 Sending message:', messageData);
             appendMessage(messageData, 'right');
-            
-            // Send to server
-            console.log('📤 Emitting send-message:', messageData);
             socket.emit('send-message', messageData);
             
             messageInput.value = '';
@@ -448,7 +409,7 @@
         });
 
         // ========================================
-        // Typing indicator
+        // TYPING
         // ========================================
         messageInput.addEventListener('input', () => {
             if (!isTyping && socket && currentUserId && currentReceiverId) { 
@@ -479,13 +440,13 @@
         });
 
         // ========================================
-        // Image upload
+        // IMAGE UPLOAD
         // ========================================
         attachFileBtn.addEventListener('click', () => { imageInput.click(); });
         
         imageInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file || !currentUserId || !currentReceiverId) return;
+            if (!file) return;
             
             const formData = new FormData();
             formData.append('image', file);
@@ -517,7 +478,7 @@
         });
 
         // ========================================
-        // Audio recording
+        // AUDIO RECORDING
         // ========================================
         recordBtn.addEventListener('mousedown', () => {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
@@ -579,7 +540,7 @@
         });
 
         // ========================================
-        // Launcher events
+        // LAUNCHER
         // ========================================
         launcher.addEventListener('click', () => { 
             widget.classList.add('active'); 

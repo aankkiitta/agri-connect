@@ -737,6 +737,49 @@
         flex-wrap: wrap;
     }
 }
+
+
+/* Chat button styles */
+.btn-chat-header {
+    background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-chat-header:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(108, 77, 255, 0.3);
+}
+
+.btn-chat-farmer {
+    background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+}
+
+.btn-chat-farmer:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(108, 77, 255, 0.3);
+}
 </style>
 
 <script>
@@ -1607,5 +1650,175 @@ function googleTranslateElementInit() {
 <script src="../agri.js"></script>
 
 <script src="/js/client.js"></script>
+
+
+
+<script>
+// ==============================================
+// CHAT INTEGRATION - USER AUTH & BUTTONS
+// ==============================================
+
+(function() {
+    // Check if user is logged in
+    let currentUser = null;
+    let currentUserId = null;
+    
+    try {
+        const userData = localStorage.getItem('agriUser');
+        if (userData) {
+            currentUser = JSON.parse(userData);
+            currentUserId = currentUser.id || currentUser.user_id || currentUser.userId || null;
+            console.log('✅ User logged in:', currentUser);
+        }
+    } catch (e) {
+        console.error('Error reading user data:', e);
+    }
+    
+    // Update auth slot
+    const authSlot = document.getElementById('authSlot');
+    if (authSlot) {
+        if (currentUser && currentUserId) {
+            authSlot.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #2e7d32; font-weight: 600;">
+                        <i class="fas fa-user-circle"></i> ${currentUser.name || 'User'}
+                    </span>
+                    <button onclick="startChat()" class="btn-chat-header" style="
+                        background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+                        color: white;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 0.85rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fas fa-comment"></i> Chat
+                    </button>
+                    <a href="logout.html" style="color: #64748b; font-size: 0.85rem; text-decoration: none;">Logout</a>
+                </div>
+            `;
+        } else {
+            authSlot.innerHTML = `
+                <a href="login.html" class="btn-login-signup" style="
+                    background: linear-gradient(135deg, #2e7d32, #1f5e2a);
+                    color: white;
+                    padding: 8px 20px;
+                    border-radius: 25px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    transition: all 0.3s ease;
+                    display: inline-block;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    LOGIN / SIGN UP
+                </a>
+            `;
+        }
+    }
+    
+    // Function to start chat
+    window.startChat = function() {
+        if (!currentUserId) {
+            alert('Please login first to chat.');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Show a list of users to chat with (you can customize this)
+        const receiverId = prompt('Enter the User ID you want to chat with:');
+        if (receiverId && !isNaN(receiverId)) {
+            window.open(`/chat?userId=${receiverId}`, '_blank');
+        } else if (receiverId) {
+            alert('Please enter a valid User ID (number).');
+        }
+    };
+    
+    // Add chat button to farmer cards dynamically
+    window.addChatButtonToFarmer = function(farmerId, farmerName) {
+        return `
+            <button onclick="window.open('/chat?userId=${farmerId}', '_blank')" class="btn-chat-farmer" style="
+                background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+                color: white;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 15px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.75rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.3s ease;
+                margin-top: 8px;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fas fa-comment"></i> Chat
+            </button>
+        `;
+    };
+    
+    // Example: Add chat buttons to existing farmer cards
+    function addChatButtonsToFarmers() {
+        const farmerCards = document.querySelectorAll('.farmer-card, .grid-container .card');
+        farmerCards.forEach((card, index) => {
+            // Check if card already has a chat button
+            if (card.querySelector('.btn-chat-farmer')) return;
+            
+            // Try to get farmer ID from data attribute or use index+1 as fallback
+            const farmerId = card.dataset.userId || card.dataset.id || (index + 1);
+            const farmerName = card.querySelector('h3')?.textContent || card.querySelector('.name')?.textContent || 'Farmer';
+            
+            // Add chat button
+            const chatBtn = document.createElement('div');
+            chatBtn.innerHTML = window.addChatButtonToFarmer(farmerId, farmerName);
+            card.appendChild(chatBtn.firstElementChild);
+        });
+    }
+    
+    // Run after page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait a bit for farmer cards to load
+        setTimeout(addChatButtonsToFarmers, 2000);
+    });
+    
+    // Also run when farmer list is updated
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                setTimeout(addChatButtonsToFarmers, 500);
+            }
+        });
+    });
+    
+    // Observe farmer list container
+    const farmerList = document.getElementById('farmerList');
+    if (farmerList) {
+        observer.observe(farmerList, { childList: true, subtree: true });
+    }
+    
+})();
+
+// ==============================================
+// CHAT WIDGET - Auto-inject if not already loaded
+// ==============================================
+(function() {
+    // Check if chat.js is already loaded
+    if (document.querySelector('script[src="/js/chat.js"]')) {
+        console.log('✅ Chat already loaded');
+        return;
+    }
+    
+    // Load chat.js
+    const script = document.createElement('script');
+    script.src = '/js/chat.js';
+    script.async = true;
+    document.body.appendChild(script);
+    console.log('✅ Chat script loaded');
+})();
+</script>
 </body>
 </html>
