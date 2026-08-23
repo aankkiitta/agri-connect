@@ -286,8 +286,9 @@ initializeDatabase();
 // ==================================================
 // CHAT STATE
 // ==================================================
-const chatUsers = new Map(); // socketId -> userData
-const chatMessages = [];
+const chatUsers = new Map(); // socketId -> { userId, socketId }
+const chatRooms = new Map(); // roomId -> Set of socketIds
+const messageCache = new Map(); // roomId -> [messages]
 // ==================================================
 // CHAT ROUTE
 // ==================================================
@@ -296,7 +297,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS
+// CHAT SOCKET EVENTS - FIXED
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -323,44 +324,59 @@ io.on('connection', (socket) => {
         
         console.log(`✅ User ${userId} connected with socket ${socket.id}`);
         
-        // Send online status
+        // Send online status to all users
         const onlineUsers = Array.from(chatUsers.values()).map(u => u.userId);
         io.emit('online-users', onlineUsers);
     });
 
-    // User joins a conversation room
+    // User joins a conversation room - FIXED
     socket.on('join-conversation', (data) => {
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
         
-        if (!userId || !receiverId) return;
+        console.log(`🔵 Join conversation: User ${userId} with User ${receiverId}`);
         
-        // Create deterministic room ID
+        if (!userId || !receiverId) {
+            console.error('❌ Invalid user IDs for conversation:', data);
+            return;
+        }
+        
+        // IMPORTANT: Create deterministic room ID
         const roomId = [userId, receiverId].sort().join('_');
         currentRoomId = roomId;
         
-        // Leave previous room
+        // Leave all previous rooms
         if (socket.rooms) {
-            socket.rooms.forEach(room => {
+            const rooms = Array.from(socket.rooms);
+            rooms.forEach(room => {
                 if (room !== socket.id) {
                     socket.leave(room);
+                    console.log(`📤 Left room: ${room}`);
                 }
             });
         }
         
+        // Join the new room
         socket.join(roomId);
+        console.log(`📥 Joined room: ${roomId}`);
         
+        // Track room membership
         if (!chatRooms.has(roomId)) {
             chatRooms.set(roomId, new Set());
         }
         chatRooms.get(roomId).add(socket.id);
         
-        console.log(`🔵 User ${userId} joined room: ${roomId}`);
+        console.log(`🔵 User ${userId} joined room: ${roomId} (with user ${receiverId})`);
+        console.log(`📊 Room ${roomId} has ${chatRooms.get(roomId).size} users`);
         
-        // Send recent messages if any (auto-deleted after seen)
+        // Send recent messages if any
         if (messageCache.has(roomId)) {
-            const recentMessages = messageCache.get(roomId).slice(-20);
+            const recentMessages = messageCache.get(roomId).slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to user ${userId}`);
             socket.emit('chat-history', recentMessages);
+        } else {
+            console.log(`📨 No cached messages for room ${roomId}`);
+            socket.emit('chat-history', []);
         }
         
         socket.emit('conversation-joined', { 
@@ -371,7 +387,7 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Send message
+    // Send message - FIXED
     socket.on('send-message', (data) => {
         try {
             const senderId = parseInt(data.sender_id);
@@ -379,9 +395,16 @@ io.on('connection', (socket) => {
             const message = data.message;
             const messageType = data.message_type || 'text';
             
-            if (!senderId || !receiverId || !message) return;
+            console.log(`📨 SEND-MESSAGE: From ${senderId} to ${receiverId}: "${message}"`);
             
+            if (!senderId || !receiverId || !message) {
+                console.error('❌ Invalid message data:', data);
+                return;
+            }
+            
+            // Generate room ID
             const roomId = [senderId, receiverId].sort().join('_');
+            console.log(`📨 Room ID: ${roomId}`);
             
             const messageData = {
                 id: Date.now(),
@@ -392,28 +415,32 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             };
             
-            // Store in cache temporarily (will auto-delete)
+            // Store in cache
             if (!messageCache.has(roomId)) {
                 messageCache.set(roomId, []);
             }
             messageCache.get(roomId).push(messageData);
             
-            // Keep only last 50 messages per room
+            // Keep only last 50 messages
             if (messageCache.get(roomId).length > 50) {
                 messageCache.set(roomId, messageCache.get(roomId).slice(-50));
             }
             
-            // Emit to room
-            io.to(roomId).emit('receive-message', messageData);
+            // Get room members
+            const roomMembers = chatRooms.get(roomId);
+            console.log(`📊 Room ${roomId} members:`, roomMembers ? Array.from(roomMembers) : 'None');
             
-            console.log(`📨 Message from ${senderId} to ${receiverId}: "${message}"`);
+            // Emit to ALL clients in the room (including sender)
+            io.to(roomId).emit('receive-message', messageData);
+            console.log(`📨 Emitted to room ${roomId}`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
+            socket.emit('message-error', { error: 'Failed to send message' });
         }
     });
 
-    // Mark messages as seen (auto-delete after seen)
+    // Mark messages as seen
     socket.on('messages-seen', (data) => {
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
@@ -447,8 +474,7 @@ io.on('connection', (socket) => {
         const receiverId = parseInt(data.receiverId);
         if (!userId || !receiverId) return;
         const roomId = [userId, receiverId].sort().join('_');
-        socket.to
-        (roomId).emit('user-typing', { userId, isTyping: false });
+        socket.to(roomId).emit('user-typing', { userId, isTyping: false });
     });
 
     // Disconnect
@@ -1792,6 +1818,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
     console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
-     console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`💬 Chat available at: /chat`);
+       console.log(`🚀 Server running on port ${PORT}`);
     console.log(`💬 Chat available at: /chat`);
 });

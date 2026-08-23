@@ -7,33 +7,43 @@
     let currentRoomId = null;
     let isConnected = false;
     
-    // Get current user
+    // Get current user from localStorage
     let agriUser = null;
     try {
         const userData = localStorage.getItem('agriUser');
         if (userData) {
             agriUser = JSON.parse(userData);
-            currentUserId = agriUser.id || agriUser.user_id || null;
+            // FIX: Try different possible ID field names
+            currentUserId = agriUser.id || agriUser.user_id || agriUser.userId || null;
+            console.log('✅ Current User ID:', currentUserId);
+            console.log('👤 User Data:', agriUser);
         }
     } catch (e) {
         console.error('Failed to parse user data:', e);
     }
 
+    // Get receiver ID from URL or query params
     function getReceiverIdFromURL() {
         const params = new URLSearchParams(window.location.search);
-        return params.get('userId') || params.get('receiverId') || params.get('id');
+        const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('user');
+        console.log('📥 Receiver ID from URL:', id);
+        return id;
     }
 
     const receiverId = getReceiverIdFromURL();
+    console.log('📥 Current User ID:', currentUserId);
+    console.log('📥 Receiver ID:', receiverId);
+    
     if (currentUserId && receiverId) {
         currentReceiverId = parseInt(receiverId);
+        console.log(`✅ Starting chat: User ${currentUserId} with User ${currentReceiverId}`);
         initializeChatWidget();
     } else {
+        console.log('❌ Missing user IDs. Current:', currentUserId, 'Receiver:', receiverId);
         createLoginPromptWidget();
     }
 
     function createLoginPromptWidget() {
-        // ... (keep existing login prompt code) ...
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
         launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
@@ -46,7 +56,7 @@
               <h1>KISAN CIRCLE🌾</h1>
               <button id="chat-widget-close-prompt">&times;</button>
             </nav>
-            <div id="join-modal" style="display: flex; height: 100%; align-items: center; justify-content: center; text-align: center;">
+            <div id="join-modal" style="display: flex; height: 100%; align-items: center; justify-content: center; text-align: center; background: white; padding: 30px;">
               <div id="join-box">
                 <h2>LOG IN TO JOIN</h2>
                 <p>You must be logged into your account to access Kisan Circle chat.</p>
@@ -103,6 +113,9 @@
     }
 
     function initializeChat(widget, launcher) {
+        console.log('🔄 Initializing chat...');
+        console.log(`👤 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
+        
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -129,8 +142,8 @@
         let isTyping = false;
         let typingTimer;
         let unreadCount = 0;
-        let hasReceivedMessages = false;
 
+        // Socket connection events
         socket.on('connect', () => {
             console.log('✅ Connected to chat server');
             isConnected = true;
@@ -138,10 +151,12 @@
             userCountText.textContent = 'Online';
             
             if (currentUserId) {
+                console.log(`📤 Emitting user-connected: ${currentUserId}`);
                 socket.emit('user-connected', { userId: currentUserId });
             }
             
             if (currentUserId && currentReceiverId) {
+                console.log(`📤 Emitting join-conversation: ${currentUserId} -> ${currentReceiverId}`);
                 socket.emit('join-conversation', {
                     userId: currentUserId,
                     receiverId: currentReceiverId
@@ -163,19 +178,21 @@
         });
 
         socket.on('conversation-joined', (data) => {
-            console.log('✅ Joined conversation:', data);
+            console.log('✅ Conversation joined:', data);
             currentRoomId = data.roomId;
+            userCountText.textContent = `Chatting with User ${currentReceiverId}`;
         });
 
-        // Load recent messages (auto-deleted after seen)
+        // Receive chat history
         socket.on('chat-history', (messages) => {
+            console.log(`📨 Received ${messages ? messages.length : 0} chat history messages`);
             messageContainer.innerHTML = '';
             if (messages && messages.length > 0) {
                 messages.forEach(msg => {
                     const position = msg.sender_id === currentUserId ? 'right' : 'left';
                     appendMessage(msg, position);
                 });
-                // Mark messages as seen (auto-delete)
+                // Mark messages as seen
                 socket.emit('messages-seen', {
                     userId: currentUserId,
                     receiverId: currentReceiverId
@@ -183,21 +200,32 @@
             }
         });
 
+        // Online users update
         socket.on('online-users', (users) => {
+            console.log('🟢 Online users:', users);
             const isReceiverOnline = users.includes(currentReceiverId);
             if (isReceiverOnline) {
                 userCountText.textContent = 'Online';
                 userCountDot.style.backgroundColor = '#32CD32';
+            } else {
+                userCountText.textContent = 'Offline';
+                userCountDot.style.backgroundColor = '#ff4444';
             }
         });
 
+        // Receive message - FIXED
         socket.on('receive-message', (data) => {
             console.log('📨 New message received:', data);
+            console.log(`📨 From: ${data.sender_id}, To: ${data.receiver_id}`);
+            console.log(`📨 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
             
+            // Check if message is for this conversation
             if ((data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
                 (data.sender_id === currentReceiverId && data.receiver_id === currentUserId)) {
                 
-                appendMessage(data, 'left');
+                console.log('✅ Message belongs to this conversation');
+                const position = data.sender_id === currentUserId ? 'right' : 'left';
+                appendMessage(data, position);
                 
                 // Auto-delete: Mark as seen immediately when received
                 socket.emit('messages-seen', {
@@ -210,9 +238,12 @@
                     unreadBadge.innerText = unreadCount;
                     unreadBadge.style.display = 'flex';
                 }
+            } else {
+                console.log('❌ Message NOT for this conversation');
             }
         });
 
+        // Typing indicator
         socket.on('user-typing', (data) => {
             if (data.userId === currentReceiverId) {
                 if (data.isTyping) {
@@ -223,6 +254,7 @@
             }
         });
 
+        // Append message to UI
         function appendMessage(data, position) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
@@ -252,10 +284,18 @@
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
 
+        // Send message - FIXED
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = messageInput.value.trim();
-            if (!message || !socket || !currentUserId || !currentReceiverId) return;
+            
+            console.log(`📤 Sending message: "${message}"`);
+            console.log(`📤 From: ${currentUserId}, To: ${currentReceiverId}`);
+            
+            if (!message || !socket || !currentUserId || !currentReceiverId) {
+                console.error('❌ Cannot send message - missing data');
+                return;
+            }
             
             const messageData = {
                 sender_id: currentUserId,
@@ -265,7 +305,11 @@
                 timestamp: new Date().toISOString()
             };
             
+            // Display immediately for sender
             appendMessage(messageData, 'right');
+            
+            // Send to server
+            console.log('📤 Emitting send-message:', messageData);
             socket.emit('send-message', messageData);
             
             messageInput.value = '';
@@ -403,6 +447,7 @@
             });
         });
 
+        // Launcher click
         launcher.addEventListener('click', () => { 
             widget.classList.add('active'); 
             launcher.style.display = 'none'; 
