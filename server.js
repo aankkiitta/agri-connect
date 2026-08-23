@@ -284,96 +284,9 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ==================================================
-// CHAT STATE - GROUP CHAT (FIXED)
-// ==================================================
-const chatUsers = new Map(); // socketId -> user data
-const chatRooms = new Map(); // roomId -> Set of socketIds
-const messageCache = []; // ✅ ARRAY for messages
-
-// ==================================================
-// CHAT ROUTE
-// ==================================================
-app.get('/chat', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
-});
-
-// ==================================================
-// CHAT SOCKET EVENTS - GROUP CHAT (COMPLETE WORKING)
-// ==================================================
-const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    },
-    transports: ['websocket', 'polling']
-});
-
-io.on('connection', (socket) => {
-    console.log('👤 New client connected:', socket.id);
-    
-    let currentUser = null;
-
-    // ========================================
-    // USER JOINS GROUP CHAT
-    // ========================================
-    socket.on('user-connected', (data) => {
-        console.log('📝 User data received:', data);
-        
-        // Get user data from login
-        const userId = data.userId || data.id || null;
-        const email = data.email || null;
-        const name = data.name || 'User';
-        
-        if (!userId && !email) {
-            console.error('❌ No user identifier provided');
-            return;
-        }
-        
-        currentUser = {
-            id: userId,
-            email: email,
-            name: name,
-            socketId: socket.id
-        };
-        
-        chatUsers.set(socket.id, currentUser);
-        
-        console.log(`✅ User joined group chat: ${name} (${email || userId})`);
-        
-        // Send online users list to everyone
-        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-            id: u.id,
-            email: u.email,
-            name: u.name
-        }));
-        io.emit('online-users', onlineUsers);
-        
-        // ✅ FIXED: Send chat history (messageCache is an array)
-        if (messageCache.length > 0) {
-            const recentMessages = messageCache.slice(-50);
-            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
-            socket.emit('chat-history', recentMessages);
-        } else {
-            console.log(`📨 No cached messages for ${name}`);
-            socket.emit('chat-history', []);
-        }
-        
-        // Broadcast user joined message
-        io.emit('user-joined', {
-            name: name,
-            message: `${name} joined the chat`
-        });
-    });
-
-    // ========================================
-    // SEND MESSAGE TO GROUP
-    // ========================================
-   // ==================================================
 // CHAT STATE - GROUP CHAT
 // ==================================================
 const chatUsers = new Map();
-const chatRooms = new Map();
 const messageCache = [];
 
 // ==================================================
@@ -421,7 +334,7 @@ io.on('connection', (socket) => {
         
         chatUsers.set(socket.id, currentUser);
         
-        console.log(`✅ User joined group chat: ${name} (${email || userId})`);
+        console.log(`✅ User joined: ${name} (${email || userId})`);
         
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
             id: u.id,
@@ -432,7 +345,6 @@ io.on('connection', (socket) => {
         
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
-            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
             socket.emit('chat-history', recentMessages);
         } else {
             socket.emit('chat-history', []);
@@ -448,11 +360,11 @@ io.on('connection', (socket) => {
         try {
             const user = chatUsers.get(socket.id);
             if (!user) {
-                console.error('❌ User not found for socket:', socket.id);
+                console.error('❌ User not found');
                 return;
             }
             
-            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+            console.log(`📨 Message from ${user.name}: "${data.message}"`);
             
             const messageData = {
                 id: Date.now(),
@@ -474,52 +386,7 @@ io.on('connection', (socket) => {
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
-            socket.emit('message-error', { error: 'Failed to send message' });
         }
-    });
-
-    socket.on('send-image', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'image',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    socket.on('send-audio', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'audio',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
     });
 
     socket.on('typing', () => {
@@ -556,107 +423,6 @@ io.on('connection', (socket) => {
             }));
             io.emit('online-users', onlineUsers);
             
-            io.emit('user-left', {
-                name: user.name,
-                message: `${user.name} left the chat`
-            });
-        }
-    });
-});
-
-
-    // ========================================
-    // IMAGE UPLOAD
-    // ========================================
-    socket.on('send-image', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'image',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    // ========================================
-    // AUDIO UPLOAD
-    // ========================================
-    socket.on('send-audio', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'audio',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    // ========================================
-    // TYPING INDICATOR
-    // ========================================
-    socket.on('typing', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            socket.broadcast.emit('user-typing', {
-                name: user.name,
-                isTyping: true
-            });
-        }
-    });
-
-    socket.on('stop-typing', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            socket.broadcast.emit('user-typing', {
-                name: user.name,
-                isTyping: false
-            });
-        }
-    });
-
-    // ========================================
-    // DISCONNECT
-    // ========================================
-    socket.on('disconnect', () => {
-        console.log('👋 Client disconnected:', socket.id);
-        
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            chatUsers.delete(socket.id);
-            
-            // Send updated online users list
-            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-                id: u.id,
-                email: u.email,
-                name: u.name
-            }));
-            io.emit('online-users', onlineUsers);
-            
-            // Broadcast user left message
             io.emit('user-left', {
                 name: user.name,
                 message: `${user.name} left the chat`

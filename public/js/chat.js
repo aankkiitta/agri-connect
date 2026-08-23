@@ -271,14 +271,23 @@
         // SEND MESSAGE - FIXED
         // ========================================
         if (elements.form) {
-            // CRITICAL: Use a direct event listener with preventDefault
-            elements.form.addEventListener('submit', function(e) {
-                // ✅ CRITICAL - These prevent page refresh
+            // Remove any existing listeners by cloning
+            const oldForm = elements.form;
+            const newForm = oldForm.cloneNode(true);
+            oldForm.parentNode.replaceChild(newForm, oldForm);
+            
+            // Re-get the form reference
+            const updatedForm = document.getElementById('send-container');
+            const updatedMessageInput = document.getElementById('messageimp');
+            const updatedSendBtn = document.getElementById('send-btn');
+            const updatedRecordBtn = document.getElementById('record-btn');
+            
+            // Handle form submission
+            updatedForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const messageInput = document.getElementById('messageimp');
-                const message = messageInput ? messageInput.value.trim() : '';
+                const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
                 
                 console.log('📤 Sending message:', message);
                 
@@ -320,44 +329,35 @@
                 console.log('📤 Message sent to server');
                 
                 // Clear input
-                messageInput.value = '';
-                messageInput.focus();
+                updatedMessageInput.value = '';
+                updatedMessageInput.focus();
                 
                 // Reset UI
-                const sendBtn = document.getElementById('send-btn');
-                const recordBtn = document.getElementById('record-btn');
-                if (recordBtn) recordBtn.style.display = 'flex';
-                if (sendBtn) sendBtn.style.display = 'none';
+                if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
+                if (updatedSendBtn) updatedSendBtn.style.display = 'none';
                 
                 return false;
             });
             
             // Handle Enter key
-            const messageInput = document.getElementById('messageimp');
-            if (messageInput) {
-                messageInput.addEventListener('keydown', function(e) {
+            if (updatedMessageInput) {
+                updatedMessageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         e.stopPropagation();
-                        // Trigger form submit
-                        const form = document.getElementById('send-container');
-                        if (form) {
-                            form.dispatchEvent(new Event('submit', { bubbles: false, cancelable: true }));
-                        }
+                        updatedForm.dispatchEvent(new Event('submit'));
                         return false;
                     }
                 });
                 
                 // Show/hide send button
-                messageInput.addEventListener('input', function() {
-                    const sendBtn = document.getElementById('send-btn');
-                    const recordBtn = document.getElementById('record-btn');
+                updatedMessageInput.addEventListener('input', function() {
                     if (this.value.trim() !== '') {
-                        if (sendBtn) sendBtn.style.display = 'flex';
-                        if (recordBtn) recordBtn.style.display = 'none';
+                        if (updatedSendBtn) updatedSendBtn.style.display = 'flex';
+                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'none';
                     } else {
-                        if (sendBtn) sendBtn.style.display = 'none';
-                        if (recordBtn) recordBtn.style.display = 'flex';
+                        if (updatedSendBtn) updatedSendBtn.style.display = 'none';
+                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
                     }
                 });
             }
