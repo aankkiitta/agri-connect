@@ -124,6 +124,8 @@
         
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
+        
+        console.log(`📝 Message appended to UI: ${messageContent}`);
     }
 
     function appendSystemMessage(text, messageContainer) {
@@ -133,6 +135,19 @@
         messageElement.innerText = text;
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    // ========================================
+    // UPDATE USER COUNT
+    // ========================================
+    function updateUserCount(count, elements) {
+        if (elements.userCountText) {
+            elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
+        }
+        if (elements.userCountDot) {
+            elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+        }
+        console.log(`👥 User count updated: ${count} online`);
     }
 
     // ========================================
@@ -177,26 +192,37 @@
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
             
-            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#32CD32';
-            if (elements.userCountText) elements.userCountText.textContent = 'Online';
+            updateUserCount(0, elements);
             
             if (currentUser) {
                 console.log('📤 Sending user data:', currentUser);
                 socket.emit('user-connected', currentUser);
             }
+            
+            // Request online users
+            socket.emit('get-online-users');
         });
 
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from chat server');
             isConnected = false;
-            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ff4444';
-            if (elements.userCountText) elements.userCountText.textContent = 'Offline';
+            updateUserCount(0, elements);
         });
 
         socket.on('connect_error', (error) => {
             console.error('❌ Connection error:', error);
             if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ffaa00';
             if (elements.userCountText) elements.userCountText.textContent = 'Reconnecting...';
+        });
+
+        // ========================================
+        // USER JOINED CONFIRMATION
+        // ========================================
+        socket.on('user-joined-confirm', (data) => {
+            console.log('✅ User join confirmed:', data);
+            if (data.usersOnline) {
+                updateUserCount(data.usersOnline, elements);
+            }
         });
 
         // ========================================
@@ -229,17 +255,19 @@
         });
 
         // ========================================
+        // MESSAGE SENT CONFIRMATION
+        // ========================================
+        socket.on('message-sent-confirm', (data) => {
+            console.log('✅ Message sent confirmation:', data);
+        });
+
+        // ========================================
         // ONLINE USERS
         // ========================================
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const count = users ? users.length : 0;
-            if (elements.userCountText) {
-                elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
-            }
-            if (elements.userCountDot) {
-                elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
-            }
+            updateUserCount(count, elements);
         });
 
         // ========================================

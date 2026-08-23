@@ -282,11 +282,12 @@ async function initializeDatabase() {
 }
 
 initializeDatabase();
+
 // ==================================================
-// CHAT STATE - GROUP CHAT
+// CHAT STATE - GROUP CHAT (FIXED)
 // ==================================================
-const chatUsers = new Map();
-const messageCache = [];
+const chatUsers = new Map(); // socketId -> user data
+const messageCache = []; // Array for messages
 
 // ==================================================
 // CHAT ROUTE
@@ -309,6 +310,7 @@ const io = socketIo(server, {
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
+    console.log(`📊 Total connections: ${io.engine.clientsCount}`);
     
     let currentUser = null;
 
@@ -336,17 +338,19 @@ io.on('connection', (socket) => {
         
         chatUsers.set(socket.id, currentUser);
         
-        console.log(`✅ User joined group chat: ${name} (${email})`);
+        console.log(`✅ User joined: ${name} (${email})`);
+        console.log(`📊 Total users online: ${chatUsers.size}`);
         
-        // Send online users list to everyone
+        // ✅ Send updated online users list to ALL clients
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
             id: u.id,
             email: u.email,
             name: u.name
         }));
         io.emit('online-users', onlineUsers);
+        console.log(`📤 Sent online users: ${onlineUsers.length} users`);
         
-        // Send chat history to new user
+        // ✅ Send chat history to the new user
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
             console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
@@ -356,10 +360,17 @@ io.on('connection', (socket) => {
             socket.emit('chat-history', []);
         }
         
-        // Broadcast user joined message
+        // ✅ Broadcast user joined message
         io.emit('user-joined', {
             name: name,
             message: `${name} joined the chat`
+        });
+        
+        // ✅ Send the user their own info for debugging
+        socket.emit('user-joined-confirm', {
+            success: true,
+            user: currentUser,
+            usersOnline: chatUsers.size
         });
     });
 
@@ -369,16 +380,19 @@ io.on('connection', (socket) => {
     socket.on('send-message', (data) => {
         try {
             console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
-            console.log('📨 Data received:', data);
+            console.log('📨 Data:', data);
+            console.log('📨 Socket ID:', socket.id);
             
             const user = chatUsers.get(socket.id);
             if (!user) {
                 console.error('❌ User not found for socket:', socket.id);
+                // Try to find user by socket id in chatUsers
+                console.log('📊 Current chatUsers:', Array.from(chatUsers.keys()));
                 return;
             }
             
             console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
-            console.log(`📨 Current users online: ${chatUsers.size}`);
+            console.log(`📊 Users online: ${chatUsers.size}`);
             
             const messageData = {
                 id: Date.now(),
@@ -396,13 +410,19 @@ io.on('connection', (socket) => {
                 messageCache.shift();
             }
             
-            console.log(`📨 Message cached, total messages: ${messageCache.length}`);
+            console.log(`📨 Message cached, total: ${messageCache.length}`);
             
-            // ✅ CRITICAL: Broadcast to ALL connected users
+            // ✅ BROADCAST TO ALL CONNECTED USERS
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
-            // Also log the socket IDs for debugging
+            // ✅ Also send to sender to confirm
+            socket.emit('message-sent-confirm', {
+                success: true,
+                message: messageData
+            });
+            
+            // Log all connected sockets
             const socketIds = Array.from(chatUsers.keys());
             console.log(`📨 Active sockets: ${socketIds.join(', ')}`);
             
@@ -486,6 +506,18 @@ io.on('connection', (socket) => {
     });
 
     // ========================================
+    // GET ONLINE USERS (manual request)
+    // ========================================
+    socket.on('get-online-users', () => {
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
+        socket.emit('online-users', onlineUsers);
+    });
+
+    // ========================================
     // DISCONNECT
     // ========================================
     socket.on('disconnect', () => {
@@ -494,8 +526,10 @@ io.on('connection', (socket) => {
         const user = chatUsers.get(socket.id);
         if (user) {
             chatUsers.delete(socket.id);
+            console.log(`❌ User removed: ${user.name}`);
+            console.log(`📊 Users online: ${chatUsers.size}`);
             
-            // Send updated online users list
+            // ✅ Send updated online users list
             const onlineUsers = Array.from(chatUsers.values()).map(u => ({
                 id: u.id,
                 email: u.email,
@@ -503,7 +537,7 @@ io.on('connection', (socket) => {
             }));
             io.emit('online-users', onlineUsers);
             
-            // Broadcast user left message
+            // ✅ Broadcast user left message
             io.emit('user-left', {
                 name: user.name,
                 message: `${user.name} left the chat`
@@ -511,6 +545,7 @@ io.on('connection', (socket) => {
         }
     });
 });
+
 
 
 // --- HEALTH ENDPOINT ---
@@ -1822,8 +1857,9 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
     }
 });
 
+const PORT = process.env.PORT || 3000;
 // ==================================================
-// SERVER START - ONLY ONE
+// SERVER START
 // ==================================================
 const PORT = process.env.PORT || 3000;
 
