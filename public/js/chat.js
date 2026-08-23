@@ -1,4 +1,11 @@
 (function() {
+    console.log('🔄 Chat.js loaded...');
+    
+    // ========================================
+    // CHECK IF WE'RE ON FULL PAGE OR WIDGET
+    // ========================================
+    const isFullPage = document.getElementById('chat-widget-container') !== null;
+    
     // ========================================
     // AUTO-DETECT SERVER URL
     // ========================================
@@ -13,7 +20,6 @@
     // ========================================
     function getCurrentUser() {
         try {
-            // Check all possible storage keys
             const keys = ['agriUser', 'user', 'userData', 'authUser'];
             
             for (const key of keys) {
@@ -23,7 +29,6 @@
                         const user = JSON.parse(data);
                         console.log(`✅ Found user in localStorage key: ${key}`, user);
                         
-                        // Get user data
                         const userId = user.id || user.user_id || user.userId || user._id || null;
                         const email = user.email || null;
                         const name = user.name || user.username || 'User';
@@ -46,23 +51,126 @@
 
     // Get current user
     currentUser = getCurrentUser();
-    if (currentUser) {
-        console.log('👤 Current User:', currentUser);
-    }
-
+    
     // ========================================
     // START CHAT
     // ========================================
     if (currentUser) {
         console.log('✅ Starting group chat');
-        initializeChatWidget();
+        
+        if (isFullPage) {
+            // Full page - use existing container
+            initializeChatFullPage();
+        } else {
+            // Widget mode - create launcher and widget
+            createLauncherAndWidget();
+        }
     } else {
         console.log('❌ No user logged in');
-        createLoginPromptWidget();
+        if (!isFullPage) {
+            createLoginPromptWidget();
+        } else {
+            // Show login prompt on full page
+            showLoginPromptFullPage();
+        }
     }
 
     // ========================================
-    // CREATE WIDGETS
+    // CREATE LAUNCHER AND WIDGET (Widget Mode)
+    // ========================================
+    function createLauncherAndWidget() {
+        console.log('🔄 Creating chat launcher and widget...');
+        
+        // Create launcher
+        const launcher = document.createElement('div');
+        launcher.id = 'chat-launcher';
+        launcher.innerHTML = `
+            <i class="fa-solid fa-message"></i>
+            <span id="chat-unread-badge"></span>
+        `;
+        document.body.appendChild(launcher);
+
+        // Create widget container
+        const widgetContainer = document.createElement('div');
+        widgetContainer.id = 'chat-widget-container';
+        widgetContainer.innerHTML = `
+            <nav>
+                <h1>💬 KISAN CIRCLE GROUP</h1>
+                <div id="user-count-container">
+                    <span id="user-count-dot"></span>
+                    <span id="user-count-text">Connecting...</span>
+                </div>
+                <button id="chat-widget-close">&times;</button>
+            </nav>
+            <div class="container active"></div>
+            <div id="typing-indicator"></div>
+            <div class="send active">
+                <input type="file" id="image-input" accept="image/*" style="display: none;">
+                <form action="#" id="send-container">
+                    <button type="button" class="btn-icon" id="attach-file-btn">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+                    <button class="btn" type="submit" id="send-btn" style="display: none;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <button type="button" class="btn" id="record-btn">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                </form>
+            </div>`;
+        
+        document.body.appendChild(widgetContainer);
+        
+        // Add click events
+        launcher.addEventListener('click', () => {
+            widgetContainer.classList.add('active');
+            launcher.style.display = 'none';
+        });
+        
+        const closeBtn = widgetContainer.querySelector('#chat-widget-close');
+        closeBtn.addEventListener('click', () => {
+            widgetContainer.classList.remove('active');
+            launcher.style.display = 'flex';
+        });
+        
+        // Initialize chat
+        initializeChat(widgetContainer, launcher);
+    }
+
+    // ========================================
+    // INITIALIZE FULL PAGE CHAT
+    // ========================================
+    function initializeChatFullPage() {
+        console.log('🔄 Initializing full page chat...');
+        const widgetContainer = document.getElementById('chat-widget-container');
+        const launcher = null; // No launcher for full page
+        initializeChat(widgetContainer, launcher);
+    }
+
+    // ========================================
+    // SHOW LOGIN PROMPT ON FULL PAGE
+    // ========================================
+    function showLoginPromptFullPage() {
+        const container = document.getElementById('chat-widget-container');
+        if (container) {
+            container.innerHTML = `
+                <nav>
+                    <h1>🔐 KISAN CIRCLE</h1>
+                </nav>
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); padding:20px;">
+                    <div style="background:white; padding:40px; border-radius:20px; text-align:center; max-width:400px;">
+                        <h2>🔐 LOGIN REQUIRED</h2>
+                        <p style="color:#666; margin:15px 0;">Please login to access Kisan Circle chat.</p>
+                        <a href="/login" style="background:linear-gradient(135deg, #6C4DFF, #8B5CFF); color:white; padding:12px 30px; border-radius:25px; text-decoration:none; font-weight:600; display:inline-block;">Go to Login</a>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // ========================================
+    // CREATE LOGIN PROMPT WIDGET
     // ========================================
     function createLoginPromptWidget() {
         const launcher = document.createElement('div');
@@ -74,17 +182,17 @@
         widgetContainer.id = 'chat-widget-container';
         widgetContainer.innerHTML = `
             <nav>
-              <h1>KISAN CIRCLE🌾</h1>
-              <button id="chat-widget-close-prompt">&times;</button>
+                <h1>🔐 LOGIN REQUIRED</h1>
+                <button id="chat-widget-close-prompt">&times;</button>
             </nav>
             <div id="join-modal">
-              <div id="join-box">
-                <h2>🔐 LOGIN REQUIRED</h2>
-                <p>Please login to access Kisan Circle group chat.</p>
-                <div style="margin-top: 20px;">
-                    <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600;">Go to Login</a>
+                <div id="join-box">
+                    <h2>🔐 LOGIN REQUIRED</h2>
+                    <p>Please login to access Kisan Circle chat.</p>
+                    <div style="margin-top: 20px;">
+                        <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600;">Go to Login</a>
+                    </div>
                 </div>
-              </div>
             </div>`;
         document.body.appendChild(widgetContainer);
         
@@ -100,46 +208,10 @@
     }
 
     // ========================================
-    // INITIALIZE CHAT
-    // ========================================
-    function initializeChatWidget() {
-        const launcher = document.createElement('div');
-        launcher.id = 'chat-launcher';
-        launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
-        
-        const widgetContainer = document.createElement('div');
-        widgetContainer.id = 'chat-widget-container';
-        widgetContainer.innerHTML = `
-            <nav>
-              <h1>💬 KISAN CIRCLE GROUP</h1>
-              <div id="user-count-container">
-                  <span id="user-count-dot"></span>
-                  <span id="user-count-text">Connecting...</span>
-              </div>
-              <button id="chat-widget-close">&times;</button>
-            </nav>
-            <div class="container active"></div>
-            <div id="typing-indicator"></div>
-            <div class="send active">
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <form action="#" id="send-container">
-                    <button type="button" class="btn-icon" id="attach-file-btn"><i class="fa-solid fa-paperclip"></i></button>
-                    <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-                    <button class="btn" type="submit" id="send-btn" style="display: none;"><i class="fa-solid fa-paper-plane"></i></button>
-                    <button type="button" class="btn" id="record-btn"><i class="fa-solid fa-microphone"></i></button>
-                </form>
-            </div>`;
-        
-        document.body.appendChild(launcher);
-        document.body.appendChild(widgetContainer);
-        initializeChat(widgetContainer, launcher);
-    }
-
-    // ========================================
     // MAIN CHAT LOGIC
     // ========================================
     function initializeChat(widget, launcher) {
-        console.log('🔄 Initializing group chat...');
+        console.log('🔄 Initializing chat...');
         console.log('👤 User:', currentUser);
         console.log(`🔗 Server URL: ${SERVER_URL}`);
         
@@ -154,8 +226,8 @@
         const form = widget.querySelector('#send-container');
         const messageInput = widget.querySelector('#messageimp');
         const messageContainer = widget.querySelector('.container');
-        const closeBtn = widget.querySelector('#chat-widget-close');
-        const unreadBadge = launcher.querySelector('#chat-unread-badge');
+        const closeBtn = widget.querySelector('#chat-widget-close') || widget.querySelector('#chat-widget-close-prompt');
+        const unreadBadge = launcher ? launcher.querySelector('#chat-unread-badge') : null;
         const userCountText = widget.querySelector('#user-count-text');
         const userCountDot = widget.querySelector('#user-count-dot');
         const attachFileBtn = widget.querySelector('#attach-file-btn');
@@ -178,8 +250,8 @@
             console.log('✅ Connected to chat server');
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
-            userCountDot.style.backgroundColor = '#32CD32';
-            userCountText.textContent = 'Connecting...';
+            if (userCountDot) userCountDot.style.backgroundColor = '#32CD32';
+            if (userCountText) userCountText.textContent = 'Online';
             
             if (currentUser) {
                 console.log('📤 Sending user data:', currentUser);
@@ -190,26 +262,28 @@
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from chat server');
             isConnected = false;
-            userCountDot.style.backgroundColor = '#ff4444';
-            userCountText.textContent = 'Offline';
+            if (userCountDot) userCountDot.style.backgroundColor = '#ff4444';
+            if (userCountText) userCountText.textContent = 'Offline';
         });
 
         socket.on('connect_error', (error) => {
             console.error('❌ Connection error:', error);
-            userCountDot.style.backgroundColor = '#ffaa00';
-            userCountText.textContent = 'Reconnecting...';
+            if (userCountDot) userCountDot.style.backgroundColor = '#ffaa00';
+            if (userCountText) userCountText.textContent = 'Reconnecting...';
         });
 
         // Chat history
         socket.on('chat-history', (messages) => {
             console.log(`📨 Received ${messages ? messages.length : 0} messages`);
-            messageContainer.innerHTML = '';
-            if (messages && messages.length > 0) {
-                messages.forEach(msg => {
-                    const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
-                    const position = isOwn ? 'right' : 'left';
-                    appendMessage(msg, position);
-                });
+            if (messageContainer) {
+                messageContainer.innerHTML = '';
+                if (messages && messages.length > 0) {
+                    messages.forEach(msg => {
+                        const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
+                        const position = isOwn ? 'right' : 'left';
+                        appendMessage(msg, position);
+                    });
+                }
             }
         });
 
@@ -217,8 +291,12 @@
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const count = users ? users.length : 0;
-            userCountText.textContent = `${count} Online`;
-            userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+            if (userCountText) {
+                userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
+            }
+            if (userCountDot) {
+                userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+            }
         });
 
         // User joined
@@ -233,9 +311,7 @@
             appendSystemMessage(data.message);
         });
 
-        // ========================================
-        // RECEIVE MESSAGE
-        // ========================================
+        // Receive message
         socket.on('receive-message', (data) => {
             console.log('📨📨📨 MESSAGE RECEIVED:', data);
             
@@ -243,7 +319,7 @@
             const position = isOwn ? 'right' : 'left';
             appendMessage(data, position);
             
-            if (!widget.classList.contains('active')) {
+            if (unreadBadge && !widget.classList.contains('active')) {
                 unreadCount++;
                 unreadBadge.innerText = unreadCount;
                 unreadBadge.style.display = 'flex';
@@ -252,10 +328,12 @@
 
         // Typing indicator
         socket.on('user-typing', (data) => {
-            if (data.isTyping) {
-                typingIndicator.innerText = `${data.name} is typing...`;
-            } else {
-                typingIndicator.innerText = '';
+            if (typingIndicator) {
+                if (data.isTyping) {
+                    typingIndicator.innerText = `${data.name} is typing...`;
+                } else {
+                    typingIndicator.innerText = '';
+                }
             }
         });
 
@@ -263,7 +341,7 @@
         // APPEND MESSAGE
         // ========================================
         function appendMessage(data, position) {
-            console.log('📝 Appending message:', data);
+            if (!messageContainer) return;
             
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
@@ -295,6 +373,7 @@
         }
 
         function appendSystemMessage(text) {
+            if (!messageContainer) return;
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', 'middle');
             messageElement.innerText = text;
@@ -305,143 +384,88 @@
         // ========================================
         // SEND MESSAGE
         // ========================================
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            
-            if (!message || !socket || !currentUser) {
-                console.error('❌ Cannot send message');
-                return;
-            }
-            
-            const messageData = {
-                message: message,
-                message_type: 'text'
-            };
-            
-            console.log('📤 Sending message:', messageData);
-            
-            // Display immediately for sender
-            const displayData = {
-                ...messageData,
-                name: currentUser.name,
-                email: currentUser.email,
-                userId: currentUser.id,
-                timestamp: new Date().toISOString()
-            };
-            appendMessage(displayData, 'right');
-            
-            // Send to server
-            socket.emit('send-message', messageData);
-            
-            messageInput.value = '';
-            socket.emit('stop-typing');
-            isTyping = false;
-            recordBtn.style.display = 'flex';
-            sendBtn.style.display = 'none';
-        });
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const message = messageInput ? messageInput.value.trim() : '';
+                
+                if (!message || !socket || !currentUser) {
+                    console.error('❌ Cannot send message');
+                    return;
+                }
+                
+                const messageData = {
+                    message: message,
+                    message_type: 'text'
+                };
+                
+                console.log('📤 Sending message:', messageData);
+                
+                // Display immediately for sender
+                const displayData = {
+                    ...messageData,
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    userId: currentUser.id,
+                    timestamp: new Date().toISOString()
+                };
+                appendMessage(displayData, 'right');
+                
+                // Send to server
+                socket.emit('send-message', messageData);
+                
+                if (messageInput) {
+                    messageInput.value = '';
+                }
+                socket.emit('stop-typing');
+                isTyping = false;
+                if (recordBtn) recordBtn.style.display = 'flex';
+                if (sendBtn) sendBtn.style.display = 'none';
+            });
+        }
 
         // ========================================
         // TYPING
         // ========================================
-        messageInput.addEventListener('input', () => {
-            if (!isTyping && socket && currentUser) { 
-                isTyping = true; 
-                socket.emit('typing');
-            }
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => { 
-                isTyping = false; 
-                if (socket) {
-                    socket.emit('stop-typing');
+        if (messageInput) {
+            messageInput.addEventListener('input', () => {
+                if (!isTyping && socket && currentUser) { 
+                    isTyping = true; 
+                    socket.emit('typing');
                 }
-            }, 2000);
-            
-            if (messageInput.value.trim() !== '') { 
-                recordBtn.style.display = 'none'; 
-                sendBtn.style.display = 'flex'; 
-            } else { 
-                recordBtn.style.display = 'flex'; 
-                sendBtn.style.display = 'none'; 
-            }
-        });
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => { 
+                    isTyping = false; 
+                    if (socket) {
+                        socket.emit('stop-typing');
+                    }
+                }, 2000);
+                
+                if (messageInput.value.trim() !== '') { 
+                    if (recordBtn) recordBtn.style.display = 'none'; 
+                    if (sendBtn) sendBtn.style.display = 'flex'; 
+                } else { 
+                    if (recordBtn) recordBtn.style.display = 'flex'; 
+                    if (sendBtn) sendBtn.style.display = 'none'; 
+                }
+            });
+        }
 
         // ========================================
         // IMAGE UPLOAD
         // ========================================
-        attachFileBtn.addEventListener('click', () => { imageInput.click(); });
-        
-        imageInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        if (attachFileBtn && imageInput) {
+            attachFileBtn.addEventListener('click', () => { imageInput.click(); });
             
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            try {
-                const response = await fetch(`${SERVER_URL}/upload/image`, { 
-                    method: 'POST', 
-                    body: formData 
-                });
-                const data = await response.json();
+            imageInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
                 
-                if (data.filePath) {
-                    const displayData = {
-                        message: data.filePath,
-                        message_type: 'image',
-                        name: currentUser.name,
-                        email: currentUser.email,
-                        userId: currentUser.id,
-                        timestamp: new Date().toISOString()
-                    };
-                    appendMessage(displayData, 'right');
-                    socket.emit('send-image', { filePath: data.filePath });
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Failed to upload image');
-            }
-            e.target.value = null;
-        });
-
-        // ========================================
-        // AUDIO RECORDING
-        // ========================================
-        recordBtn.addEventListener('mousedown', () => {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
-                alert('Browser not supported'); 
-                return; 
-            }
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    isRecording = true; 
-                    audioChunks = []; 
-                    mediaRecorder = new MediaRecorder(stream); 
-                    mediaRecorder.start(); 
-                    recordBtn.classList.add('recording');
-                    mediaRecorder.addEventListener("dataavailable", event => { 
-                        audioChunks.push(event.data); 
-                    });
-                })
-                .catch(err => {
-                    console.error('Microphone error:', err);
-                    alert('Could not access microphone');
-                });
-        });
-
-        recordBtn.addEventListener('mouseup', async () => {
-            if (!isRecording || !mediaRecorder) return;
-            isRecording = false; 
-            mediaRecorder.stop(); 
-            recordBtn.classList.remove('recording');
-            
-            mediaRecorder.addEventListener("stop", async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const formData = new FormData();
-                formData.append('audio', audioBlob, `audio-${Date.now()}.webm`);
+                formData.append('image', file);
                 
                 try {
-                    const response = await fetch(`${SERVER_URL}/upload/audio`, { 
+                    const response = await fetch(`${SERVER_URL}/upload/image`, { 
                         method: 'POST', 
                         body: formData 
                     });
@@ -450,35 +474,108 @@
                     if (data.filePath) {
                         const displayData = {
                             message: data.filePath,
-                            message_type: 'audio',
+                            message_type: 'image',
                             name: currentUser.name,
                             email: currentUser.email,
                             userId: currentUser.id,
                             timestamp: new Date().toISOString()
                         };
                         appendMessage(displayData, 'right');
-                        socket.emit('send-audio', { filePath: data.filePath });
+                        socket.emit('send-image', { filePath: data.filePath });
                     }
                 } catch (error) {
-                    console.error('Audio upload error:', error);
-                    alert('Failed to upload audio');
+                    console.error('Upload error:', error);
+                    alert('Failed to upload image');
                 }
+                e.target.value = null;
             });
-        });
+        }
 
         // ========================================
-        // LAUNCHER
+        // AUDIO RECORDING
         // ========================================
-        launcher.addEventListener('click', () => { 
-            widget.classList.add('active'); 
-            launcher.style.display = 'none'; 
-            unreadCount = 0; 
-            unreadBadge.style.display = 'none'; 
-        });
+        if (recordBtn) {
+            recordBtn.addEventListener('mousedown', () => {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
+                    alert('Browser not supported'); 
+                    return; 
+                }
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        isRecording = true; 
+                        audioChunks = []; 
+                        mediaRecorder = new MediaRecorder(stream); 
+                        mediaRecorder.start(); 
+                        recordBtn.classList.add('recording');
+                        mediaRecorder.addEventListener("dataavailable", event => { 
+                            audioChunks.push(event.data); 
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Microphone error:', err);
+                        alert('Could not access microphone');
+                    });
+            });
+
+            recordBtn.addEventListener('mouseup', async () => {
+                if (!isRecording || !mediaRecorder) return;
+                isRecording = false; 
+                mediaRecorder.stop(); 
+                recordBtn.classList.remove('recording');
+                
+                mediaRecorder.addEventListener("stop", async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, `audio-${Date.now()}.webm`);
+                    
+                    try {
+                        const response = await fetch(`${SERVER_URL}/upload/audio`, { 
+                            method: 'POST', 
+                            body: formData 
+                        });
+                        const data = await response.json();
+                        
+                        if (data.filePath) {
+                            const displayData = {
+                                message: data.filePath,
+                                message_type: 'audio',
+                                name: currentUser.name,
+                                email: currentUser.email,
+                                userId: currentUser.id,
+                                timestamp: new Date().toISOString()
+                            };
+                            appendMessage(displayData, 'right');
+                            socket.emit('send-audio', { filePath: data.filePath });
+                        }
+                    } catch (error) {
+                        console.error('Audio upload error:', error);
+                        alert('Failed to upload audio');
+                    }
+                });
+            });
+        }
+
+        // ========================================
+        // LAUNCHER CLICK (for widget mode)
+        // ========================================
+        if (launcher) {
+            launcher.addEventListener('click', () => { 
+                widget.classList.add('active'); 
+                launcher.style.display = 'none'; 
+                unreadCount = 0; 
+                if (unreadBadge) {
+                    unreadBadge.style.display = 'none'; 
+                }
+            });
+        }
         
-        closeBtn.addEventListener('click', () => { 
-            widget.classList.remove('active'); 
-            launcher.style.display = 'flex'; 
-        });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => { 
+                if (launcher) {
+                    widget.classList.remove('active'); 
+                    launcher.style.display = 'flex'; 
+                }
+            });
+        }
     }
 })();

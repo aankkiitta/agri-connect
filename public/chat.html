@@ -6,11 +6,45 @@
     <title>KISAN CIRCLE Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="/css/chat.css">
+    <style>
+        /* Full page chat - no header/nav */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
+        }
+        #chat-full-page {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #chat-widget-container {
+            position: relative !important;
+            width: 100% !important;
+            height: 100vh !important;
+            max-width: 100% !important;
+            max-height: 100vh !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
+        }
+        #chat-launcher {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
-    <!-- Full Page Chat - No Header, No Navigation -->
+    <!-- Full Page Chat -->
     <div id="chat-full-page">
-        <!-- Chat Widget Container (Full Page) -->
         <div id="chat-widget-container" class="full-page active">
             <!-- Header -->
             <nav>
