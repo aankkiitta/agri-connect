@@ -288,7 +288,6 @@ initializeDatabase();
 // ==================================================
 const chatUsers = new Map(); // socketId -> userData
 const chatMessages = [];
-
 // ==================================================
 // CHAT ROUTE
 // ==================================================
@@ -304,7 +303,8 @@ const io = socketIo(server, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST']
-    }
+    },
+    transports: ['websocket', 'polling']
 });
 
 io.on('connection', (socket) => {
@@ -335,6 +335,7 @@ io.on('connection', (socket) => {
         const userList = Array.from(chatUsers.values()).map(u => u.name);
         io.emit('user-list-update', userList);
         
+        // Send chat history to new user
         socket.emit('chat-history', chatMessages);
     });
 
@@ -351,7 +352,8 @@ io.on('connection', (socket) => {
         chatMessages.push(messageData);
         if (chatMessages.length > 100) chatMessages.shift();
         
-        socket.broadcast.emit('receive', messageData);
+        // Broadcast to all clients including sender
+        io.emit('receive', messageData);
     });
 
     socket.on('send-image', (data) => {
@@ -368,7 +370,7 @@ io.on('connection', (socket) => {
         chatMessages.push(messageData);
         if (chatMessages.length > 100) chatMessages.shift();
         
-        socket.broadcast.emit('receive-image', messageData);
+        io.emit('receive-image', messageData);
     });
 
     socket.on('send-audio', (data) => {
@@ -385,7 +387,7 @@ io.on('connection', (socket) => {
         chatMessages.push(messageData);
         if (chatMessages.length > 100) chatMessages.shift();
         
-        socket.broadcast.emit('receive-audio', messageData);
+        io.emit('receive-audio', messageData);
     });
 
     socket.on('typing', () => {
@@ -411,7 +413,6 @@ io.on('connection', (socket) => {
         console.log('👋 Client disconnected:', socket.id);
     });
 });
-
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
     res.json({
@@ -1724,7 +1725,7 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
 // ======== SERVER START ========
 const PORT = process.env.PORT || 3000;
 
-// REPLACE: app.listen with server.listen
+// REPLACE: app.listen(PORT, ...) with:
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
