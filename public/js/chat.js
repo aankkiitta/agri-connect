@@ -7,6 +7,8 @@
     
     let socket = null;
     let currentUser = null;
+    let currentReceiverId = null;
+    let currentRoomId = null;
     let isConnected = false;
     let isTyping = false;
     let typingTimer;
@@ -50,6 +52,16 @@
             console.error('Error getting user:', error);
             return null;
         }
+    }
+
+    // ========================================
+    // GET RECEIVER ID FROM URL
+    // ========================================
+    function getReceiverIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('userId') || params.get('receiverId') || params.get('id');
+        console.log('📥 Receiver ID from URL:', id);
+        return id ? parseInt(id) : null;
     }
 
     // ========================================
@@ -107,6 +119,26 @@
     }
 
     // ========================================
+    // SHOW NO RECEIVER PROMPT
+    // ========================================
+    function showNoReceiverPrompt() {
+        const container = document.getElementById('chat-widget-container');
+        if (container) {
+            container.innerHTML = `
+                <nav>
+                    <h1>💬 KISAN CIRCLE</h1>
+                </nav>
+                <div id="login-prompt">
+                    <div class="login-box">
+                        <h2>👤 SELECT A USER</h2>
+                        <p>Use: <code>/chat?userId=2</code></p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // ========================================
     // APPEND MESSAGE
     // ========================================
     function appendMessage(data, position, messageContainer) {
@@ -157,6 +189,32 @@
     }
 
     // ========================================
+    // UPDATE USER COUNT
+    // ========================================
+    function updateUserCount(count, elements) {
+        if (elements.userCountText) {
+            elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
+        }
+        if (elements.userCountDot) {
+            elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+        }
+        console.log(`👥 User count updated: ${count} online`);
+    }
+
+    // ========================================
+    // UPDATE RECEIVER PRESENCE
+    // ========================================
+    function updateReceiverPresence(online, elements) {
+        if (elements.userCountText) {
+            elements.userCountText.textContent = online ? '🟢 Online' : '🔴 Offline';
+        }
+        if (elements.userCountDot) {
+            elements.userCountDot.style.backgroundColor = online ? '#32CD32' : '#ff4444';
+        }
+        console.log(`📡 Receiver presence: ${online ? 'Online' : 'Offline'}`);
+    }
+
+    // ========================================
     // INITIALIZE CHAT
     // ========================================
     function initializeChat() {
@@ -170,8 +228,17 @@
             return;
         }
         
+        currentReceiverId = getReceiverIdFromURL();
+        
+        if (!currentReceiverId) {
+            console.log('❌ No receiver ID in URL');
+            showNoReceiverPrompt();
+            return;
+        }
+        
         console.log('✅ Starting chat...');
         console.log('👤 User:', currentUser);
+        console.log('📥 Receiver:', currentReceiverId);
         
         const elements = getElements();
         
@@ -201,20 +268,28 @@
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
             
-            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#32CD32';
-            if (elements.userCountText) elements.userCountText.textContent = 'Online';
+            updateReceiverPresence(false, elements);
             
             if (currentUser) {
                 console.log('📤 Sending user data:', currentUser);
-                socket.emit('user-connected', currentUser);
+                socket.emit('user-connected', {
+                    userId: currentUser.id,
+                    email: currentUser.email,
+                    name: currentUser.name
+                });
             }
+            
+            // Join conversation
+            socket.emit('join-conversation', {
+                userId: currentUser.id,
+                receiverId: currentReceiverId
+            });
         });
 
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from chat server');
             isConnected = false;
-            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ff4444';
-            if (elements.userCountText) elements.userCountText.textContent = 'Offline';
+            updateReceiverPresence(false, elements);
         });
 
         socket.on('connect_error', (error) => {
@@ -232,11 +307,21 @@
                 elements.messageContainer.innerHTML = '';
                 if (messages && messages.length > 0) {
                     messages.forEach(msg => {
-                        const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
+                        const isOwn = msg.sender_id === currentUser.id;
                         const position = isOwn ? 'right' : 'left';
                         appendMessage(msg, position, elements.messageContainer);
                     });
                 }
+            }
+        });
+
+        // ========================================
+        // RECEIVER PRESENCE
+        // ========================================
+        socket.on('receiver-presence', (data) => {
+            console.log('📡 Receiver presence update:', data);
+            if (data.userId === currentReceiverId) {
+                updateReceiverPresence(data.online, elements);
             }
         });
 
@@ -247,9 +332,12 @@
             console.log('📨📨📨 MESSAGE RECEIVED:', data);
             console.log('📨 From:', data.name, 'Message:', data.message);
             
-            const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
-            const position = isOwn ? 'right' : 'left';
-            appendMessage(data, position, elements.messageContainer);
+            // Check if message is for this conversation
+            if ((data.sender_id === currentUser.id && data.receiver_id === currentReceiverId) ||
+                (data.sender_id === currentReceiverId && data.receiver_id === currentUser.id)) {
+                const position = data.sender_id === currentUser.id ? 'right' : 'left';
+                appendMessage(data, position, elements.messageContainer);
+            }
         });
 
         // ========================================
@@ -258,11 +346,15 @@
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const count = users ? users.length : 0;
+            
+            // Check if receiver is online
+            const receiverOnline = users && users.some(u => u.id === currentReceiverId);
+            if (receiverOnline !== undefined) {
+                updateReceiverPresence(receiverOnline, elements);
+            }
+            
             if (elements.userCountText) {
                 elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
-            }
-            if (elements.userCountDot) {
-                elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
             }
         });
 
@@ -271,12 +363,26 @@
         // ========================================
         socket.on('user-joined', (data) => {
             console.log('👤 User joined:', data);
+            if (data.userId === currentReceiverId) {
+                updateReceiverPresence(true, elements);
+            }
             appendSystemMessage(data.message, elements.messageContainer);
         });
 
         socket.on('user-left', (data) => {
             console.log('👤 User left:', data);
+            if (data.userId === currentReceiverId) {
+                updateReceiverPresence(false, elements);
+            }
             appendSystemMessage(data.message, elements.messageContainer);
+        });
+
+        // ========================================
+        // CONVERSATION JOINED
+        // ========================================
+        socket.on('conversation-joined', (data) => {
+            console.log('✅ Conversation joined:', data);
+            currentRoomId = data.roomId;
         });
 
         // ========================================
@@ -284,8 +390,8 @@
         // ========================================
         socket.on('user-typing', (data) => {
             if (elements.typingIndicator) {
-                if (data.isTyping) {
-                    elements.typingIndicator.innerText = `${data.name} is typing...`;
+                if (data.userId === currentReceiverId && data.isTyping) {
+                    elements.typingIndicator.innerText = `${data.name || 'User'} is typing...`;
                 } else {
                     elements.typingIndicator.innerText = '';
                 }
@@ -293,12 +399,11 @@
         });
 
         // ========================================
-        // SEND MESSAGE - SIMPLIFIED FIX
+        // SEND MESSAGE
         // ========================================
         if (elements.form) {
             console.log('📋 Setting up form handler...');
             
-            // Get the form and input
             const form = document.getElementById('send-container');
             const messageInput = document.getElementById('messageimp');
             const sendBtn = document.getElementById('send-btn');
@@ -316,14 +421,12 @@
             
             console.log('✅ Form and input found');
             
-            // ✅ SIMPLE FORM SUBMIT HANDLER
             form.addEventListener('submit', function(e) {
-                console.log('🔴🔴🔴 FORM SUBMIT EVENT TRIGGERED');
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const message = messageInput.value.trim();
-                console.log('📤 Message:', message);
+                console.log('📤 Sending message:', message);
                 
                 if (!message) {
                     console.log('❌ Empty message');
@@ -336,32 +439,31 @@
                     return false;
                 }
                 
-                if (!currentUser) {
-                    console.log('❌ No user logged in');
-                    alert('Please login first');
+                if (!currentUser || !currentReceiverId) {
+                    console.log('❌ Missing user IDs');
                     return false;
                 }
                 
                 const messageData = {
+                    sender_id: currentUser.id,
+                    receiver_id: currentReceiverId,
                     message: message,
                     message_type: 'text'
                 };
                 
-                console.log('📤 Sending message data:', messageData);
-                console.log('📤 Socket ID:', socket.id);
-                
                 // Display immediately for sender
                 const displayData = {
-                    message: message,
-                    message_type: 'text',
+                    sender_id: currentUser.id,
+                    receiver_id: currentReceiverId,
                     name: currentUser.name,
                     email: currentUser.email,
-                    userId: currentUser.id,
+                    message: message,
+                    message_type: 'text',
                     timestamp: new Date().toISOString()
                 };
                 appendMessage(displayData, 'right', elements.messageContainer);
                 
-                // ✅ Send to server
+                // Send to server
                 socket.emit('send-message', messageData);
                 console.log('📤 Message emitted to server');
                 
@@ -369,17 +471,15 @@
                 messageInput.value = '';
                 messageInput.focus();
                 
-                // Reset UI
                 if (recordBtn) recordBtn.style.display = 'flex';
                 if (sendBtn) sendBtn.style.display = 'none';
                 
                 return false;
             });
             
-            // ✅ Enter key handler
+            // Enter key handler
             messageInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
-                    console.log('🔴🔴🔴 ENTER KEY PRESSED');
                     e.preventDefault();
                     e.stopPropagation();
                     form.dispatchEvent(new Event('submit'));
@@ -404,15 +504,21 @@
         // ========================================
         if (elements.messageInput) {
             elements.messageInput.addEventListener('input', function() {
-                if (!isTyping && socket && currentUser) { 
+                if (!isTyping && socket && currentUser && currentReceiverId) { 
                     isTyping = true; 
-                    socket.emit('typing');
+                    socket.emit('typing', {
+                        userId: currentUser.id,
+                        receiverId: currentReceiverId
+                    });
                 }
                 clearTimeout(typingTimer);
                 typingTimer = setTimeout(() => { 
                     isTyping = false; 
-                    if (socket) {
-                        socket.emit('stop-typing');
+                    if (socket && currentUser && currentReceiverId) {
+                        socket.emit('stop-typing', {
+                            userId: currentUser.id,
+                            receiverId: currentReceiverId
+                        });
                     }
                 }, 2000);
             });
@@ -426,7 +532,7 @@
             
             elements.imageInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
-                if (!file) return;
+                if (!file || !currentUser || !currentReceiverId) return;
                 
                 const formData = new FormData();
                 formData.append('image', file);
@@ -440,15 +546,20 @@
                     
                     if (data.filePath) {
                         const displayData = {
-                            message: data.filePath,
-                            message_type: 'image',
+                            sender_id: currentUser.id,
+                            receiver_id: currentReceiverId,
                             name: currentUser.name,
                             email: currentUser.email,
-                            userId: currentUser.id,
+                            message: data.filePath,
+                            message_type: 'image',
                             timestamp: new Date().toISOString()
                         };
                         appendMessage(displayData, 'right', elements.messageContainer);
-                        socket.emit('send-image', { filePath: data.filePath });
+                        socket.emit('send-image', {
+                            sender_id: currentUser.id,
+                            receiver_id: currentReceiverId,
+                            filePath: data.filePath
+                        });
                     }
                 } catch (error) {
                     console.error('Upload error:', error);
@@ -504,15 +615,20 @@
                         
                         if (data.filePath) {
                             const displayData = {
-                                message: data.filePath,
-                                message_type: 'audio',
+                                sender_id: currentUser.id,
+                                receiver_id: currentReceiverId,
                                 name: currentUser.name,
                                 email: currentUser.email,
-                                userId: currentUser.id,
+                                message: data.filePath,
+                                message_type: 'audio',
                                 timestamp: new Date().toISOString()
                             };
                             appendMessage(displayData, 'right', elements.messageContainer);
-                            socket.emit('send-audio', { filePath: data.filePath });
+                            socket.emit('send-audio', {
+                                sender_id: currentUser.id,
+                                receiver_id: currentReceiverId,
+                                filePath: data.filePath
+                            });
                         }
                     } catch (error) {
                         console.error('Audio upload error:', error);
