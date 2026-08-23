@@ -1606,21 +1606,18 @@ function googleTranslateElementInit() {
 
 <script src="../agri.js"></script>
 
-<script src="/js/client.js"></script>
-
-
 <!-- ========================================== -->
-<!-- FLOATING CHAT ICON - Full Widget Mode -->
+<!-- FLOATING CHAT WIDGET - SMALL VERSION -->
 <!-- ========================================== -->
 
 <style>
 /* Floating Chat Icon */
 .floating-chat-icon {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
     background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
     border-radius: 50%;
     cursor: pointer;
@@ -1628,7 +1625,7 @@ function googleTranslateElementInit() {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(108, 77, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(108, 77, 255, 0.4);
     transition: all 0.3s ease;
     border: none;
     color: white;
@@ -1636,23 +1633,23 @@ function googleTranslateElementInit() {
 
 .floating-chat-icon:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 30px rgba(108, 77, 255, 0.5);
+    box-shadow: 0 6px 25px rgba(108, 77, 255, 0.5);
 }
 
 .floating-chat-icon i {
-    font-size: 28px;
+    font-size: 24px;
 }
 
 .floating-chat-icon .chat-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -4px;
+    right: -4px;
     background: #ff4444;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 700;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1661,16 +1658,16 @@ function googleTranslateElementInit() {
     display: none;
 }
 
-/* Chat Widget Container */
+/* Chat Widget - Small Window */
 #chat-widget-container {
     position: fixed;
-    bottom: 100px;
+    bottom: 90px;
     right: 20px;
-    width: 380px;
-    max-height: 80vh;
+    width: 340px;
+    max-height: 70vh;
     background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
     border-radius: 16px;
-    box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -1681,17 +1678,18 @@ function googleTranslateElementInit() {
     display: flex;
 }
 
+/* Chat Header */
 #chat-widget-container nav {
     display: flex;
     align-items: center;
     background: rgba(0,0,0,0.15);
-    padding: 10px 15px;
+    padding: 10px 14px;
     justify-content: space-between;
     flex-shrink: 0;
 }
 
 #chat-widget-container h1 {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     margin: 0;
     flex: 1;
     color: white;
@@ -1699,10 +1697,35 @@ function googleTranslateElementInit() {
     font-weight: 600;
 }
 
+#user-count-container {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+    padding: 2px 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+#user-count-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    background-color: #ffaa00;
+}
+
+#user-count-text {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+}
+
 #chat-widget-close {
     background: none;
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     line-height: 1;
     color: white;
     cursor: pointer;
@@ -1718,9 +1741,9 @@ function googleTranslateElementInit() {
 #chat-widget-container .container {
     width: auto;
     max-width: 100%;
-    height: 400px;
-    background-color: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
+    height: 320px;
+    background-color: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
     margin: 0;
     padding: 10px;
     border-radius: 0;
@@ -1730,58 +1753,64 @@ function googleTranslateElementInit() {
 }
 
 #chat-widget-container .container::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 #chat-widget-container .container::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
+    border-radius: 4px;
 }
 
 /* Message Bubbles */
 #chat-widget-container .message {
     max-width: 80%;
     padding: 0;
-    margin: 5px;
-    border-radius: 15px;
-    font-size: 14px;
+    margin: 4px 0;
+    border-radius: 12px;
+    font-size: 13px;
     line-height: 1.4;
     word-wrap: break-word;
     clear: both;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
 
 #chat-widget-container .right {
     background-color: #DCF8C6;
-    color: #333;
+    color: #1a1a2e;
     float: right;
     align-self: flex-end;
-    border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 3px;
 }
 
 #chat-widget-container .left {
-    background-color: #F1F0F0;
-    color: #333;
+    background-color: #ffffff;
+    color: #1a1a2e;
     float: left;
     align-self: flex-start;
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 3px;
 }
 
 #chat-widget-container .message-body {
-    padding: 10px 15px 4px 15px;
-    font-size: 0.95rem;
+    padding: 8px 12px 3px 12px;
+    font-size: 0.9rem;
 }
 
 #chat-widget-container .message-header {
-    padding: 0 15px 8px 15px;
+    padding: 0 12px 6px 12px;
     display: flex;
     justify-content: flex-end;
 }
 
-#chat-widget-container .message-info {
+#chat-widget-container .message-name {
+    font-weight: 700;
+    color: #6C4DFF;
     font-size: 0.7rem;
+}
+
+#chat-widget-container .message-info {
+    font-size: 0.6rem;
     color: #888;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 #chat-widget-container .right .message-header {
@@ -1789,28 +1818,75 @@ function googleTranslateElementInit() {
 }
 
 #chat-widget-container .right .message-body {
-    padding-bottom: 10px;
+    padding-bottom: 8px;
+}
+
+/* System Messages */
+#chat-widget-container .message.middle {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.1);
+    font-style: italic;
+    font-size: 10px;
+    border: none;
+    padding: 3px 10px;
+    margin: 4px auto;
+    width: fit-content;
+    max-width: 80%;
+    align-self: center;
+    float: none;
+    box-shadow: none;
+    border-radius: 12px;
+}
+
+/* Image Messages */
+#chat-widget-container .message-body a {
+    text-decoration: none;
+}
+
+#chat-widget-container .message-image {
+    max-width: 180px;
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 4px;
+    cursor: pointer;
+}
+
+#chat-widget-container .message-body:has(.message-image) {
+    padding: 4px 4px 0 4px;
+}
+
+#chat-widget-container .right .message-body:has(.message-image) {
+    padding-bottom: 0;
+}
+
+/* Audio Messages */
+#chat-widget-container .message-body audio {
+    width: 100%;
+    min-width: 140px;
+    height: 32px;
+    border-radius: 6px;
 }
 
 /* Typing Indicator */
 #typing-indicator {
-    height: 24px;
-    padding: 0 15px 5px 15px;
-    font-size: 0.85rem;
+    height: 20px;
+    padding: 0 14px 3px 14px;
+    font-size: 0.75rem;
     font-style: italic;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.8);
     background: transparent;
-    min-height: 24px;
+    min-height: 20px;
 }
 
-/* Message Input */
+/* Input Area */
 #chat-widget-container .send {
     width: auto;
     max-width: 100%;
     display: flex;
     margin: 0;
-    padding: 12px 15px;
-    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.92);
     flex-shrink: 0;
 }
 
@@ -1818,16 +1894,17 @@ function googleTranslateElementInit() {
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 8px;
+    gap: 6px;
 }
 
 #messageimp {
     flex: 1;
-    padding: 10px 15px;
-    font-size: 14px;
-    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 18px;
     border: 1px solid #ccc;
     outline: none;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 #messageimp:focus {
@@ -1837,10 +1914,10 @@ function googleTranslateElementInit() {
 .btn-icon {
     background: none;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #555;
     cursor: pointer;
-    padding: 0 10px;
+    padding: 0 6px;
 }
 
 .btn-icon:hover {
@@ -1849,8 +1926,8 @@ function googleTranslateElementInit() {
 
 .btn {
     padding: 0;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
     color: white;
     border: none;
@@ -1866,28 +1943,83 @@ function googleTranslateElementInit() {
     transform: scale(1.05);
 }
 
+.btn i {
+    font-size: 13px;
+}
+
+/* Recording Animation */
+@keyframes pulse-record {
+    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(244, 67, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+}
+
+#record-btn.recording {
+    background-color: #F44336;
+    animation: pulse-record 1.5s infinite;
+}
+
+/* Login Prompt */
+#join-modal {
+    background: white;
+    color: #333;
+    padding: 20px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#join-box h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+#join-box p {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+#join-box a {
+    background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    font-size: 0.85rem;
+}
+
 /* Mobile Responsive */
 @media (max-width: 480px) {
     #chat-widget-container {
-        width: 95vw;
-        right: 2.5vw;
-        bottom: 80px;
-        max-height: 90vh;
+        width: 92vw;
+        right: 4vw;
+        bottom: 75px;
+        max-height: 75vh;
     }
     
     .floating-chat-icon {
-        width: 55px;
-        height: 55px;
-        bottom: 20px;
-        right: 20px;
+        width: 48px;
+        height: 48px;
+        bottom: 18px;
+        right: 18px;
     }
     
     .floating-chat-icon i {
-        font-size: 24px;
+        font-size: 20px;
     }
     
     #chat-widget-container .container {
-        height: 350px;
+        height: 280px;
+    }
+    
+    #chat-widget-container h1 {
+        font-size: 0.8rem;
     }
 }
 </style>
@@ -1902,6 +2034,10 @@ function googleTranslateElementInit() {
 <div id="chat-widget-container">
     <nav>
         <h1>💬 KISAN CIRCLE</h1>
+        <div id="user-count-container">
+            <span id="user-count-dot"></span>
+            <span id="user-count-text">0</span>
+        </div>
         <button id="chat-widget-close" onclick="toggleChat()">&times;</button>
     </nav>
     <div class="container active" id="chatMessages"></div>
@@ -1918,30 +2054,15 @@ function googleTranslateElementInit() {
 </div>
 
 <script>
-// Make sure Socket.IO is loaded
-function loadSocketIO() {
-    if (document.querySelector('script[src*="socket.io"]')) {
-        return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
-    document.head.appendChild(script);
-}
-
 // Load chat widget script
 function loadChatWidget() {
     if (document.querySelector('script[src*="chat.js"]')) {
+        console.log('✅ Chat already loaded');
         return;
     }
     const script = document.createElement('script');
     script.src = '/js/chat.js';
     script.async = true;
-    script.onload = function() {
-        console.log('✅ Chat widget loaded');
-    };
-    script.onerror = function() {
-        console.error('❌ Failed to load chat widget');
-    };
     document.body.appendChild(script);
 }
 
@@ -1951,8 +2072,6 @@ function toggleChat() {
     container.classList.toggle('active');
     if (container.classList.contains('active')) {
         document.getElementById('chatBadge').style.display = 'none';
-        // Load chat widget when opened
-        loadSocketIO();
         loadChatWidget();
     }
 }
@@ -1968,15 +2087,12 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Load chat on page load (optional - set to true to load automatically)
+// Load chat on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Set to true to load chat automatically, false to load on click
-    const autoLoad = false;
-    if (autoLoad) {
-        loadSocketIO();
-        loadChatWidget();
-    }
+    loadChatWidget();
 });
 </script>
+
+
 </body>
 </html>
