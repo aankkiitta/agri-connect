@@ -298,7 +298,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - ID TO ID
+// CHAT SOCKET EVENTS - ID TO ID (FIXED)
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -319,6 +319,11 @@ io.on('connection', (socket) => {
     // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
+        
+        if (!data) {
+            console.error('❌ No data received');
+            return;
+        }
         
         const userId = data.userId || data.id || null;
         const email = data.email || null;
@@ -363,7 +368,6 @@ io.on('connection', (socket) => {
         io.emit('online-users', onlineUsers);
         
         // Send chat history if any
-        // Empty for now, messages will be loaded per conversation
         socket.emit('chat-history', []);
     });
 
@@ -371,6 +375,11 @@ io.on('connection', (socket) => {
     // JOIN CONVERSATION ROOM
     // ========================================
     socket.on('join-conversation', (data) => {
+        if (!data || !data.userId || !data.receiverId) {
+            console.error('❌ Invalid join-conversation data:', data);
+            return;
+        }
+        
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
         
@@ -426,6 +435,11 @@ io.on('connection', (socket) => {
             console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
             console.log('📨 Data:', data);
             
+            if (!data || !data.sender_id || !data.receiver_id || !data.message) {
+                console.error('❌ Invalid message data:', data);
+                return;
+            }
+            
             const senderId = parseInt(data.sender_id);
             const receiverId = parseInt(data.receiver_id);
             const message = data.message;
@@ -467,7 +481,7 @@ io.on('connection', (socket) => {
                 messageCache.set(roomId, msgs.slice(-100));
             }
             
-            // ✅ Send to ALL users in the room (including sender)
+            // Send to ALL users in the room (including sender)
             io.to(roomId).emit('receive-message', messageData);
             console.log(`📨 Broadcasted to room ${roomId}`);
             
@@ -481,6 +495,11 @@ io.on('connection', (socket) => {
     // GET RECEIVER PRESENCE
     // ========================================
     socket.on('get-user-presence', (data) => {
+        if (!data || !data.userId) {
+            console.log('⚠️ get-user-presence missing userId:', data);
+            return;
+        }
+        
         const userId = parseInt(data.userId);
         if (!userId) return;
         
@@ -492,9 +511,14 @@ io.on('connection', (socket) => {
     });
 
     // ========================================
-    // TYPING INDICATOR - ID TO ID
+    // TYPING INDICATOR - FIXED
     // ========================================
     socket.on('typing', (data) => {
+        if (!data || !data.userId || !data.receiverId) {
+            console.log('⚠️ Typing event missing data:', data);
+            return;
+        }
+        
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
         if (!userId || !receiverId) return;
@@ -508,6 +532,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('stop-typing', (data) => {
+        if (!data || !data.userId || !data.receiverId) {
+            console.log('⚠️ Stop-typing event missing data:', data);
+            return;
+        }
+        
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
         if (!userId || !receiverId) return;
@@ -523,6 +552,11 @@ io.on('connection', (socket) => {
     // IMAGE UPLOAD
     // ========================================
     socket.on('send-image', (data) => {
+        if (!data || !data.sender_id || !data.receiver_id || !data.filePath) {
+            console.log('⚠️ send-image missing data:', data);
+            return;
+        }
+        
         const sender = chatUsers.get(socket.id);
         if (!sender) return;
         
@@ -557,6 +591,11 @@ io.on('connection', (socket) => {
     // AUDIO UPLOAD
     // ========================================
     socket.on('send-audio', (data) => {
+        if (!data || !data.sender_id || !data.receiver_id || !data.filePath) {
+            console.log('⚠️ send-audio missing data:', data);
+            return;
+        }
+        
         const sender = chatUsers.get(socket.id);
         if (!sender) return;
         
