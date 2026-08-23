@@ -295,9 +295,8 @@ const messageCache = new Map(); // roomId -> [messages]
 app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
-
 // ==================================================
-// CHAT SOCKET EVENTS - FIXED
+// CHAT SOCKET EVENTS - COMPLETE WORKING VERSION
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -308,28 +307,33 @@ const io = socketIo(server, {
     transports: ['websocket', 'polling']
 });
 
+// Store user socket mappings
+const userSockets = new Map(); // userId -> socketId
+const userRooms = new Map(); // socketId -> roomId
+
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
     
     let currentUserId = null;
     let currentRoomId = null;
 
-    // User joins with their ID
+    // User connects with their ID
     socket.on('user-connected', (data) => {
         const userId = parseInt(data.userId);
         if (!userId) return;
         
         currentUserId = userId;
+        userSockets.set(userId, socket.id);
         chatUsers.set(socket.id, { userId, socketId: socket.id });
         
         console.log(`✅ User ${userId} connected with socket ${socket.id}`);
         
-        // Send online status to all users
-        const onlineUsers = Array.from(chatUsers.values()).map(u => u.userId);
+        // Send online users list to everyone
+        const onlineUsers = Array.from(userSockets.keys());
         io.emit('online-users', onlineUsers);
     });
 
-    // User joins a conversation room - FIXED
+    // Join conversation room
     socket.on('join-conversation', (data) => {
         const userId = parseInt(data.userId);
         const receiverId = parseInt(data.receiverId);
@@ -341,9 +345,10 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // IMPORTANT: Create deterministic room ID
+        // Create deterministic room ID (sorted so both users get same room)
         const roomId = [userId, receiverId].sort().join('_');
         currentRoomId = roomId;
+        userRooms.set(socket.id, roomId);
         
         // Leave all previous rooms
         if (socket.rooms) {
@@ -367,7 +372,6 @@ io.on('connection', (socket) => {
         chatRooms.get(roomId).add(socket.id);
         
         console.log(`🔵 User ${userId} joined room: ${roomId} (with user ${receiverId})`);
-        console.log(`📊 Room ${roomId} has ${chatRooms.get(roomId).size} users`);
         
         // Send recent messages if any
         if (messageCache.has(roomId)) {
@@ -387,7 +391,7 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Send message - FIXED
+    // Send message - CRITICAL FIX
     socket.on('send-message', (data) => {
         try {
             const senderId = parseInt(data.sender_id);
@@ -405,6 +409,7 @@ io.on('connection', (socket) => {
             // Generate room ID
             const roomId = [senderId, receiverId].sort().join('_');
             console.log(`📨 Room ID: ${roomId}`);
+            console.log(`📨 Room members:`, chatRooms.get(roomId) ? Array.from(chatRooms.get(roomId)) : 'None');
             
             const messageData = {
                 id: Date.now(),
@@ -426,37 +431,22 @@ io.on('connection', (socket) => {
                 messageCache.set(roomId, messageCache.get(roomId).slice(-50));
             }
             
-            // Get room members
-            const roomMembers = chatRooms.get(roomId);
-            console.log(`📊 Room ${roomId} members:`, roomMembers ? Array.from(roomMembers) : 'None');
-            
-            // Emit to ALL clients in the room (including sender)
+            // CRITICAL: Emit to ALL clients in the room
             io.to(roomId).emit('receive-message', messageData);
             console.log(`📨 Emitted to room ${roomId}`);
+            
+            // Also send directly to receiver if online
+            const receiverSocketId = userSockets.get(receiverId);
+            if (receiverSocketId && receiverSocketId !== socket.id) {
+                io.to(receiverSocketId).emit('receive-message', messageData);
+                console.log(`📨 Direct sent to receiver ${receiverId} (${receiverSocketId})`);
+            } else {
+                console.log(`⚠️ Receiver ${receiverId} not online or same socket`);
+            }
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
             socket.emit('message-error', { error: 'Failed to send message' });
-        }
-    });
-
-    // Mark messages as seen
-    socket.on('messages-seen', (data) => {
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        
-        if (!userId || !receiverId) return;
-        
-        const roomId = [userId, receiverId].sort().join('_');
-        
-        // Clear cache for this room after messages are seen
-        if (messageCache.has(roomId)) {
-            // Keep only messages sent by current user (for their own reference)
-            const userMessages = messageCache.get(roomId).filter(
-                msg => msg.sender_id === userId
-            );
-            messageCache.set(roomId, userMessages);
-            console.log(`🗑️ Messages cleared for room ${roomId} after being seen`);
         }
     });
 
@@ -482,8 +472,9 @@ io.on('connection', (socket) => {
         console.log('👋 Client disconnected:', socket.id);
         
         if (currentUserId) {
+            userSockets.delete(currentUserId);
             chatUsers.delete(socket.id);
-            const onlineUsers = Array.from(chatUsers.values()).map(u => u.userId);
+            const onlineUsers = Array.from(userSockets.keys());
             io.emit('online-users', onlineUsers);
         }
         
@@ -491,7 +482,6 @@ io.on('connection', (socket) => {
             chatRooms.get(currentRoomId).delete(socket.id);
             if (chatRooms.get(currentRoomId).size === 0) {
                 chatRooms.delete(currentRoomId);
-                // Auto-delete messages when room is empty
                 if (messageCache.has(currentRoomId)) {
                     messageCache.delete(currentRoomId);
                     console.log(`🗑️ Room ${currentRoomId} emptied, messages auto-deleted`);
