@@ -1,17 +1,15 @@
 (function() {
     // ========================================
-    // AUTO-DETECT SERVER URL (Works on both local and live)
+    // AUTO-DETECT SERVER URL
     // ========================================
     const SERVER_URL = window.location.origin;
     
     let socket = null;
-    let currentUserId = null;
-    let currentReceiverId = null;
-    let currentRoomId = null;
+    let currentUser = null;
     let isConnected = false;
     
     // ========================================
-    // GET USER ID FROM localStorage
+    // GET USER FROM localStorage
     // ========================================
     function getCurrentUser() {
         try {
@@ -25,27 +23,17 @@
                         const user = JSON.parse(data);
                         console.log(`✅ Found user in localStorage key: ${key}`, user);
                         
-                        // Try all possible ID fields
+                        // Get user data
                         const userId = user.id || user.user_id || user.userId || user._id || null;
-                        if (userId) {
-                            console.log(`✅ User ID: ${userId}`);
-                            return user;
+                        const email = user.email || null;
+                        const name = user.name || user.username || 'User';
+                        
+                        if (userId || email) {
+                            console.log(`✅ User: ${name} (${email})`);
+                            return { id: userId, email, name };
                         }
                     } catch (e) {}
                 }
-            }
-            
-            // Check sessionStorage
-            const sessionData = sessionStorage.getItem('user');
-            if (sessionData) {
-                try {
-                    const user = JSON.parse(sessionData);
-                    const userId = user.id || user.user_id || user.userId || user._id || null;
-                    if (userId) {
-                        console.log('✅ Found user in sessionStorage:', user);
-                        return user;
-                    }
-                } catch (e) {}
             }
             
             console.warn('⚠️ No user data found');
@@ -57,44 +45,20 @@
     }
 
     // Get current user
-    const agriUser = getCurrentUser();
-    if (agriUser) {
-        currentUserId = agriUser.id || agriUser.user_id || agriUser.userId || agriUser._id || null;
-        console.log('👤 Current User:', agriUser);
-        console.log('🆔 Current User ID:', currentUserId);
+    currentUser = getCurrentUser();
+    if (currentUser) {
+        console.log('👤 Current User:', currentUser);
     }
 
-    // ========================================
-    // GET RECEIVER ID FROM URL
-    // ========================================
-    function getReceiverIdFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('userId') || 
-                   params.get('receiverId') || 
-                   params.get('id') || 
-                   params.get('user') ||
-                   params.get('receiver');
-        
-        console.log('📥 Receiver ID from URL:', id);
-        return id;
-    }
-
-    const receiverId = getReceiverIdFromURL();
-    
     // ========================================
     // START CHAT
     // ========================================
-    if (currentUserId && receiverId) {
-        currentReceiverId = parseInt(receiverId);
-        console.log(`✅ Starting chat: User ${currentUserId} with User ${currentReceiverId}`);
+    if (currentUser) {
+        console.log('✅ Starting group chat');
         initializeChatWidget();
     } else {
-        console.log('❌ Missing user IDs');
-        if (!currentUserId) {
-            createLoginPromptWidget();
-        } else if (!receiverId) {
-            createNoReceiverWidget();
-        }
+        console.log('❌ No user logged in');
+        createLoginPromptWidget();
     }
 
     // ========================================
@@ -116,42 +80,10 @@
             <div id="join-modal">
               <div id="join-box">
                 <h2>🔐 LOGIN REQUIRED</h2>
-                <p>Please login to access Kisan Circle chat.</p>
+                <p>Please login to access Kisan Circle group chat.</p>
                 <div style="margin-top: 20px;">
                     <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600;">Go to Login</a>
                 </div>
-              </div>
-            </div>`;
-        document.body.appendChild(widgetContainer);
-        
-        const closeBtn = widgetContainer.querySelector('#chat-widget-close-prompt');
-        launcher.addEventListener('click', () => { 
-            widgetContainer.classList.add('active'); 
-            launcher.style.display = 'none'; 
-        });
-        closeBtn.addEventListener('click', () => { 
-            widgetContainer.classList.remove('active'); 
-            launcher.style.display = 'flex'; 
-        });
-    }
-
-    function createNoReceiverWidget() {
-        const launcher = document.createElement('div');
-        launcher.id = 'chat-launcher';
-        launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
-        document.body.appendChild(launcher);
-
-        const widgetContainer = document.createElement('div');
-        widgetContainer.id = 'chat-widget-container';
-        widgetContainer.innerHTML = `
-            <nav>
-              <h1>KISAN CIRCLE🌾</h1>
-              <button id="chat-widget-close-prompt">&times;</button>
-            </nav>
-            <div id="join-modal">
-              <div id="join-box">
-                <h2>👤 SELECT A USER</h2>
-                <p>Use: <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px;">/chat?userId=2</code></p>
               </div>
             </div>`;
         document.body.appendChild(widgetContainer);
@@ -179,7 +111,7 @@
         widgetContainer.id = 'chat-widget-container';
         widgetContainer.innerHTML = `
             <nav>
-              <h1>💬 CHAT</h1>
+              <h1>💬 KISAN CIRCLE GROUP</h1>
               <div id="user-count-container">
                   <span id="user-count-dot"></span>
                   <span id="user-count-text">Connecting...</span>
@@ -207,8 +139,8 @@
     // MAIN CHAT LOGIC
     // ========================================
     function initializeChat(widget, launcher) {
-        console.log('🔄 Initializing chat...');
-        console.log(`👤 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
+        console.log('🔄 Initializing group chat...');
+        console.log('👤 User:', currentUser);
         console.log(`🔗 Server URL: ${SERVER_URL}`);
         
         // Connect to Socket.IO
@@ -247,19 +179,11 @@
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
             userCountDot.style.backgroundColor = '#32CD32';
-            userCountText.textContent = 'Online';
+            userCountText.textContent = 'Connecting...';
             
-            if (currentUserId) {
-                console.log(`📤 Emitting user-connected: ${currentUserId}`);
-                socket.emit('user-connected', { userId: currentUserId });
-            }
-            
-            if (currentUserId && currentReceiverId) {
-                console.log(`📤 Emitting join-conversation: ${currentUserId} -> ${currentReceiverId}`);
-                socket.emit('join-conversation', {
-                    userId: currentUserId,
-                    receiverId: currentReceiverId
-                });
+            if (currentUser) {
+                console.log('📤 Sending user data:', currentUser);
+                socket.emit('user-connected', currentUser);
             }
         });
 
@@ -276,78 +200,62 @@
             userCountText.textContent = 'Reconnecting...';
         });
 
-        socket.on('conversation-joined', (data) => {
-            console.log('✅ Conversation joined:', data);
-            currentRoomId = data.roomId;
-            userCountText.textContent = `Chatting`;
-        });
-
+        // Chat history
         socket.on('chat-history', (messages) => {
             console.log(`📨 Received ${messages ? messages.length : 0} messages`);
             messageContainer.innerHTML = '';
             if (messages && messages.length > 0) {
                 messages.forEach(msg => {
-                    const position = msg.sender_id === currentUserId ? 'right' : 'left';
+                    const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
+                    const position = isOwn ? 'right' : 'left';
                     appendMessage(msg, position);
-                });
-                socket.emit('messages-seen', {
-                    userId: currentUserId,
-                    receiverId: currentReceiverId
                 });
             }
         });
 
+        // Online users
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
-            const isReceiverOnline = users.includes(currentReceiverId);
-            if (isReceiverOnline) {
-                userCountText.textContent = 'Online';
-                userCountDot.style.backgroundColor = '#32CD32';
-            } else {
-                userCountText.textContent = 'Offline';
-                userCountDot.style.backgroundColor = '#ff4444';
-            }
+            const count = users ? users.length : 0;
+            userCountText.textContent = `${count} Online`;
+            userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+        });
+
+        // User joined
+        socket.on('user-joined', (data) => {
+            console.log('👤 User joined:', data);
+            appendSystemMessage(data.message);
+        });
+
+        // User left
+        socket.on('user-left', (data) => {
+            console.log('👤 User left:', data);
+            appendSystemMessage(data.message);
         });
 
         // ========================================
-        // RECEIVE MESSAGE - CRITICAL FIX
+        // RECEIVE MESSAGE
         // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨📨📨 MESSAGE RECEIVED:', data);
-            console.log('📨 Current User:', currentUserId, 'Receiver:', currentReceiverId);
             
-            // Check if message belongs to this conversation
-            const isForThisConversation = 
-                (data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
-                (data.sender_id === currentReceiverId && data.receiver_id === currentUserId);
+            const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
+            const position = isOwn ? 'right' : 'left';
+            appendMessage(data, position);
             
-            console.log('📨 Is for this conversation?', isForThisConversation);
-            
-            if (isForThisConversation) {
-                console.log('✅ Message belongs to this conversation');
-                const position = data.sender_id === currentUserId ? 'right' : 'left';
-                appendMessage(data, position);
-                
-                socket.emit('messages-seen', {
-                    userId: currentUserId,
-                    receiverId: currentReceiverId
-                });
-                
-                if (!widget.classList.contains('active')) {
-                    unreadCount++;
-                    unreadBadge.innerText = unreadCount;
-                    unreadBadge.style.display = 'flex';
-                }
-            } else {
-                console.log('❌ Message NOT for this conversation');
-                console.log('Expected:', currentUserId, '->', currentReceiverId);
-                console.log('Got:', data.sender_id, '->', data.receiver_id);
+            if (!widget.classList.contains('active')) {
+                unreadCount++;
+                unreadBadge.innerText = unreadCount;
+                unreadBadge.style.display = 'flex';
             }
         });
 
+        // Typing indicator
         socket.on('user-typing', (data) => {
-            if (data.userId === currentReceiverId) {
-                typingIndicator.innerText = data.isTyping ? 'User is typing...' : '';
+            if (data.isTyping) {
+                typingIndicator.innerText = `${data.name} is typing...`;
+            } else {
+                typingIndicator.innerText = '';
             }
         });
 
@@ -355,7 +263,7 @@
         // APPEND MESSAGE
         // ========================================
         function appendMessage(data, position) {
-            console.log('📝 Appending message:', data, 'Position:', position);
+            console.log('📝 Appending message:', data);
             
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
@@ -366,6 +274,7 @@
                 : new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
             let messageContent = data.message || data.text || '';
+            let senderName = data.name || data.email || 'User';
             
             if (data.message_type === 'image') {
                 messageContent = `<a href="${data.message}" target="_blank"><img src="${data.message}" class="message-image" /></a>`;
@@ -376,13 +285,21 @@
             messageElement.innerHTML = `
                 <div class="message-body">${messageContent}</div>
                 <div class="message-header">
+                    <span class="message-name">${position === 'left' ? senderName + ' · ' : ''}</span>
                     <span class="message-info">${time}</span>
                 </div>
             `;
             
             messageContainer.append(messageElement);
             messageContainer.scrollTop = messageContainer.scrollHeight;
-            console.log('✅ Message appended to UI');
+        }
+
+        function appendSystemMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'middle');
+            messageElement.innerText = text;
+            messageContainer.append(messageElement);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
         }
 
         // ========================================
@@ -392,38 +309,33 @@
             e.preventDefault();
             const message = messageInput.value.trim();
             
-            console.log('📤 SEND BUTTON CLICKED');
-            console.log('📤 Message:', message);
-            console.log('📤 Current User:', currentUserId);
-            console.log('📤 Receiver:', currentReceiverId);
-            
-            if (!message || !socket || !currentUserId || !currentReceiverId) {
-                console.error('❌ Cannot send message - missing data');
+            if (!message || !socket || !currentUser) {
+                console.error('❌ Cannot send message');
                 return;
             }
             
             const messageData = {
-                sender_id: currentUserId,
-                receiver_id: currentReceiverId,
                 message: message,
-                message_type: 'text',
-                timestamp: new Date().toISOString()
+                message_type: 'text'
             };
             
-            console.log('📤 Sending message data:', messageData);
+            console.log('📤 Sending message:', messageData);
             
             // Display immediately for sender
-            appendMessage(messageData, 'right');
+            const displayData = {
+                ...messageData,
+                name: currentUser.name,
+                email: currentUser.email,
+                userId: currentUser.id,
+                timestamp: new Date().toISOString()
+            };
+            appendMessage(displayData, 'right');
             
             // Send to server
             socket.emit('send-message', messageData);
-            console.log('📤 Message emitted to server');
             
             messageInput.value = '';
-            socket.emit('stop-typing', { 
-                userId: currentUserId, 
-                receiverId: currentReceiverId 
-            });
+            socket.emit('stop-typing');
             isTyping = false;
             recordBtn.style.display = 'flex';
             sendBtn.style.display = 'none';
@@ -433,21 +345,15 @@
         // TYPING
         // ========================================
         messageInput.addEventListener('input', () => {
-            if (!isTyping && socket && currentUserId && currentReceiverId) { 
+            if (!isTyping && socket && currentUser) { 
                 isTyping = true; 
-                socket.emit('typing', { 
-                    userId: currentUserId, 
-                    receiverId: currentReceiverId 
-                });
+                socket.emit('typing');
             }
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => { 
                 isTyping = false; 
-                if (socket && currentUserId && currentReceiverId) {
-                    socket.emit('stop-typing', { 
-                        userId: currentUserId, 
-                        receiverId: currentReceiverId 
-                    });
+                if (socket) {
+                    socket.emit('stop-typing');
                 }
             }, 2000);
             
@@ -480,16 +386,16 @@
                 const data = await response.json();
                 
                 if (data.filePath) {
-                    const messageData = {
-                        sender_id: currentUserId,
-                        receiver_id: currentReceiverId,
+                    const displayData = {
                         message: data.filePath,
                         message_type: 'image',
+                        name: currentUser.name,
+                        email: currentUser.email,
+                        userId: currentUser.id,
                         timestamp: new Date().toISOString()
                     };
-                    
-                    appendMessage(messageData, 'right');
-                    socket.emit('send-message', messageData);
+                    appendMessage(displayData, 'right');
+                    socket.emit('send-image', { filePath: data.filePath });
                 }
             } catch (error) {
                 console.error('Upload error:', error);
@@ -542,16 +448,16 @@
                     const data = await response.json();
                     
                     if (data.filePath) {
-                        const messageData = {
-                            sender_id: currentUserId,
-                            receiver_id: currentReceiverId,
+                        const displayData = {
                             message: data.filePath,
                             message_type: 'audio',
+                            name: currentUser.name,
+                            email: currentUser.email,
+                            userId: currentUser.id,
                             timestamp: new Date().toISOString()
                         };
-                        
-                        appendMessage(messageData, 'right');
-                        socket.emit('send-message', messageData);
+                        appendMessage(displayData, 'right');
+                        socket.emit('send-audio', { filePath: data.filePath });
                     }
                 } catch (error) {
                     console.error('Audio upload error:', error);

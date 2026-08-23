@@ -296,7 +296,20 @@ app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
 // ==================================================
-// CHAT SOCKET EVENTS - COMPLETE WORKING VERSION
+// CHAT STATE - GROUP CHAT
+// ==================================================
+const chatUsers = new Map(); // socketId -> { userId, email, name, socketId }
+const messageCache = []; // All messages (group chat)
+
+// ==================================================
+// CHAT ROUTE
+// ==================================================
+app.get('/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
+// ==================================================
+// CHAT SOCKET EVENTS - GROUP CHAT
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -307,142 +320,82 @@ const io = socketIo(server, {
     transports: ['websocket', 'polling']
 });
 
-// Store user socket mappings
-const userSockets = new Map(); // userId -> socketId
-const userRooms = new Map(); // socketId -> roomId
-
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
     
-    let currentUserId = null;
-    let currentRoomId = null;
+    let currentUser = null;
 
-    // User connects with their ID
+    // User joins the group chat
     socket.on('user-connected', (data) => {
-        const userId = parseInt(data.userId);
-        if (!userId) return;
+        console.log('📝 User data received:', data);
         
-        currentUserId = userId;
-        userSockets.set(userId, socket.id);
-        chatUsers.set(socket.id, { userId, socketId: socket.id });
+        // Get user data from login
+        const userId = data.userId || data.id || null;
+        const email = data.email || null;
+        const name = data.name || 'User';
         
-        console.log(`✅ User ${userId} connected with socket ${socket.id}`);
-        
-        // Send online users list to everyone
-        const onlineUsers = Array.from(userSockets.keys());
-        io.emit('online-users', onlineUsers);
-    });
-
-    // Join conversation room
-    socket.on('join-conversation', (data) => {
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        
-        console.log(`🔵 Join conversation: User ${userId} with User ${receiverId}`);
-        
-        if (!userId || !receiverId) {
-            console.error('❌ Invalid user IDs for conversation:', data);
+        if (!userId && !email) {
+            console.error('❌ No user identifier provided');
             return;
         }
         
-        // Create deterministic room ID (sorted so both users get same room)
-        const roomId = [userId, receiverId].sort().join('_');
-        currentRoomId = roomId;
-        userRooms.set(socket.id, roomId);
+        currentUser = {
+            id: userId,
+            email: email,
+            name: name,
+            socketId: socket.id
+        };
         
-        // Leave all previous rooms
-        if (socket.rooms) {
-            const rooms = Array.from(socket.rooms);
-            rooms.forEach(room => {
-                if (room !== socket.id) {
-                    socket.leave(room);
-                    console.log(`📤 Left room: ${room}`);
-                }
-            });
-        }
+        chatUsers.set(socket.id, currentUser);
         
-        // Join the new room
-        socket.join(roomId);
-        console.log(`📥 Joined room: ${roomId}`);
+        console.log(`✅ User joined group chat: ${name} (${email})`);
         
-        // Track room membership
-        if (!chatRooms.has(roomId)) {
-            chatRooms.set(roomId, new Set());
-        }
-        chatRooms.get(roomId).add(socket.id);
+        // Send online users list to everyone
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
+        io.emit('online-users', onlineUsers);
         
-        console.log(`🔵 User ${userId} joined room: ${roomId} (with user ${receiverId})`);
+        // Send chat history to new user
+        socket.emit('chat-history', messageCache.slice(-50));
         
-        // Send recent messages if any
-        if (messageCache.has(roomId)) {
-            const recentMessages = messageCache.get(roomId).slice(-50);
-            console.log(`📨 Sending ${recentMessages.length} cached messages to user ${userId}`);
-            socket.emit('chat-history', recentMessages);
-        } else {
-            console.log(`📨 No cached messages for room ${roomId}`);
-            socket.emit('chat-history', []);
-        }
-        
-        socket.emit('conversation-joined', { 
-            roomId, 
-            userId, 
-            receiverId,
-            success: true 
+        // Broadcast user joined message
+        io.emit('user-joined', {
+            name: name,
+            message: `${name} joined the chat`
         });
     });
 
-    // Send message - CRITICAL FIX
+    // Send message to group
     socket.on('send-message', (data) => {
         try {
-            const senderId = parseInt(data.sender_id);
-            const receiverId = parseInt(data.receiver_id);
-            const message = data.message;
-            const messageType = data.message_type || 'text';
-            
-            console.log(`📨 SEND-MESSAGE: From ${senderId} to ${receiverId}: "${message}"`);
-            
-            if (!senderId || !receiverId || !message) {
-                console.error('❌ Invalid message data:', data);
+            const user = chatUsers.get(socket.id);
+            if (!user) {
+                console.error('❌ User not found for socket:', socket.id);
                 return;
             }
             
-            // Generate room ID
-            const roomId = [senderId, receiverId].sort().join('_');
-            console.log(`📨 Room ID: ${roomId}`);
-            console.log(`📨 Room members:`, chatRooms.get(roomId) ? Array.from(chatRooms.get(roomId)) : 'None');
+            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
             
             const messageData = {
                 id: Date.now(),
-                sender_id: senderId,
-                receiver_id: receiverId,
-                message: message,
-                message_type: messageType,
+                userId: user.id,
+                email: user.email,
+                name: user.name,
+                message: data.message,
+                message_type: data.message_type || 'text',
                 timestamp: new Date().toISOString()
             };
             
             // Store in cache
-            if (!messageCache.has(roomId)) {
-                messageCache.set(roomId, []);
-            }
-            messageCache.get(roomId).push(messageData);
+            messageCache.push(messageData);
+            if (messageCache.length > 100) messageCache.shift();
             
-            // Keep only last 50 messages
-            if (messageCache.get(roomId).length > 50) {
-                messageCache.set(roomId, messageCache.get(roomId).slice(-50));
-            }
-            
-            // CRITICAL: Emit to ALL clients in the room
-            io.to(roomId).emit('receive-message', messageData);
-            console.log(`📨 Emitted to room ${roomId}`);
-            
-            // Also send directly to receiver if online
-            const receiverSocketId = userSockets.get(receiverId);
-            if (receiverSocketId && receiverSocketId !== socket.id) {
-                io.to(receiverSocketId).emit('receive-message', messageData);
-                console.log(`📨 Direct sent to receiver ${receiverId} (${receiverSocketId})`);
-            } else {
-                console.log(`⚠️ Receiver ${receiverId} not online or same socket`);
-            }
+            // Broadcast to ALL users in the group
+            io.emit('receive-message', messageData);
+            console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
@@ -450,43 +403,90 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Typing indicator
-    socket.on('typing', (data) => {
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        if (!userId || !receiverId) return;
-        const roomId = [userId, receiverId].sort().join('_');
-        socket.to(roomId).emit('user-typing', { userId, isTyping: true });
+    // Image upload for group chat
+    socket.on('send-image', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'image',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) messageCache.shift();
+        
+        io.emit('receive-message', messageData);
     });
 
-    socket.on('stop-typing', (data) => {
-        const userId = parseInt(data.userId);
-        const receiverId = parseInt(data.receiverId);
-        if (!userId || !receiverId) return;
-        const roomId = [userId, receiverId].sort().join('_');
-        socket.to(roomId).emit('user-typing', { userId, isTyping: false });
+    // Audio upload for group chat
+    socket.on('send-audio', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'audio',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) messageCache.shift();
+        
+        io.emit('receive-message', messageData);
+    });
+
+    // Typing indicator
+    socket.on('typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: true
+            });
+        }
+    });
+
+    socket.on('stop-typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: false
+            });
+        }
     });
 
     // Disconnect
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
-        if (currentUserId) {
-            userSockets.delete(currentUserId);
+        const user = chatUsers.get(socket.id);
+        if (user) {
             chatUsers.delete(socket.id);
-            const onlineUsers = Array.from(userSockets.keys());
+            
+            // Send updated online users list
+            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+                id: u.id,
+                email: u.email,
+                name: u.name
+            }));
             io.emit('online-users', onlineUsers);
-        }
-        
-        if (currentRoomId && chatRooms.has(currentRoomId)) {
-            chatRooms.get(currentRoomId).delete(socket.id);
-            if (chatRooms.get(currentRoomId).size === 0) {
-                chatRooms.delete(currentRoomId);
-                if (messageCache.has(currentRoomId)) {
-                    messageCache.delete(currentRoomId);
-                    console.log(`🗑️ Room ${currentRoomId} emptied, messages auto-deleted`);
-                }
-            }
+            
+            // Broadcast user left message
+            io.emit('user-left', {
+                name: user.name,
+                message: `${user.name} left the chat`
+            });
         }
     });
 });
