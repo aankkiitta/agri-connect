@@ -282,12 +282,11 @@ async function initializeDatabase() {
 }
 
 initializeDatabase();
-
 // ==================================================
 // CHAT STATE - GROUP CHAT
 // ==================================================
-const chatUsers = new Map(); // socketId -> user data
-const messageCache = []; // Array for messages
+const chatUsers = new Map();
+const messageCache = [];
 
 // ==================================================
 // CHAT ROUTE
@@ -297,7 +296,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - FIXED
+// CHAT SOCKET EVENTS - COMPLETE FIX
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -337,9 +336,9 @@ io.on('connection', (socket) => {
         
         chatUsers.set(socket.id, currentUser);
         
-        console.log(`✅ User joined: ${name} (${email || userId})`);
+        console.log(`✅ User joined group chat: ${name} (${email})`);
         
-        // ✅ Send online users list to ALL clients
+        // Send online users list to everyone
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
             id: u.id,
             email: u.email,
@@ -347,16 +346,17 @@ io.on('connection', (socket) => {
         }));
         io.emit('online-users', onlineUsers);
         
-        // ✅ Send chat history to the new user only
+        // Send chat history to new user
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
             console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
             socket.emit('chat-history', recentMessages);
         } else {
+            console.log(`📨 No cached messages for ${name}`);
             socket.emit('chat-history', []);
         }
         
-        // ✅ Notify everyone that user joined
+        // Broadcast user joined message
         io.emit('user-joined', {
             name: name,
             message: `${name} joined the chat`
@@ -368,13 +368,17 @@ io.on('connection', (socket) => {
     // ========================================
     socket.on('send-message', (data) => {
         try {
+            console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
+            console.log('📨 Data received:', data);
+            
             const user = chatUsers.get(socket.id);
             if (!user) {
                 console.error('❌ User not found for socket:', socket.id);
                 return;
             }
             
-            console.log(`📨 Message from ${user.name}: "${data.message}"`);
+            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+            console.log(`📨 Current users online: ${chatUsers.size}`);
             
             const messageData = {
                 id: Date.now(),
@@ -386,15 +390,21 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             };
             
-            // ✅ Store in cache
+            // Store in cache
             messageCache.push(messageData);
             if (messageCache.length > 100) {
                 messageCache.shift();
             }
             
+            console.log(`📨 Message cached, total messages: ${messageCache.length}`);
+            
             // ✅ CRITICAL: Broadcast to ALL connected users
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+            
+            // Also log the socket IDs for debugging
+            const socketIds = Array.from(chatUsers.keys());
+            console.log(`📨 Active sockets: ${socketIds.join(', ')}`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
@@ -485,7 +495,7 @@ io.on('connection', (socket) => {
         if (user) {
             chatUsers.delete(socket.id);
             
-            // ✅ Send updated online users list
+            // Send updated online users list
             const onlineUsers = Array.from(chatUsers.values()).map(u => ({
                 id: u.id,
                 email: u.email,
@@ -493,7 +503,7 @@ io.on('connection', (socket) => {
             }));
             io.emit('online-users', onlineUsers);
             
-            // ✅ Notify everyone that user left
+            // Broadcast user left message
             io.emit('user-left', {
                 name: user.name,
                 message: `${user.name} left the chat`

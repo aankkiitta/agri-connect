@@ -290,7 +290,10 @@
                 
                 const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
                 
-                console.log('📤 Sending message:', message);
+                console.log('📤📤📤 SEND BUTTON CLICKED');
+                console.log('📤 Message:', message);
+                console.log('📤 Current User:', currentUser);
+                console.log('📤 Socket connected:', socket ? socket.connected : false);
                 
                 if (!message) {
                     console.log('❌ Empty message - ignoring');
@@ -326,8 +329,9 @@
                 appendMessage(displayData, 'right', elements.messageContainer);
                 
                 // ✅ Send to server
+                console.log('📤 Emitting send-message:', messageData);
                 socket.emit('send-message', messageData);
-                console.log('📤 Message sent to server');
+                console.log('📤 Message emitted to server');
                 
                 // Clear input
                 updatedMessageInput.value = '';
@@ -344,6 +348,7 @@
             if (updatedMessageInput) {
                 updatedMessageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
+                        console.log('📤 Enter key pressed');
                         e.preventDefault();
                         e.stopPropagation();
                         updatedForm.dispatchEvent(new Event('submit'));
