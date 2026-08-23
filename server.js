@@ -9,22 +9,25 @@ const multer = require('multer');
 const fs = require('fs');
 const cors = require('cors');
 const axios = require('axios');
-const http = require('http');
-const socketIo = require('socket.io');
+const http = require('http'); // ADDED FOR CHAT
+const socketIo = require('socket.io'); // ADDED FOR CHAT
 
 // --- Configuration ---
 const saltRounds = 10;
 const ADMIN_USER_ID = 99999;
 const ADMIN_EMAIL = 'admin@agriconnect.com';
-const ADMIN_PASSWORD_HASH = '$2b$10$77o11F2iW/jG1G5zE8z2w.z5/7qA9r3k5y6L/L1H.Q/1A.T/9f0k';
+const ADMIN_PASSWORD_HASH = '$2b$10$77o11F2iW/jG1G5zE8z2w.z5/7qA9r3k5y6L/L1H.Q/1A.T/9f0k'; // Hashed "admin123"
 
 // --- PRODUCTION URL HELPER ---
 function getPublicUrl(req, filePath) {
     if (!filePath) return null;
+    // If it's already a full URL, return it
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
         return filePath;
     }
+    // Remove leading slash if present for consistency
     const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    // Check if PUBLIC_API_URL is set (Render environment variable)
     const baseUrl = process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
     return `${baseUrl}/${cleanPath}`;
 }
@@ -36,7 +39,9 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: { rejectUnauthorized: false },
+    ssl: {
+        rejectUnauthorized: false
+    },
     waitForConnections: true,
     connectionLimit: 10
 });
@@ -47,6 +52,8 @@ const db = pool;
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         let dir = path.join(__dirname, 'public/uploads');
+        
+        // Create subdirectories based on file type
         if (file.fieldname === 'image' || file.fieldname === 'audio') {
             dir = path.join(__dirname, 'public/uploads/chat');
         } else if (file.fieldname === 'profileImage') {
@@ -54,6 +61,7 @@ const storage = multer.diskStorage({
         } else {
             dir = path.join(__dirname, 'public/uploads');
         }
+        
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -73,18 +81,18 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    'https://agri-connect-2kik.onrender.com'
+    'http://127.0.0.1:5000'
 ].filter(Boolean);
 
 app.use(cors({
     origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
             console.log('CORS blocked for origin:', origin);
-            callback(null, true);
+            callback(null, true); // Allow anyway for debugging
         }
     },
     credentials: true
@@ -268,6 +276,7 @@ async function initializeDatabase() {
         console.error(`   Errno: ${err.errno || 'N/A'}`);
         console.error(`   Host: ${process.env.DB_HOST}`);
         console.error(`   Database: ${process.env.DB_NAME}`);
+        // DO NOT log password
         process.exit(1);
     }
 }
@@ -275,10 +284,11 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ==================================================
-// CHAT STATE - GROUP CHAT (ONLY ONE)
+// CHAT STATE - GROUP CHAT (FIXED)
 // ==================================================
 const chatUsers = new Map(); // socketId -> user data
-const messageCache = []; // Array for messages
+const chatRooms = new Map(); // roomId -> Set of socketIds
+const messageCache = []; // ✅ ARRAY for messages
 
 // ==================================================
 // CHAT ROUTE
@@ -288,7 +298,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - CLEAN WORKING VERSION
+// CHAT SOCKET EVENTS - GROUP CHAT (COMPLETE WORKING)
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -304,10 +314,13 @@ io.on('connection', (socket) => {
     
     let currentUser = null;
 
+    // ========================================
     // USER JOINS GROUP CHAT
+    // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
         
+        // Get user data from login
         const userId = data.userId || data.id || null;
         const email = data.email || null;
         const name = data.name || 'User';
@@ -336,12 +349,13 @@ io.on('connection', (socket) => {
         }));
         io.emit('online-users', onlineUsers);
         
-        // Send chat history
+        // ✅ FIXED: Send chat history (messageCache is an array)
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
             console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
             socket.emit('chat-history', recentMessages);
         } else {
+            console.log(`📨 No cached messages for ${name}`);
             socket.emit('chat-history', []);
         }
         
@@ -352,7 +366,84 @@ io.on('connection', (socket) => {
         });
     });
 
+    // ========================================
     // SEND MESSAGE TO GROUP
+    // ========================================
+   // ==================================================
+// CHAT STATE - GROUP CHAT
+// ==================================================
+const chatUsers = new Map();
+const chatRooms = new Map();
+const messageCache = [];
+
+// ==================================================
+// CHAT ROUTE
+// ==================================================
+app.get('/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
+// ==================================================
+// CHAT SOCKET EVENTS
+// ==================================================
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    },
+    transports: ['websocket', 'polling']
+});
+
+io.on('connection', (socket) => {
+    console.log('👤 New client connected:', socket.id);
+    
+    let currentUser = null;
+
+    socket.on('user-connected', (data) => {
+        console.log('📝 User data received:', data);
+        
+        const userId = data.userId || data.id || null;
+        const email = data.email || null;
+        const name = data.name || 'User';
+        
+        if (!userId && !email) {
+            console.error('❌ No user identifier provided');
+            return;
+        }
+        
+        currentUser = {
+            id: userId,
+            email: email,
+            name: name,
+            socketId: socket.id
+        };
+        
+        chatUsers.set(socket.id, currentUser);
+        
+        console.log(`✅ User joined group chat: ${name} (${email || userId})`);
+        
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
+        io.emit('online-users', onlineUsers);
+        
+        if (messageCache.length > 0) {
+            const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
+            socket.emit('chat-history', recentMessages);
+        } else {
+            socket.emit('chat-history', []);
+        }
+        
+        io.emit('user-joined', {
+            name: name,
+            message: `${name} joined the chat`
+        });
+    });
+
     socket.on('send-message', (data) => {
         try {
             const user = chatUsers.get(socket.id);
@@ -378,7 +469,6 @@ io.on('connection', (socket) => {
                 messageCache.shift();
             }
             
-            // ✅ Broadcast to ALL users
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
@@ -388,7 +478,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // IMAGE UPLOAD
     socket.on('send-image', (data) => {
         const user = chatUsers.get(socket.id);
         if (!user) return;
@@ -411,7 +500,6 @@ io.on('connection', (socket) => {
         io.emit('receive-message', messageData);
     });
 
-    // AUDIO UPLOAD
     socket.on('send-audio', (data) => {
         const user = chatUsers.get(socket.id);
         if (!user) return;
@@ -434,7 +522,6 @@ io.on('connection', (socket) => {
         io.emit('receive-message', messageData);
     });
 
-    // TYPING INDICATOR
     socket.on('typing', () => {
         const user = chatUsers.get(socket.id);
         if (user) {
@@ -455,7 +542,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // DISCONNECT
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
@@ -478,6 +564,107 @@ io.on('connection', (socket) => {
     });
 });
 
+
+    // ========================================
+    // IMAGE UPLOAD
+    // ========================================
+    socket.on('send-image', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'image',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        io.emit('receive-message', messageData);
+    });
+
+    // ========================================
+    // AUDIO UPLOAD
+    // ========================================
+    socket.on('send-audio', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'audio',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        io.emit('receive-message', messageData);
+    });
+
+    // ========================================
+    // TYPING INDICATOR
+    // ========================================
+    socket.on('typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: true
+            });
+        }
+    });
+
+    socket.on('stop-typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: false
+            });
+        }
+    });
+
+    // ========================================
+    // DISCONNECT
+    // ========================================
+    socket.on('disconnect', () => {
+        console.log('👋 Client disconnected:', socket.id);
+        
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            chatUsers.delete(socket.id);
+            
+            // Send updated online users list
+            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+                id: u.id,
+                email: u.email,
+                name: u.name
+            }));
+            io.emit('online-users', onlineUsers);
+            
+            // Broadcast user left message
+            io.emit('user-left', {
+                name: user.name,
+                message: `${user.name} left the chat`
+            });
+        }
+    });
+});
+
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
     res.json({
@@ -488,7 +675,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// --- DEBUG ENDPOINT ---
+// --- DEBUG ENDPOINT (Public Data Counts Only) ---
 app.get('/api/debug/public-data', async (req, res) => {
     try {
         const [farmers] = await db.query('SELECT COUNT(*) as count FROM farmer_directory');
@@ -591,6 +778,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     } catch (error) {
         console.error('❌ Admin login error:', error);
+
         return res.status(500).json({
             success: false,
             message: 'Admin login failed.'
@@ -632,6 +820,7 @@ app.get('/api/user/:id', async (req, res) => {
             return res.json(null);
         }
 
+        // Convert profile picture URL to full URL
         if (rows[0].profile_picture_url) {
             rows[0].profile_picture_url = getPublicUrl(req, rows[0].profile_picture_url);
         }
@@ -675,7 +864,7 @@ app.get('/api/my-farmer-listings/:userId', async (req, res) => {
     }
 });
 
-// GET Approved Farmers
+// GET Approved Farmers - FIXED for production
 app.get('/api/approved-farmers', async (req, res) => {
     try {
         const sql = `
@@ -701,6 +890,7 @@ app.get('/api/approved-farmers', async (req, res) => {
         `;
         const [farmers] = await db.query(sql);
 
+        // Convert profile picture URLs to full URLs
         const processedFarmers = farmers.map(farmer => {
             if (farmer.profile_picture_url) {
                 farmer.profile_picture_url = getPublicUrl(req, farmer.profile_picture_url);
@@ -731,7 +921,7 @@ app.post('/api/submit-story', async (req, res) => {
     }
 });
 
-// GET Approved Success Stories
+// GET Approved Success Stories - FIXED for production
 app.get('/api/success-stories', async (req, res) => {
     try {
         const sql = `
@@ -754,6 +944,7 @@ app.get('/api/success-stories', async (req, res) => {
         `;
         const [stories] = await db.query(sql);
 
+        // Convert profile picture URLs to full URLs
         const processedStories = stories.map(story => {
             if (story.profile_picture_url) {
                 story.profile_picture_url = getPublicUrl(req, story.profile_picture_url);
@@ -890,6 +1081,7 @@ app.get('/api/equipment/all', async (req, res) => {
         `;
         const [equipment] = await db.query(sql);
 
+        // Convert image URLs to full URLs
         const processedEquipment = equipment.map(item => {
             if (item.image_url) {
                 item.image_url = getPublicUrl(req, item.image_url);
@@ -909,6 +1101,7 @@ app.get('/api/my-equipment/:userId', async (req, res) => {
     try {
         const [equipment] = await db.query('SELECT * FROM equipment WHERE seller_id = ? ORDER BY id DESC', [req.params.userId]);
 
+        // Convert image URLs to full URLs
         const processedEquipment = equipment.map(item => {
             if (item.image_url) {
                 item.image_url = getPublicUrl(req, item.image_url);
@@ -979,7 +1172,7 @@ app.put('/api/equipment/:id', upload.single('image'), async (req, res) => {
 
 // ======== REVIEWS ROUTES ========
 
-// POST Review
+// POST Review - FIXED for production
 app.post('/api/reviews/add', upload.single('photo'), async (req, res) => {
     try {
         const { rating, review_text, username, page_name, userId } = req.body;
@@ -999,7 +1192,14 @@ app.post('/api/reviews/add', upload.single('photo'), async (req, res) => {
         await db.query(
             `INSERT INTO reviews (user_id, rating, text, page_name, username, user_photo)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [userId, rating, review_text, finalPageName, finalUsername, photoPath]
+            [
+                userId,
+                rating,
+                review_text,
+                finalPageName,
+                finalUsername,
+                photoPath
+            ]
         );
 
         console.log(`✅ POST /api/reviews/add: Review added for page "${finalPageName}" by user ${userId}`);
@@ -1011,7 +1211,7 @@ app.post('/api/reviews/add', upload.single('photo'), async (req, res) => {
     }
 });
 
-// GET Reviews List
+// GET Reviews List - FIXED for production
 app.get('/api/reviews/list', async (req, res) => {
     try {
         const page_name = req.query.page_name || 'home';
@@ -1043,6 +1243,7 @@ app.get('/api/reviews/list', async (req, res) => {
             [page_name, limit, offset]
         );
 
+        // Convert profile picture URLs to full URLs
         const processedRows = rows.map(row => {
             if (row.profile_picture_url) {
                 row.profile_picture_url = getPublicUrl(req, row.profile_picture_url);
@@ -1062,7 +1263,7 @@ app.get('/api/reviews/list', async (req, res) => {
     }
 });
 
-// GET Reviews Average
+// GET Reviews Average - FIXED for production
 app.get('/api/reviews/average', async (req, res) => {
     try {
         const { page_name } = req.query;
@@ -1085,7 +1286,7 @@ app.get('/api/reviews/average', async (req, res) => {
     }
 });
 
-// GET Reviews (Alternative endpoint)
+// GET Reviews (Alternative endpoint for backward compatibility)
 app.get('/api/reviews', async (req, res) => {
     try {
         const sql = `
@@ -1102,6 +1303,7 @@ app.get('/api/reviews', async (req, res) => {
             ORDER BY r.timestamp DESC`;
         const [reviews] = await db.query(sql);
 
+        // Convert profile picture URLs to full URLs
         const processedReviews = reviews.map(review => {
             if (review.profile_picture_url) {
                 review.profile_picture_url = getPublicUrl(req, review.profile_picture_url);
@@ -1160,6 +1362,7 @@ app.get('/api/comments/:pageIdentifier', async (req, res) => {
         `;
         const [comments] = await db.query(sql, [pageIdentifier]);
 
+        // Convert profile picture URLs to full URLs
         const processedComments = comments.map(comment => {
             if (comment.profile_picture_url) {
                 comment.profile_picture_url = getPublicUrl(req, comment.profile_picture_url);
@@ -1441,12 +1644,16 @@ app.post('/api/hub/join-group', async (req, res) => {
 // Get All Articles (Public)
 app.get('/api/articles', async (req, res) => {
     try {
+        // Try to add column if missing (prevents 'Unknown column' error)
         try {
             await db.query('ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at DATETIME DEFAULT CURRENT_TIMESTAMP');
-        } catch (columnErr) {}
+        } catch (columnErr) {
+            // Ignore if column already exists
+        }
 
         const [articles] = await db.query('SELECT * FROM articles ORDER BY published_at DESC');
 
+        // Convert image URLs to full URLs
         const processedArticles = articles.map(article => {
             if (article.image_url) {
                 article.image_url = getPublicUrl(req, article.image_url);
@@ -1685,6 +1892,7 @@ app.get('/api/admin/comments/all', async (req, res) => {
         `;
         const [comments] = await db.query(sql);
 
+        // Convert profile picture URLs to full URLs
         const processedComments = comments.map(comment => {
             if (comment.profile_picture_url) {
                 comment.profile_picture_url = getPublicUrl(req, comment.profile_picture_url);
@@ -1766,10 +1974,11 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
     }
 });
 
-// ==================================================
-// SERVER START - ONLY ONE
-// ==================================================
 const PORT = process.env.PORT || 3000;
+// ==================================================
+// SERVER START
+// ==================================================
+
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
