@@ -1610,7 +1610,7 @@ function googleTranslateElementInit() {
 
 
 <!-- ========================================== -->
-<!-- FLOATING CHAT ICON -->
+<!-- FLOATING CHAT ICON - Full Widget Mode -->
 <!-- ========================================== -->
 
 <style>
@@ -1918,38 +1918,44 @@ function googleTranslateElementInit() {
 </div>
 
 <script>
+// Make sure Socket.IO is loaded
+function loadSocketIO() {
+    if (document.querySelector('script[src*="socket.io"]')) {
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.socket.io/4.8.1/socket.io.min.js';
+    document.head.appendChild(script);
+}
+
+// Load chat widget script
+function loadChatWidget() {
+    if (document.querySelector('script[src*="chat.js"]')) {
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = '/js/chat.js';
+    script.async = true;
+    script.onload = function() {
+        console.log('✅ Chat widget loaded');
+    };
+    script.onerror = function() {
+        console.error('❌ Failed to load chat widget');
+    };
+    document.body.appendChild(script);
+}
+
 // Toggle chat widget
 function toggleChat() {
     const container = document.getElementById('chat-widget-container');
     container.classList.toggle('active');
     if (container.classList.contains('active')) {
         document.getElementById('chatBadge').style.display = 'none';
+        // Load chat widget when opened
+        loadSocketIO();
+        loadChatWidget();
     }
 }
-
-// Load chat script
-function loadChat() {
-    if (document.querySelector('script[src*="chat.js"]')) {
-        console.log('✅ Chat script already loaded');
-        return;
-    }
-    
-    const script = document.createElement('script');
-    script.src = '/js/chat.js';
-    script.async = true;
-    script.onload = function() {
-        console.log('✅ Chat script loaded successfully');
-    };
-    script.onerror = function() {
-        console.error('❌ Failed to load chat script');
-    };
-    document.body.appendChild(script);
-}
-
-// Load chat when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadChat();
-});
 
 // Close chat when clicking outside
 document.addEventListener('click', function(e) {
@@ -1959,6 +1965,16 @@ document.addEventListener('click', function(e) {
         if (!container.contains(e.target) && !launcher.contains(e.target)) {
             container.classList.remove('active');
         }
+    }
+});
+
+// Load chat on page load (optional - set to true to load automatically)
+document.addEventListener('DOMContentLoaded', function() {
+    // Set to true to load chat automatically, false to load on click
+    const autoLoad = false;
+    if (autoLoad) {
+        loadSocketIO();
+        loadChatWidget();
     }
 });
 </script>
