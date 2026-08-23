@@ -94,7 +94,7 @@
     // ========================================
     // APPEND MESSAGE
     // ========================================
-    function appendMessage(data, position, messageContainer) {
+    function appendMessage(data, position, messageContainer, currentUser) {
         if (!messageContainer) return;
         
         const messageElement = document.createElement('div');
@@ -210,7 +210,7 @@
                     messages.forEach(msg => {
                         const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
                         const position = isOwn ? 'right' : 'left';
-                        appendMessage(msg, position, elements.messageContainer);
+                        appendMessage(msg, position, elements.messageContainer, currentUser);
                     });
                 }
             }
@@ -224,7 +224,7 @@
             
             const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
             const position = isOwn ? 'right' : 'left';
-            appendMessage(data, position, elements.messageContainer);
+            appendMessage(data, position, elements.messageContainer, currentUser);
         });
 
         // ========================================
@@ -268,35 +268,44 @@
         });
 
         // ========================================
-        // SEND MESSAGE - FIXED
+        // SEND MESSAGE - CRITICAL FIX
         // ========================================
         if (elements.form) {
-            // CRITICAL: Use a direct event listener with preventDefault
-            elements.form.addEventListener('submit', function(e) {
-                // ✅ CRITICAL - These prevent page refresh
-                e.preventDefault();
-                e.stopPropagation();
+            // ✅ IMPORTANT: Remove all existing event listeners by cloning
+            const oldForm = elements.form;
+            const newForm = oldForm.cloneNode(true);
+            oldForm.parentNode.replaceChild(newForm, oldForm);
+            
+            // Re-get the form references
+            const updatedForm = document.getElementById('send-container');
+            const updatedMessageInput = document.getElementById('messageimp');
+            const updatedSendBtn = document.getElementById('send-btn');
+            const updatedRecordBtn = document.getElementById('record-btn');
+            
+            // ✅ CRITICAL: Form submit handler with preventDefault
+            updatedForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // ✅ Stops page refresh
+                e.stopPropagation(); // ✅ Stops event bubbling
                 
-                const messageInput = document.getElementById('messageimp');
-                const message = messageInput ? messageInput.value.trim() : '';
+                const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
                 
                 console.log('📤 Sending message:', message);
                 
                 if (!message) {
                     console.log('❌ Empty message - ignoring');
-                    return false;
+                    return;
                 }
                 
                 if (!socket || !socket.connected) {
                     console.log('❌ Socket not connected');
                     alert('Please wait, connecting to chat...');
-                    return false;
+                    return;
                 }
                 
                 if (!currentUser) {
                     console.log('❌ No user logged in');
                     alert('Please login first');
-                    return false;
+                    return;
                 }
                 
                 const messageData = {
@@ -313,51 +322,42 @@
                     userId: currentUser.id,
                     timestamp: new Date().toISOString()
                 };
-                appendMessage(displayData, 'right', elements.messageContainer);
+                appendMessage(displayData, 'right', elements.messageContainer, currentUser);
                 
                 // Send to server
                 socket.emit('send-message', messageData);
                 console.log('📤 Message sent to server');
                 
                 // Clear input
-                messageInput.value = '';
-                messageInput.focus();
+                updatedMessageInput.value = '';
+                updatedMessageInput.focus();
                 
                 // Reset UI
-                const sendBtn = document.getElementById('send-btn');
-                const recordBtn = document.getElementById('record-btn');
-                if (recordBtn) recordBtn.style.display = 'flex';
-                if (sendBtn) sendBtn.style.display = 'none';
+                if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
+                if (updatedSendBtn) updatedSendBtn.style.display = 'none';
                 
-                return false;
+                return false; // ✅ Extra prevention
             });
             
-            // Handle Enter key
-            const messageInput = document.getElementById('messageimp');
-            if (messageInput) {
-                messageInput.addEventListener('keydown', function(e) {
+            // ✅ CRITICAL: Handle Enter key
+            if (updatedMessageInput) {
+                updatedMessageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
+                        e.preventDefault(); // ✅ Stops default Enter behavior
                         e.stopPropagation();
-                        // Trigger form submit
-                        const form = document.getElementById('send-container');
-                        if (form) {
-                            form.dispatchEvent(new Event('submit', { bubbles: false, cancelable: true }));
-                        }
+                        updatedForm.dispatchEvent(new Event('submit'));
                         return false;
                     }
                 });
                 
                 // Show/hide send button
-                messageInput.addEventListener('input', function() {
-                    const sendBtn = document.getElementById('send-btn');
-                    const recordBtn = document.getElementById('record-btn');
+                updatedMessageInput.addEventListener('input', function() {
                     if (this.value.trim() !== '') {
-                        if (sendBtn) sendBtn.style.display = 'flex';
-                        if (recordBtn) recordBtn.style.display = 'none';
+                        if (updatedSendBtn) updatedSendBtn.style.display = 'flex';
+                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'none';
                     } else {
-                        if (sendBtn) sendBtn.style.display = 'none';
-                        if (recordBtn) recordBtn.style.display = 'flex';
+                        if (updatedSendBtn) updatedSendBtn.style.display = 'none';
+                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
                     }
                 });
             }
@@ -411,7 +411,7 @@
                             userId: currentUser.id,
                             timestamp: new Date().toISOString()
                         };
-                        appendMessage(displayData, 'right', elements.messageContainer);
+                        appendMessage(displayData, 'right', elements.messageContainer, currentUser);
                         socket.emit('send-image', { filePath: data.filePath });
                     }
                 } catch (error) {
@@ -475,7 +475,7 @@
                                 userId: currentUser.id,
                                 timestamp: new Date().toISOString()
                             };
-                            appendMessage(displayData, 'right', elements.messageContainer);
+                            appendMessage(displayData, 'right', elements.messageContainer, currentUser);
                             socket.emit('send-audio', { filePath: data.filePath });
                         }
                     } catch (error) {
