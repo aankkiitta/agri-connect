@@ -268,22 +268,22 @@
         });
 
         // ========================================
-        // SEND MESSAGE
+        // SEND MESSAGE - FIXED
         // ========================================
         if (elements.form) {
-            const updatedForm = elements.form;
-            const updatedMessageInput = document.getElementById('messageimp');
-            const updatedSendBtn = document.getElementById('send-btn');
-            const updatedRecordBtn = document.getElementById('record-btn');
-            
-            updatedForm.addEventListener('submit', function(e) {
+            // CRITICAL: Use a direct event listener with preventDefault
+            elements.form.addEventListener('submit', function(e) {
+                // ✅ CRITICAL - These prevent page refresh
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
+                const messageInput = document.getElementById('messageimp');
+                const message = messageInput ? messageInput.value.trim() : '';
+                
+                console.log('📤 Sending message:', message);
                 
                 if (!message) {
-                    console.log('❌ Empty message');
+                    console.log('❌ Empty message - ignoring');
                     return false;
                 }
                 
@@ -304,6 +304,7 @@
                     message_type: 'text'
                 };
                 
+                // Display immediately for sender
                 const displayData = {
                     message: message,
                     message_type: 'text',
@@ -319,32 +320,44 @@
                 console.log('📤 Message sent to server');
                 
                 // Clear input
-                updatedMessageInput.value = '';
-                updatedMessageInput.focus();
+                messageInput.value = '';
+                messageInput.focus();
                 
-                if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
-                if (updatedSendBtn) updatedSendBtn.style.display = 'none';
+                // Reset UI
+                const sendBtn = document.getElementById('send-btn');
+                const recordBtn = document.getElementById('record-btn');
+                if (recordBtn) recordBtn.style.display = 'flex';
+                if (sendBtn) sendBtn.style.display = 'none';
                 
                 return false;
             });
             
-            if (updatedMessageInput) {
-                updatedMessageInput.addEventListener('keydown', function(e) {
+            // Handle Enter key
+            const messageInput = document.getElementById('messageimp');
+            if (messageInput) {
+                messageInput.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         e.stopPropagation();
-                        updatedForm.dispatchEvent(new Event('submit'));
+                        // Trigger form submit
+                        const form = document.getElementById('send-container');
+                        if (form) {
+                            form.dispatchEvent(new Event('submit', { bubbles: false, cancelable: true }));
+                        }
                         return false;
                     }
                 });
                 
-                updatedMessageInput.addEventListener('input', function() {
+                // Show/hide send button
+                messageInput.addEventListener('input', function() {
+                    const sendBtn = document.getElementById('send-btn');
+                    const recordBtn = document.getElementById('record-btn');
                     if (this.value.trim() !== '') {
-                        if (updatedSendBtn) updatedSendBtn.style.display = 'flex';
-                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'none';
+                        if (sendBtn) sendBtn.style.display = 'flex';
+                        if (recordBtn) recordBtn.style.display = 'none';
                     } else {
-                        if (updatedSendBtn) updatedSendBtn.style.display = 'none';
-                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
+                        if (sendBtn) sendBtn.style.display = 'none';
+                        if (recordBtn) recordBtn.style.display = 'flex';
                     }
                 });
             }
