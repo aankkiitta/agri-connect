@@ -2,11 +2,6 @@
     console.log('🔄 Chat.js loaded...');
     
     // ========================================
-    // CHECK IF WE'RE ON FULL PAGE OR WIDGET
-    // ========================================
-    const isFullPage = document.getElementById('chat-widget-container') !== null;
-    
-    // ========================================
     // AUTO-DETECT SERVER URL
     // ========================================
     const SERVER_URL = window.location.origin;
@@ -53,105 +48,28 @@
     currentUser = getCurrentUser();
     
     // ========================================
+    // CHECK IF FULL PAGE OR WIDGET
+    // ========================================
+    const isFullPage = document.getElementById('chat-widget-container') !== null && 
+                       document.getElementById('chat-widget-container').classList.contains('full-page');
+
+    // ========================================
     // START CHAT
     // ========================================
     if (currentUser) {
-        console.log('✅ Starting group chat');
-        
-        if (isFullPage) {
-            // Full page - use existing container
-            initializeChatFullPage();
-        } else {
-            // Widget mode - create launcher and widget
-            createLauncherAndWidget();
-        }
+        console.log('✅ Starting chat...');
+        initializeChat();
     } else {
         console.log('❌ No user logged in');
-        if (!isFullPage) {
-            createLoginPromptWidget();
-        } else {
-            // Show login prompt on full page
-            showLoginPromptFullPage();
+        if (isFullPage) {
+            showLoginPrompt();
         }
     }
 
     // ========================================
-    // CREATE LAUNCHER AND WIDGET (Widget Mode)
+    // SHOW LOGIN PROMPT
     // ========================================
-    function createLauncherAndWidget() {
-        console.log('🔄 Creating chat launcher and widget...');
-        
-        // Create launcher
-        const launcher = document.createElement('div');
-        launcher.id = 'chat-launcher';
-        launcher.innerHTML = `
-            <i class="fa-solid fa-message"></i>
-            <span id="chat-unread-badge"></span>
-        `;
-        document.body.appendChild(launcher);
-
-        // Create widget container
-        const widgetContainer = document.createElement('div');
-        widgetContainer.id = 'chat-widget-container';
-        widgetContainer.innerHTML = `
-            <nav>
-                <h1>💬 KISAN CIRCLE GROUP</h1>
-                <div id="user-count-container">
-                    <span id="user-count-dot"></span>
-                    <span id="user-count-text">Connecting...</span>
-                </div>
-                <button id="chat-widget-close">&times;</button>
-            </nav>
-            <div class="container active"></div>
-            <div id="typing-indicator"></div>
-            <div class="send active">
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <form action="#" id="send-container">
-                    <button type="button" class="btn-icon" id="attach-file-btn">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
-                    <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-                    <button class="btn" type="submit" id="send-btn" style="display: none;">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                    <button type="button" class="btn" id="record-btn">
-                        <i class="fa-solid fa-microphone"></i>
-                    </button>
-                </form>
-            </div>`;
-        
-        document.body.appendChild(widgetContainer);
-        
-        // Add click events
-        launcher.addEventListener('click', () => {
-            widgetContainer.classList.add('active');
-            launcher.style.display = 'none';
-        });
-        
-        const closeBtn = widgetContainer.querySelector('#chat-widget-close');
-        closeBtn.addEventListener('click', () => {
-            widgetContainer.classList.remove('active');
-            launcher.style.display = 'flex';
-        });
-        
-        // Initialize chat
-        initializeChat(widgetContainer, launcher);
-    }
-
-    // ========================================
-    // INITIALIZE FULL PAGE CHAT
-    // ========================================
-    function initializeChatFullPage() {
-        console.log('🔄 Initializing full page chat...');
-        const widgetContainer = document.getElementById('chat-widget-container');
-        const launcher = null; // No launcher for full page
-        initializeChat(widgetContainer, launcher);
-    }
-
-    // ========================================
-    // SHOW LOGIN PROMPT ON FULL PAGE
-    // ========================================
-    function showLoginPromptFullPage() {
+    function showLoginPrompt() {
         const container = document.getElementById('chat-widget-container');
         if (container) {
             container.innerHTML = `
@@ -170,78 +88,40 @@
     }
 
     // ========================================
-    // CREATE LOGIN PROMPT WIDGET
+    // INITIALIZE CHAT
     // ========================================
-    function createLoginPromptWidget() {
-        const launcher = document.createElement('div');
-        launcher.id = 'chat-launcher';
-        launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
-        document.body.appendChild(launcher);
+    function initializeChat() {
+        // Get DOM elements
+        const widget = document.getElementById('chat-widget-container');
+        const form = document.getElementById('send-container');
+        const messageInput = document.getElementById('messageimp');
+        const messageContainer = document.getElementById('messageContainer') || document.querySelector('.container');
+        const userCountText = document.getElementById('user-count-text');
+        const userCountDot = document.getElementById('user-count-dot');
+        const attachFileBtn = document.getElementById('attach-file-btn');
+        const imageInput = document.getElementById('image-input');
+        const sendBtn = document.getElementById('send-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
 
-        const widgetContainer = document.createElement('div');
-        widgetContainer.id = 'chat-widget-container';
-        widgetContainer.innerHTML = `
-            <nav>
-                <h1>🔐 LOGIN REQUIRED</h1>
-                <button id="chat-widget-close-prompt">&times;</button>
-            </nav>
-            <div id="join-modal">
-                <div id="join-box">
-                    <h2>🔐 LOGIN REQUIRED</h2>
-                    <p>Please login to access Kisan Circle chat.</p>
-                    <div style="margin-top: 20px;">
-                        <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600;">Go to Login</a>
-                    </div>
-                </div>
-            </div>`;
-        document.body.appendChild(widgetContainer);
-        
-        const closeBtn = widgetContainer.querySelector('#chat-widget-close-prompt');
-        launcher.addEventListener('click', () => { 
-            widgetContainer.classList.add('active'); 
-            launcher.style.display = 'none'; 
-        });
-        closeBtn.addEventListener('click', () => { 
-            widgetContainer.classList.remove('active'); 
-            launcher.style.display = 'flex'; 
-        });
-    }
+        if (!widget) {
+            console.error('❌ Chat widget not found');
+            return;
+        }
 
-    // ========================================
-    // MAIN CHAT LOGIC
-    // ========================================
-    function initializeChat(widget, launcher) {
         console.log('🔄 Initializing chat...');
         console.log('👤 User:', currentUser);
         console.log(`🔗 Server URL: ${SERVER_URL}`);
-        
-        // Connect to Socket.IO
+
+        // ========================================
+        // CONNECT TO SOCKET.IO
+        // ========================================
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionAttempts: 10,
             reconnectionDelay: 1000
         });
-
-        const form = widget.querySelector('#send-container');
-        const messageInput = widget.querySelector('#messageimp');
-        const messageContainer = widget.querySelector('.container');
-        const closeBtn = widget.querySelector('#chat-widget-close') || widget.querySelector('#chat-widget-close-prompt');
-        const unreadBadge = launcher ? launcher.querySelector('#chat-unread-badge') : null;
-        const userCountText = widget.querySelector('#user-count-text');
-        const userCountDot = widget.querySelector('#user-count-dot');
-        const attachFileBtn = widget.querySelector('#attach-file-btn');
-        const imageInput = widget.querySelector('#image-input');
-        const sendBtn = widget.querySelector('#send-btn');
-        const recordBtn = widget.querySelector('#record-btn');
-        const typingIndicator = widget.querySelector('#typing-indicator');
-
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let isTyping = false;
-        let typingTimer;
-        let unreadCount = 0;
 
         // ========================================
         // SOCKET EVENTS
@@ -272,7 +152,9 @@
             if (userCountText) userCountText.textContent = 'Reconnecting...';
         });
 
-        // Chat history
+        // ========================================
+        // RECEIVE CHAT HISTORY
+        // ========================================
         socket.on('chat-history', (messages) => {
             console.log(`📨 Received ${messages ? messages.length : 0} messages`);
             if (messageContainer) {
@@ -287,7 +169,20 @@
             }
         });
 
-        // Online users
+        // ========================================
+        // RECEIVE MESSAGE (REAL-TIME)
+        // ========================================
+        socket.on('receive-message', (data) => {
+            console.log('📨📨📨 MESSAGE RECEIVED:', data);
+            
+            const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
+            const position = isOwn ? 'right' : 'left';
+            appendMessage(data, position);
+        });
+
+        // ========================================
+        // ONLINE USERS
+        // ========================================
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const count = users ? users.length : 0;
@@ -299,34 +194,22 @@
             }
         });
 
-        // User joined
+        // ========================================
+        // USER JOINED/LEFT
+        // ========================================
         socket.on('user-joined', (data) => {
             console.log('👤 User joined:', data);
             appendSystemMessage(data.message);
         });
 
-        // User left
         socket.on('user-left', (data) => {
             console.log('👤 User left:', data);
             appendSystemMessage(data.message);
         });
 
-        // Receive message
-        socket.on('receive-message', (data) => {
-            console.log('📨📨📨 MESSAGE RECEIVED:', data);
-            
-            const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
-            const position = isOwn ? 'right' : 'left';
-            appendMessage(data, position);
-            
-            if (unreadBadge && !widget.classList.contains('active')) {
-                unreadCount++;
-                unreadBadge.innerText = unreadCount;
-                unreadBadge.style.display = 'flex';
-            }
-        });
-
-        // Typing indicator
+        // ========================================
+        // TYPING INDICATOR
+        // ========================================
         socket.on('user-typing', (data) => {
             if (typingIndicator) {
                 if (data.isTyping) {
@@ -382,12 +265,16 @@
         }
 
         // ========================================
-        // SEND MESSAGE
+        // SEND MESSAGE - FIXED (No Page Refresh)
         // ========================================
         if (form) {
             form.addEventListener('submit', (e) => {
-                e.preventDefault();
+                e.preventDefault(); // ✅ PREVENTS PAGE REFRESH
+                
                 const message = messageInput ? messageInput.value.trim() : '';
+                
+                console.log('📤 SEND BUTTON CLICKED');
+                console.log('📤 Message:', message);
                 
                 if (!message || !socket || !currentUser) {
                     console.error('❌ Cannot send message');
@@ -399,7 +286,7 @@
                     message_type: 'text'
                 };
                 
-                console.log('📤 Sending message:', messageData);
+                console.log('📤 Sending message data:', messageData);
                 
                 // Display immediately for sender
                 const displayData = {
@@ -413,7 +300,9 @@
                 
                 // Send to server
                 socket.emit('send-message', messageData);
+                console.log('📤 Message emitted to server');
                 
+                // Clear input
                 if (messageInput) {
                     messageInput.value = '';
                 }
@@ -555,27 +444,10 @@
             });
         }
 
-        // ========================================
-        // LAUNCHER CLICK (for widget mode)
-        // ========================================
-        if (launcher) {
-            launcher.addEventListener('click', () => { 
-                widget.classList.add('active'); 
-                launcher.style.display = 'none'; 
-                unreadCount = 0; 
-                if (unreadBadge) {
-                    unreadBadge.style.display = 'none'; 
-                }
-            });
-        }
-        
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => { 
-                if (launcher) {
-                    widget.classList.remove('active'); 
-                    launcher.style.display = 'flex'; 
-                }
-            });
-        }
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let isTyping = false;
+        let typingTimer;
     }
 })();

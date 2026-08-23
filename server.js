@@ -1814,11 +1814,8 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
     }
 });
 
-// ======== SERVER START ========
 const PORT = process.env.PORT || 3000;
-// ==================================================
-// SERVER START
-// ==================================================
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
