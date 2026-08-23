@@ -74,7 +74,7 @@
             border-radius: 50%;
             display: inline-block;
             margin-right: 5px;
-            background-color: #32CD32;
+            background-color: #ffaa00;
         }
         
         #user-count-text {
@@ -478,7 +478,7 @@
         <!-- Message Input Area -->
         <div class="send active">
             <input type="file" id="image-input" accept="image/*" style="display: none;">
-            <form id="send-container" onsubmit="return false;">
+            <form id="send-container">
                 <button type="button" class="btn-icon" id="attach-file-btn">
                     <i class="fa-solid fa-paperclip"></i>
                 </button>
@@ -497,9 +497,10 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     
     <script>
-        // Prevent form from reloading page
+        // Debug: Log when form is submitted
         document.addEventListener('submit', function(e) {
             if (e.target && e.target.id === 'send-container') {
+                console.log('🔴 FORM SUBMITTED - preventing default');
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -508,6 +509,7 @@
         
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'messageimp') {
+                console.log('🔴 ENTER KEY PRESSED - preventing default');
                 e.preventDefault();
                 e.stopPropagation();
                 return false;

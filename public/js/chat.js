@@ -1,7 +1,10 @@
 (function() {
     console.log('🔄 Chat.js loaded...');
+    console.log('📍 Current URL:', window.location.href);
     
     const SERVER_URL = window.location.origin;
+    console.log('🔗 Server URL:', SERVER_URL);
+    
     let socket = null;
     let currentUser = null;
     let isConnected = false;
@@ -15,11 +18,13 @@
     // GET USER FROM localStorage
     // ========================================
     function getCurrentUser() {
+        console.log('🔍 Looking for user in localStorage...');
         try {
             const keys = ['agriUser', 'user', 'userData', 'authUser'];
             
             for (const key of keys) {
                 const data = localStorage.getItem(key);
+                console.log(`📦 Checking key "${key}":`, data ? 'Found' : 'Not found');
                 if (data) {
                     try {
                         const user = JSON.parse(data);
@@ -33,11 +38,13 @@
                             console.log(`✅ User: ${name} (${email})`);
                             return { id: userId, email, name };
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn(`⚠️ Failed to parse data from key: ${key}`);
+                    }
                 }
             }
             
-            console.warn('⚠️ No user data found');
+            console.warn('⚠️ No user data found in localStorage');
             return null;
         } catch (error) {
             console.error('Error getting user:', error);
@@ -63,8 +70,16 @@
             typingIndicator: document.getElementById('typing-indicator')
         };
         
+        console.log('📋 DOM Elements found:', {
+            widget: !!elements.widget,
+            form: !!elements.form,
+            messageInput: !!elements.messageInput,
+            messageContainer: !!elements.messageContainer
+        });
+        
         if (!elements.messageContainer) {
             elements.messageContainer = document.querySelector('.container');
+            console.log('📋 Using fallback .container');
         }
         
         return elements;
@@ -95,7 +110,12 @@
     // APPEND MESSAGE
     // ========================================
     function appendMessage(data, position, messageContainer) {
-        if (!messageContainer) return;
+        if (!messageContainer) {
+            console.error('❌ No message container!');
+            return;
+        }
+        
+        console.log(`📝 Appending message: ${data.message} (${position})`);
         
         const messageElement = document.createElement('div');
         messageElement.classList.add('message');
@@ -124,8 +144,7 @@
         
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
-        
-        console.log(`📝 Message appended to UI: ${messageContent}`);
+        console.log('✅ Message appended to UI');
     }
 
     function appendSystemMessage(text, messageContainer) {
@@ -138,22 +157,11 @@
     }
 
     // ========================================
-    // UPDATE USER COUNT
-    // ========================================
-    function updateUserCount(count, elements) {
-        if (elements.userCountText) {
-            elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
-        }
-        if (elements.userCountDot) {
-            elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
-        }
-        console.log(`👥 User count updated: ${count} online`);
-    }
-
-    // ========================================
     // INITIALIZE CHAT
     // ========================================
     function initializeChat() {
+        console.log('🚀 Initializing chat...');
+        
         currentUser = getCurrentUser();
         
         if (!currentUser) {
@@ -177,6 +185,7 @@
         // ========================================
         // CONNECT TO SOCKET.IO
         // ========================================
+        console.log('📡 Connecting to Socket.IO...');
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -192,37 +201,26 @@
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
             
-            updateUserCount(0, elements);
+            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#32CD32';
+            if (elements.userCountText) elements.userCountText.textContent = 'Online';
             
             if (currentUser) {
                 console.log('📤 Sending user data:', currentUser);
                 socket.emit('user-connected', currentUser);
             }
-            
-            // Request online users
-            socket.emit('get-online-users');
         });
 
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from chat server');
             isConnected = false;
-            updateUserCount(0, elements);
+            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ff4444';
+            if (elements.userCountText) elements.userCountText.textContent = 'Offline';
         });
 
         socket.on('connect_error', (error) => {
             console.error('❌ Connection error:', error);
             if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ffaa00';
             if (elements.userCountText) elements.userCountText.textContent = 'Reconnecting...';
-        });
-
-        // ========================================
-        // USER JOINED CONFIRMATION
-        // ========================================
-        socket.on('user-joined-confirm', (data) => {
-            console.log('✅ User join confirmed:', data);
-            if (data.usersOnline) {
-                updateUserCount(data.usersOnline, elements);
-            }
         });
 
         // ========================================
@@ -255,19 +253,17 @@
         });
 
         // ========================================
-        // MESSAGE SENT CONFIRMATION
-        // ========================================
-        socket.on('message-sent-confirm', (data) => {
-            console.log('✅ Message sent confirmation:', data);
-        });
-
-        // ========================================
         // ONLINE USERS
         // ========================================
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const count = users ? users.length : 0;
-            updateUserCount(count, elements);
+            if (elements.userCountText) {
+                elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
+            }
+            if (elements.userCountDot) {
+                elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+            }
         });
 
         // ========================================
@@ -297,34 +293,40 @@
         });
 
         // ========================================
-        // SEND MESSAGE
+        // SEND MESSAGE - SIMPLIFIED FIX
         // ========================================
         if (elements.form) {
-            // Remove any existing listeners by cloning
-            const oldForm = elements.form;
-            const newForm = oldForm.cloneNode(true);
-            oldForm.parentNode.replaceChild(newForm, oldForm);
+            console.log('📋 Setting up form handler...');
             
-            // Re-get the form reference
-            const updatedForm = document.getElementById('send-container');
-            const updatedMessageInput = document.getElementById('messageimp');
-            const updatedSendBtn = document.getElementById('send-btn');
-            const updatedRecordBtn = document.getElementById('record-btn');
+            // Get the form and input
+            const form = document.getElementById('send-container');
+            const messageInput = document.getElementById('messageimp');
+            const sendBtn = document.getElementById('send-btn');
+            const recordBtn = document.getElementById('record-btn');
             
-            // Handle form submission
-            updatedForm.addEventListener('submit', function(e) {
+            if (!form) {
+                console.error('❌ Form not found!');
+                return;
+            }
+            
+            if (!messageInput) {
+                console.error('❌ Message input not found!');
+                return;
+            }
+            
+            console.log('✅ Form and input found');
+            
+            // ✅ SIMPLE FORM SUBMIT HANDLER
+            form.addEventListener('submit', function(e) {
+                console.log('🔴🔴🔴 FORM SUBMIT EVENT TRIGGERED');
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
-                
-                console.log('📤📤📤 SEND BUTTON CLICKED');
+                const message = messageInput.value.trim();
                 console.log('📤 Message:', message);
-                console.log('📤 Current User:', currentUser);
-                console.log('📤 Socket connected:', socket ? socket.connected : false);
                 
                 if (!message) {
-                    console.log('❌ Empty message - ignoring');
+                    console.log('❌ Empty message');
                     return false;
                 }
                 
@@ -345,6 +347,9 @@
                     message_type: 'text'
                 };
                 
+                console.log('📤 Sending message data:', messageData);
+                console.log('📤 Socket ID:', socket.id);
+                
                 // Display immediately for sender
                 const displayData = {
                     message: message,
@@ -357,44 +362,41 @@
                 appendMessage(displayData, 'right', elements.messageContainer);
                 
                 // ✅ Send to server
-                console.log('📤 Emitting send-message:', messageData);
                 socket.emit('send-message', messageData);
                 console.log('📤 Message emitted to server');
                 
                 // Clear input
-                updatedMessageInput.value = '';
-                updatedMessageInput.focus();
+                messageInput.value = '';
+                messageInput.focus();
                 
                 // Reset UI
-                if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
-                if (updatedSendBtn) updatedSendBtn.style.display = 'none';
+                if (recordBtn) recordBtn.style.display = 'flex';
+                if (sendBtn) sendBtn.style.display = 'none';
                 
                 return false;
             });
             
-            // Handle Enter key
-            if (updatedMessageInput) {
-                updatedMessageInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        console.log('📤 Enter key pressed');
-                        e.preventDefault();
-                        e.stopPropagation();
-                        updatedForm.dispatchEvent(new Event('submit'));
-                        return false;
-                    }
-                });
-                
-                // Show/hide send button
-                updatedMessageInput.addEventListener('input', function() {
-                    if (this.value.trim() !== '') {
-                        if (updatedSendBtn) updatedSendBtn.style.display = 'flex';
-                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'none';
-                    } else {
-                        if (updatedSendBtn) updatedSendBtn.style.display = 'none';
-                        if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
-                    }
-                });
-            }
+            // ✅ Enter key handler
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    console.log('🔴🔴🔴 ENTER KEY PRESSED');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.dispatchEvent(new Event('submit'));
+                    return false;
+                }
+            });
+            
+            // Show/hide send button
+            messageInput.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    if (sendBtn) sendBtn.style.display = 'flex';
+                    if (recordBtn) recordBtn.style.display = 'none';
+                } else {
+                    if (sendBtn) sendBtn.style.display = 'none';
+                    if (recordBtn) recordBtn.style.display = 'flex';
+                }
+            });
         }
 
         // ========================================
@@ -519,11 +521,14 @@
                 });
             });
         }
+        
+        console.log('✅ Chat initialization complete');
     }
 
     // ========================================
     // START
     // ========================================
+    console.log('📋 DOM ready state:', document.readyState);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeChat);
     } else {

@@ -284,10 +284,10 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ==================================================
-// CHAT STATE - GROUP CHAT (FIXED)
+// CHAT STATE
 // ==================================================
-const chatUsers = new Map(); // socketId -> user data
-const messageCache = []; // Array for messages
+const chatUsers = new Map();
+const messageCache = [];
 
 // ==================================================
 // CHAT ROUTE
@@ -297,7 +297,7 @@ app.get('/chat', (req, res) => {
 });
 
 // ==================================================
-// CHAT SOCKET EVENTS - COMPLETE FIX
+// CHAT SOCKET EVENTS
 // ==================================================
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -310,13 +310,9 @@ const io = socketIo(server, {
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
-    console.log(`📊 Total connections: ${io.engine.clientsCount}`);
     
     let currentUser = null;
 
-    // ========================================
-    // USER JOINS CHAT
-    // ========================================
     socket.on('user-connected', (data) => {
         console.log('📝 User data received:', data);
         
@@ -339,60 +335,41 @@ io.on('connection', (socket) => {
         chatUsers.set(socket.id, currentUser);
         
         console.log(`✅ User joined: ${name} (${email})`);
-        console.log(`📊 Total users online: ${chatUsers.size}`);
+        console.log(`📊 Users online: ${chatUsers.size}`);
         
-        // ✅ Send updated online users list to ALL clients
         const onlineUsers = Array.from(chatUsers.values()).map(u => ({
             id: u.id,
             email: u.email,
             name: u.name
         }));
         io.emit('online-users', onlineUsers);
-        console.log(`📤 Sent online users: ${onlineUsers.length} users`);
         
-        // ✅ Send chat history to the new user
         if (messageCache.length > 0) {
             const recentMessages = messageCache.slice(-50);
             console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
             socket.emit('chat-history', recentMessages);
         } else {
-            console.log(`📨 No cached messages for ${name}`);
             socket.emit('chat-history', []);
         }
         
-        // ✅ Broadcast user joined message
         io.emit('user-joined', {
             name: name,
             message: `${name} joined the chat`
         });
-        
-        // ✅ Send the user their own info for debugging
-        socket.emit('user-joined-confirm', {
-            success: true,
-            user: currentUser,
-            usersOnline: chatUsers.size
-        });
     });
 
-    // ========================================
-    // SEND MESSAGE - CRITICAL FIX
-    // ========================================
     socket.on('send-message', (data) => {
         try {
             console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
             console.log('📨 Data:', data);
-            console.log('📨 Socket ID:', socket.id);
             
             const user = chatUsers.get(socket.id);
             if (!user) {
-                console.error('❌ User not found for socket:', socket.id);
-                // Try to find user by socket id in chatUsers
-                console.log('📊 Current chatUsers:', Array.from(chatUsers.keys()));
+                console.error('❌ User not found');
                 return;
             }
             
-            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
-            console.log(`📊 Users online: ${chatUsers.size}`);
+            console.log(`📨 Message from ${user.name}: "${data.message}"`);
             
             const messageData = {
                 id: Date.now(),
@@ -404,87 +381,19 @@ io.on('connection', (socket) => {
                 timestamp: new Date().toISOString()
             };
             
-            // Store in cache
             messageCache.push(messageData);
             if (messageCache.length > 100) {
                 messageCache.shift();
             }
             
-            console.log(`📨 Message cached, total: ${messageCache.length}`);
-            
-            // ✅ BROADCAST TO ALL CONNECTED USERS
             io.emit('receive-message', messageData);
             console.log(`📨 Broadcasted to ${chatUsers.size} users`);
             
-            // ✅ Also send to sender to confirm
-            socket.emit('message-sent-confirm', {
-                success: true,
-                message: messageData
-            });
-            
-            // Log all connected sockets
-            const socketIds = Array.from(chatUsers.keys());
-            console.log(`📨 Active sockets: ${socketIds.join(', ')}`);
-            
         } catch (error) {
             console.error('❌ Error sending message:', error);
-            socket.emit('message-error', { error: 'Failed to send message' });
         }
     });
 
-    // ========================================
-    // IMAGE UPLOAD
-    // ========================================
-    socket.on('send-image', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'image',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    // ========================================
-    // AUDIO UPLOAD
-    // ========================================
-    socket.on('send-audio', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'audio',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    // ========================================
-    // TYPING INDICATOR
-    // ========================================
     socket.on('typing', () => {
         const user = chatUsers.get(socket.id);
         if (user) {
@@ -505,31 +414,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ========================================
-    // GET ONLINE USERS (manual request)
-    // ========================================
-    socket.on('get-online-users', () => {
-        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-            id: u.id,
-            email: u.email,
-            name: u.name
-        }));
-        socket.emit('online-users', onlineUsers);
-    });
-
-    // ========================================
-    // DISCONNECT
-    // ========================================
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
         const user = chatUsers.get(socket.id);
         if (user) {
             chatUsers.delete(socket.id);
-            console.log(`❌ User removed: ${user.name}`);
-            console.log(`📊 Users online: ${chatUsers.size}`);
             
-            // ✅ Send updated online users list
             const onlineUsers = Array.from(chatUsers.values()).map(u => ({
                 id: u.id,
                 email: u.email,
@@ -537,7 +428,6 @@ io.on('connection', (socket) => {
             }));
             io.emit('online-users', onlineUsers);
             
-            // ✅ Broadcast user left message
             io.emit('user-left', {
                 name: user.name,
                 message: `${user.name} left the chat`
@@ -545,8 +435,6 @@ io.on('connection', (socket) => {
         }
     });
 });
-
-
 
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
@@ -1857,7 +1745,7 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+
 // ==================================================
 // SERVER START
 // ==================================================
