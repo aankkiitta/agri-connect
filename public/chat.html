@@ -6,7 +6,7 @@
     <title>KISAN CIRCLE Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
-        /* Full page chat - centered small box */
+        /* Full page chat - centered small box like floating widget */
         * {
             margin: 0;
             padding: 0;
@@ -26,10 +26,9 @@
             justify-content: center;
         }
         
-        /* Chat widget - small centered box */
         #chat-widget-container {
-            width: 380px !important;
-            height: 600px !important;
+            width: 340px !important;
+            height: 550px !important;
             max-width: 95vw !important;
             max-height: 85vh !important;
             display: flex !important;
@@ -46,13 +45,13 @@
             display: flex;
             align-items: center;
             background: rgba(0, 0, 0, 0.15);
-            padding: 12px 16px;
+            padding: 10px 14px;
             justify-content: space-between;
             flex-shrink: 0;
         }
         
         #chat-widget-container h1 {
-            font-size: 1rem;
+            font-size: 0.95rem;
             margin: 0;
             flex: 1;
             color: white;
@@ -64,14 +63,14 @@
             display: flex;
             align-items: center;
             margin-right: 8px;
-            padding: 3px 10px;
+            padding: 2px 8px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 12px;
         }
         
         #user-count-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 5px;
@@ -79,7 +78,7 @@
         }
         
         #user-count-text {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             color: white;
             white-space: nowrap;
@@ -88,7 +87,7 @@
         #chat-widget-close {
             background: none;
             border: none;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             line-height: 1;
             color: white;
             cursor: pointer;
@@ -106,7 +105,7 @@
             width: 100%;
             background-color: rgba(255, 255, 255, 0.10);
             backdrop-filter: blur(8px);
-            padding: 12px 15px;
+            padding: 10px 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -266,6 +265,7 @@
             outline: none;
             font-family: 'Segoe UI', sans-serif;
             background: #f8f8f8;
+            transition: border-color 0.3s ease;
         }
         
         #messageimp:focus {
@@ -340,7 +340,7 @@
             padding: 30px;
             border-radius: 16px;
             text-align: center;
-            max-width: 320px;
+            max-width: 280px;
         }
         
         #login-prompt .login-box h2 {
@@ -370,39 +370,39 @@
         @media (max-width: 480px) {
             #chat-widget-container {
                 width: 95vw !important;
-                height: 85vh !important;
+                height: 80vh !important;
                 max-height: 90vh !important;
                 border-radius: 12px !important;
             }
             
             #chat-widget-container nav {
-                padding: 10px 12px;
-            }
-            
-            #chat-widget-container h1 {
-                font-size: 0.85rem;
-            }
-            
-            #user-count-text {
-                font-size: 0.65rem;
-            }
-            
-            #user-count-container {
-                padding: 2px 8px;
-            }
-            
-            #user-count-dot {
-                width: 7px;
-                height: 7px;
-                margin-right: 4px;
-            }
-            
-            #chat-widget-container .container {
                 padding: 8px 10px;
             }
             
+            #chat-widget-container h1 {
+                font-size: 0.8rem;
+            }
+            
+            #user-count-text {
+                font-size: 0.6rem;
+            }
+            
+            #user-count-container {
+                padding: 2px 6px;
+            }
+            
+            #user-count-dot {
+                width: 6px;
+                height: 6px;
+                margin-right: 3px;
+            }
+            
+            #chat-widget-container .container {
+                padding: 6px 8px;
+            }
+            
             #chat-widget-container .message-body {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
                 padding: 6px 10px 2px 10px;
             }
             
@@ -415,11 +415,11 @@
             }
             
             #chat-widget-container .message-info {
-                font-size: 0.55rem;
+                font-size: 0.5rem;
             }
             
             #chat-widget-container .send {
-                padding: 6px 10px;
+                padding: 6px 8px;
             }
             
             #messageimp {
@@ -428,21 +428,21 @@
             }
             
             .btn {
-                width: 32px;
-                height: 32px;
+                width: 30px;
+                height: 30px;
             }
             
             .btn i {
-                font-size: 12px;
+                font-size: 11px;
             }
             
             .btn-icon {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 padding: 0 4px;
             }
             
             #chat-widget-container .message-image {
-                max-width: 140px;
+                max-width: 120px;
             }
             
             #chat-widget-container .message-body audio {
@@ -452,66 +452,50 @@
             
             #chat-widget-container .message.middle {
                 font-size: 9px;
-                padding: 3px 8px;
-            }
-            
-            #login-prompt .login-box {
-                padding: 20px;
-            }
-            
-            #login-prompt .login-box h2 {
-                font-size: 1rem;
-            }
-            
-            #login-prompt .login-box p {
-                font-size: 0.8rem;
+                padding: 2px 8px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Full Page Chat - Centered Small Box -->
-    <div id="chat-full-page">
-        <div id="chat-widget-container" class="full-page active">
-            <!-- Header -->
-            <nav>
-                <h1>💬 KISAN CIRCLE GROUP</h1>
-                <div id="user-count-container">
-                    <span id="user-count-dot"></span>
-                    <span id="user-count-text">Connecting...</span>
-                </div>
-                <button id="chat-widget-close" onclick="window.close()">&times;</button>
-            </nav>
-
-            <!-- Messages Area -->
-            <div class="container active" id="messageContainer"></div>
-
-            <!-- Typing Indicator -->
-            <div id="typing-indicator"></div>
-
-            <!-- Message Input Area -->
-            <div class="send active">
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <form id="send-container">
-                    <button type="button" class="btn-icon" id="attach-file-btn">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
-                    <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-                    <button class="btn" type="submit" id="send-btn" style="display: none;">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                    <button type="button" class="btn" id="record-btn">
-                        <i class="fa-solid fa-microphone"></i>
-                    </button>
-                </form>
+    <div id="chat-widget-container" class="full-page active">
+        <!-- Header -->
+        <nav>
+            <h1>💬 KISAN CIRCLE</h1>
+            <div id="user-count-container">
+                <span id="user-count-dot"></span>
+                <span id="user-count-text">0</span>
             </div>
+            <button id="chat-widget-close" onclick="window.close()">&times;</button>
+        </nav>
+
+        <!-- Messages Area -->
+        <div class="container active" id="messageContainer"></div>
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator"></div>
+
+        <!-- Message Input Area -->
+        <div class="send active">
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <form id="send-container">
+                <button type="button" class="btn-icon" id="attach-file-btn">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+                <button class="btn" type="submit" id="send-btn" style="display: none;">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+                <button type="button" class="btn" id="record-btn">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+            </form>
         </div>
     </div>
 
     <!-- Load Socket.IO -->
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     
-    <!-- Load Chat JavaScript with protection -->
     <script>
         // Prevent any global form submission from reloading the page
         document.addEventListener('submit', function(e) {
@@ -522,7 +506,6 @@
             }
         }, true);
         
-        // Also prevent enter key from reloading
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'messageimp') {
                 e.preventDefault();
