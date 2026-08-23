@@ -6,7 +6,7 @@
     <title>KISAN CIRCLE Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
-        /* Full page chat - centered small box like floating widget */
+        /* Small centered chat box - like floating widget */
         * {
             margin: 0;
             padding: 0;
@@ -28,7 +28,7 @@
         
         #chat-widget-container {
             width: 340px !important;
-            height: 550px !important;
+            height: 500px !important;
             max-width: 95vw !important;
             max-height: 85vh !important;
             display: flex !important;
@@ -337,40 +337,40 @@
         
         #login-prompt .login-box {
             background: white;
-            padding: 30px;
+            padding: 24px;
             border-radius: 16px;
             text-align: center;
-            max-width: 280px;
+            max-width: 260px;
         }
         
         #login-prompt .login-box h2 {
             color: #333;
             margin-bottom: 8px;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
         
         #login-prompt .login-box p {
             color: #666;
-            margin: 12px 0;
-            font-size: 0.85rem;
+            margin: 10px 0;
+            font-size: 0.8rem;
         }
         
         #login-prompt .login-box a {
             background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
             color: white;
-            padding: 8px 24px;
+            padding: 8px 20px;
             border-radius: 20px;
             text-decoration: none;
             font-weight: 600;
             display: inline-block;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         
         /* Mobile Responsive */
         @media (max-width: 480px) {
             #chat-widget-container {
                 width: 95vw !important;
-                height: 80vh !important;
+                height: 75vh !important;
                 max-height: 90vh !important;
                 border-radius: 12px !important;
             }
@@ -458,7 +458,8 @@
     </style>
 </head>
 <body>
-    <div id="chat-widget-container" class="full-page active">
+    <!-- Small Centered Chat Box -->
+    <div id="chat-widget-container">
         <!-- Header -->
         <nav>
             <h1>💬 KISAN CIRCLE</h1>
@@ -497,7 +498,7 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     
     <script>
-        // Prevent any global form submission from reloading the page
+        // Prevent form from reloading page
         document.addEventListener('submit', function(e) {
             if (e.target && e.target.id === 'send-container') {
                 e.preventDefault();
