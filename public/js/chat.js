@@ -7,42 +7,102 @@
     let currentRoomId = null;
     let isConnected = false;
     
-    // Get current user from localStorage
-    let agriUser = null;
-    try {
-        const userData = localStorage.getItem('agriUser');
-        if (userData) {
-            agriUser = JSON.parse(userData);
-            // FIX: Try different possible ID field names
-            currentUserId = agriUser.id || agriUser.user_id || agriUser.userId || null;
-            console.log('✅ Current User ID:', currentUserId);
-            console.log('👤 User Data:', agriUser);
+    // ========================================
+    // FIX: Get user ID from localStorage properly
+    // ========================================
+    function getCurrentUser() {
+        try {
+            // Try different possible storage keys
+            const keys = ['agriUser', 'user', 'userData', 'authUser'];
+            
+            for (const key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const user = JSON.parse(data);
+                        console.log(`✅ Found user data in localStorage key: ${key}`, user);
+                        
+                        // Try different possible ID fields
+                        const userId = user.id || user.user_id || user.userId || user._id || null;
+                        if (userId) {
+                            console.log(`✅ User ID found: ${userId}`);
+                            return user;
+                        }
+                    } catch (e) {
+                        // Continue to next key
+                    }
+                }
+            }
+            
+            // If no user found in localStorage, try sessionStorage
+            const sessionData = sessionStorage.getItem('user');
+            if (sessionData) {
+                try {
+                    const user = JSON.parse(sessionData);
+                    const userId = user.id || user.user_id || user.userId || user._id || null;
+                    if (userId) {
+                        console.log('✅ Found user in sessionStorage:', user);
+                        return user;
+                    }
+                } catch (e) {}
+            }
+            
+            console.warn('⚠️ No user data found in localStorage or sessionStorage');
+            return null;
+        } catch (error) {
+            console.error('Error getting current user:', error);
+            return null;
         }
-    } catch (e) {
-        console.error('Failed to parse user data:', e);
     }
 
-    // Get receiver ID from URL or query params
+    // Get user data
+    const agriUser = getCurrentUser();
+    if (agriUser) {
+        currentUserId = agriUser.id || agriUser.user_id || agriUser.userId || agriUser._id || null;
+        console.log('👤 Current User:', agriUser);
+        console.log('🆔 Current User ID:', currentUserId);
+    } else {
+        console.warn('⚠️ No user logged in');
+    }
+
+    // ========================================
+    // Get receiver ID from URL
+    // ========================================
     function getReceiverIdFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('user');
+        const id = params.get('userId') || 
+                   params.get('receiverId') || 
+                   params.get('id') || 
+                   params.get('user') ||
+                   params.get('receiver');
+        
         console.log('📥 Receiver ID from URL:', id);
         return id;
     }
 
     const receiverId = getReceiverIdFromURL();
-    console.log('📥 Current User ID:', currentUserId);
-    console.log('📥 Receiver ID:', receiverId);
     
+    // ========================================
+    // Initialize chat if both IDs exist
+    // ========================================
     if (currentUserId && receiverId) {
         currentReceiverId = parseInt(receiverId);
         console.log(`✅ Starting chat: User ${currentUserId} with User ${currentReceiverId}`);
         initializeChatWidget();
     } else {
         console.log('❌ Missing user IDs. Current:', currentUserId, 'Receiver:', receiverId);
-        createLoginPromptWidget();
+        if (!currentUserId) {
+            console.warn('⚠️ User not logged in. Please login first.');
+            createLoginPromptWidget();
+        } else if (!receiverId) {
+            console.warn('⚠️ No receiver ID in URL. Use: /chat?userId=2');
+            createNoReceiverWidget();
+        }
     }
 
+    // ========================================
+    // Create login prompt widget
+    // ========================================
     function createLoginPromptWidget() {
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
@@ -56,13 +116,12 @@
               <h1>KISAN CIRCLE🌾</h1>
               <button id="chat-widget-close-prompt">&times;</button>
             </nav>
-            <div id="join-modal" style="display: flex; height: 100%; align-items: center; justify-content: center; text-align: center; background: white; padding: 30px;">
+            <div id="join-modal">
               <div id="join-box">
-                <h2>LOG IN TO JOIN</h2>
-                <p>You must be logged into your account to access Kisan Circle chat.</p>
-                <div style="margin-top: 20px; font-size: 1.1rem;">
-                    <p style="margin-bottom: 5px; color: #555;">Proceed to:</p>
-                    <a href="/login" style="color: #5b21b6; text-decoration: underline; font-weight: 600;">Login Page</a>
+                <h2>🔐 LOGIN REQUIRED</h2>
+                <p>Please login to access Kisan Circle chat.</p>
+                <div style="margin-top: 20px;">
+                    <a href="/login" style="color: #6C4DFF; text-decoration: underline; font-weight: 600; font-size: 1.1rem;">Go to Login</a>
                 </div>
               </div>
             </div>`;
@@ -79,6 +138,47 @@
         });
     }
 
+    // ========================================
+    // Create no receiver widget
+    // ========================================
+    function createNoReceiverWidget() {
+        const launcher = document.createElement('div');
+        launcher.id = 'chat-launcher';
+        launcher.innerHTML = `<i class="fa-solid fa-message"></i><span id="chat-unread-badge"></span>`;
+        document.body.appendChild(launcher);
+
+        const widgetContainer = document.createElement('div');
+        widgetContainer.id = 'chat-widget-container';
+        widgetContainer.innerHTML = `
+            <nav>
+              <h1>KISAN CIRCLE🌾</h1>
+              <button id="chat-widget-close-prompt">&times;</button>
+            </nav>
+            <div id="join-modal">
+              <div id="join-box">
+                <h2>👤 SELECT A USER</h2>
+                <p>Please specify who you want to chat with.</p>
+                <div style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+                    <p>Use: <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px;">/chat?userId=2</code></p>
+                </div>
+              </div>
+            </div>`;
+        document.body.appendChild(widgetContainer);
+        
+        const closeBtn = widgetContainer.querySelector('#chat-widget-close-prompt');
+        launcher.addEventListener('click', () => { 
+            widgetContainer.classList.add('active'); 
+            launcher.style.display = 'none'; 
+        });
+        closeBtn.addEventListener('click', () => { 
+            widgetContainer.classList.remove('active'); 
+            launcher.style.display = 'flex'; 
+        });
+    }
+
+    // ========================================
+    // Initialize chat widget
+    // ========================================
     function initializeChatWidget() {
         const launcher = document.createElement('div');
         launcher.id = 'chat-launcher';
@@ -88,7 +188,7 @@
         widgetContainer.id = 'chat-widget-container';
         widgetContainer.innerHTML = `
             <nav>
-              <h1>KISAN CIRCLE🌾</h1>
+              <h1>💬 CHAT WITH USER ${currentReceiverId}</h1>
               <div id="user-count-container">
                   <span id="user-count-dot"></span>
                   <span id="user-count-text">Connecting...</span>
@@ -112,10 +212,14 @@
         initializeChat(widgetContainer, launcher);
     }
 
+    // ========================================
+    // Main chat initialization
+    // ========================================
     function initializeChat(widget, launcher) {
         console.log('🔄 Initializing chat...');
         console.log(`👤 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
         
+        // Connect to Socket.IO
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -143,7 +247,9 @@
         let typingTimer;
         let unreadCount = 0;
 
+        // ========================================
         // Socket connection events
+        // ========================================
         socket.on('connect', () => {
             console.log('✅ Connected to chat server');
             isConnected = true;
@@ -177,13 +283,18 @@
             userCountText.textContent = 'Reconnecting...';
         });
 
+        // ========================================
+        // Conversation joined
+        // ========================================
         socket.on('conversation-joined', (data) => {
             console.log('✅ Conversation joined:', data);
             currentRoomId = data.roomId;
             userCountText.textContent = `Chatting with User ${currentReceiverId}`;
         });
 
+        // ========================================
         // Receive chat history
+        // ========================================
         socket.on('chat-history', (messages) => {
             console.log(`📨 Received ${messages ? messages.length : 0} chat history messages`);
             messageContainer.innerHTML = '';
@@ -200,7 +311,9 @@
             }
         });
 
+        // ========================================
         // Online users update
+        // ========================================
         socket.on('online-users', (users) => {
             console.log('🟢 Online users:', users);
             const isReceiverOnline = users.includes(currentReceiverId);
@@ -213,21 +326,25 @@
             }
         });
 
-        // Receive message - FIXED
+        // ========================================
+        // Receive message - CRITICAL FIX
+        // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨 New message received:', data);
             console.log(`📨 From: ${data.sender_id}, To: ${data.receiver_id}`);
             console.log(`📨 Current User: ${currentUserId}, Receiver: ${currentReceiverId}`);
             
-            // Check if message is for this conversation
-            if ((data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
-                (data.sender_id === currentReceiverId && data.receiver_id === currentUserId)) {
-                
+            // Check if message belongs to this conversation
+            const isForThisConversation = 
+                (data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
+                (data.sender_id === currentReceiverId && data.receiver_id === currentUserId);
+            
+            if (isForThisConversation) {
                 console.log('✅ Message belongs to this conversation');
                 const position = data.sender_id === currentUserId ? 'right' : 'left';
                 appendMessage(data, position);
                 
-                // Auto-delete: Mark as seen immediately when received
+                // Auto-delete: Mark as seen
                 socket.emit('messages-seen', {
                     userId: currentUserId,
                     receiverId: currentReceiverId
@@ -240,10 +357,14 @@
                 }
             } else {
                 console.log('❌ Message NOT for this conversation');
+                console.log(`Expected: ${currentUserId}->${currentReceiverId} or ${currentReceiverId}->${currentUserId}`);
+                console.log(`Got: ${data.sender_id}->${data.receiver_id}`);
             }
         });
 
+        // ========================================
         // Typing indicator
+        // ========================================
         socket.on('user-typing', (data) => {
             if (data.userId === currentReceiverId) {
                 if (data.isTyping) {
@@ -254,7 +375,9 @@
             }
         });
 
+        // ========================================
         // Append message to UI
+        // ========================================
         function appendMessage(data, position) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
@@ -284,7 +407,9 @@
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
 
-        // Send message - FIXED
+        // ========================================
+        // Send message
+        // ========================================
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = messageInput.value.trim();
@@ -322,7 +447,9 @@
             sendBtn.style.display = 'none';
         });
 
+        // ========================================
         // Typing indicator
+        // ========================================
         messageInput.addEventListener('input', () => {
             if (!isTyping && socket && currentUserId && currentReceiverId) { 
                 isTyping = true; 
@@ -351,7 +478,9 @@
             }
         });
 
+        // ========================================
         // Image upload
+        // ========================================
         attachFileBtn.addEventListener('click', () => { imageInput.click(); });
         
         imageInput.addEventListener('change', async (e) => {
@@ -387,7 +516,9 @@
             e.target.value = null;
         });
 
+        // ========================================
         // Audio recording
+        // ========================================
         recordBtn.addEventListener('mousedown', () => {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { 
                 alert('Browser not supported'); 
@@ -447,7 +578,9 @@
             });
         });
 
-        // Launcher click
+        // ========================================
+        // Launcher events
+        // ========================================
         launcher.addEventListener('click', () => { 
             widget.classList.add('active'); 
             launcher.style.display = 'none'; 
