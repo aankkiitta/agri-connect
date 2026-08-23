@@ -16,7 +16,6 @@
     // ========================================
     function getCurrentUser() {
         try {
-            // Try all possible storage keys
             const keys = ['agriUser', 'user', 'userData', 'authUser'];
             
             for (const key of keys) {
@@ -34,13 +33,11 @@
                             console.log(`✅ User: ${name} (${email})`);
                             return { id: userId, email, name };
                         }
-                    } catch (e) {
-                        console.warn(`⚠️ Failed to parse data from key: ${key}`);
-                    }
+                    } catch (e) {}
                 }
             }
             
-            console.warn('⚠️ No user data found in localStorage');
+            console.warn('⚠️ No user data found');
             return null;
         } catch (error) {
             console.error('Error getting user:', error);
@@ -74,7 +71,7 @@
     }
 
     // ========================================
-    // SHOW LOGIN PROMPT - FIXED
+    // SHOW LOGIN PROMPT
     // ========================================
     function showLoginPrompt() {
         const container = document.getElementById('chat-widget-container');
@@ -83,18 +80,11 @@
                 <nav>
                     <h1>🔐 KISAN CIRCLE</h1>
                 </nav>
-                <div style="flex:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); backdrop-filter:blur(10px); padding:20px;">
-                    <div style="background:white; padding:40px; border-radius:20px; text-align:center; max-width:400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
-                        <h2 style="margin:0 0 10px 0; color:#333;">🔐 LOGIN REQUIRED</h2>
-                        <p style="color:#666; margin:15px 0; line-height:1.6;">
-                            Please login to access Kisan Circle chat.
-                        </p>
-                        <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                            <a href="/login" style="background:linear-gradient(135deg, #6C4DFF, #8B5CFF); color:white; padding:12px 30px; border-radius:25px; text-decoration:none; font-weight:600; display:inline-block;">Go to Login</a>
-                            <p style="font-size:0.8rem; color:#999; margin:5px 0 0 0;">
-                                After login, refresh this page
-                            </p>
-                        </div>
+                <div id="login-prompt">
+                    <div class="login-box">
+                        <h2>🔐 LOGIN REQUIRED</h2>
+                        <p>Please login to access Kisan Circle chat.</p>
+                        <a href="/login">Go to Login</a>
                     </div>
                 </div>
             `;
@@ -104,7 +94,7 @@
     // ========================================
     // APPEND MESSAGE
     // ========================================
-    function appendMessage(data, position, messageContainer, currentUser) {
+    function appendMessage(data, position, messageContainer) {
         if (!messageContainer) return;
         
         const messageElement = document.createElement('div');
@@ -152,7 +142,7 @@
         currentUser = getCurrentUser();
         
         if (!currentUser) {
-            console.log('❌ No user logged in - showing login prompt');
+            console.log('❌ No user logged in');
             showLoginPrompt();
             return;
         }
@@ -220,7 +210,7 @@
                     messages.forEach(msg => {
                         const isOwn = msg.email === currentUser.email || msg.userId === currentUser.id;
                         const position = isOwn ? 'right' : 'left';
-                        appendMessage(msg, position, elements.messageContainer, currentUser);
+                        appendMessage(msg, position, elements.messageContainer);
                     });
                 }
             }
@@ -234,7 +224,7 @@
             
             const isOwn = data.email === currentUser.email || data.userId === currentUser.id;
             const position = isOwn ? 'right' : 'left';
-            appendMessage(data, position, elements.messageContainer, currentUser);
+            appendMessage(data, position, elements.messageContainer);
         });
 
         // ========================================
@@ -294,19 +284,19 @@
                 
                 if (!message) {
                     console.log('❌ Empty message');
-                    return;
+                    return false;
                 }
                 
                 if (!socket || !socket.connected) {
                     console.log('❌ Socket not connected');
                     alert('Please wait, connecting to chat...');
-                    return;
+                    return false;
                 }
                 
                 if (!currentUser) {
                     console.log('❌ No user logged in');
                     alert('Please login first');
-                    return;
+                    return false;
                 }
                 
                 const messageData = {
@@ -322,11 +312,13 @@
                     userId: currentUser.id,
                     timestamp: new Date().toISOString()
                 };
-                appendMessage(displayData, 'right', elements.messageContainer, currentUser);
+                appendMessage(displayData, 'right', elements.messageContainer);
                 
+                // Send to server
                 socket.emit('send-message', messageData);
                 console.log('📤 Message sent to server');
                 
+                // Clear input
                 updatedMessageInput.value = '';
                 updatedMessageInput.focus();
                 
@@ -406,7 +398,7 @@
                             userId: currentUser.id,
                             timestamp: new Date().toISOString()
                         };
-                        appendMessage(displayData, 'right', elements.messageContainer, currentUser);
+                        appendMessage(displayData, 'right', elements.messageContainer);
                         socket.emit('send-image', { filePath: data.filePath });
                     }
                 } catch (error) {
@@ -470,7 +462,7 @@
                                 userId: currentUser.id,
                                 timestamp: new Date().toISOString()
                             };
-                            appendMessage(displayData, 'right', elements.messageContainer, currentUser);
+                            appendMessage(displayData, 'right', elements.messageContainer);
                             socket.emit('send-audio', { filePath: data.filePath });
                         }
                     } catch (error) {
