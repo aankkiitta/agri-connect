@@ -2,7 +2,7 @@
     // ========================================
     // AUTO-DETECT SERVER URL (Works on both local and live)
     // ========================================
-    const SERVER_URL = window.location.origin; // https://agri-connect-2kik.onrender.com
+    const SERVER_URL = window.location.origin;
     
     let socket = null;
     let currentUserId = null;
@@ -244,6 +244,7 @@
         // ========================================
         socket.on('connect', () => {
             console.log('✅ Connected to chat server');
+            console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
             userCountDot.style.backgroundColor = '#32CD32';
             userCountText.textContent = 'Online';
@@ -309,15 +310,18 @@
         });
 
         // ========================================
-        // RECEIVE MESSAGE - CRITICAL
+        // RECEIVE MESSAGE - CRITICAL FIX
         // ========================================
         socket.on('receive-message', (data) => {
-            console.log('📨 New message received:', data);
+            console.log('📨📨📨 MESSAGE RECEIVED:', data);
+            console.log('📨 Current User:', currentUserId, 'Receiver:', currentReceiverId);
             
             // Check if message belongs to this conversation
             const isForThisConversation = 
                 (data.sender_id === currentUserId && data.receiver_id === currentReceiverId) ||
                 (data.sender_id === currentReceiverId && data.receiver_id === currentUserId);
+            
+            console.log('📨 Is for this conversation?', isForThisConversation);
             
             if (isForThisConversation) {
                 console.log('✅ Message belongs to this conversation');
@@ -334,6 +338,10 @@
                     unreadBadge.innerText = unreadCount;
                     unreadBadge.style.display = 'flex';
                 }
+            } else {
+                console.log('❌ Message NOT for this conversation');
+                console.log('Expected:', currentUserId, '->', currentReceiverId);
+                console.log('Got:', data.sender_id, '->', data.receiver_id);
             }
         });
 
@@ -347,6 +355,8 @@
         // APPEND MESSAGE
         // ========================================
         function appendMessage(data, position) {
+            console.log('📝 Appending message:', data, 'Position:', position);
+            
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
             messageElement.classList.add(position);
@@ -372,6 +382,7 @@
             
             messageContainer.append(messageElement);
             messageContainer.scrollTop = messageContainer.scrollHeight;
+            console.log('✅ Message appended to UI');
         }
 
         // ========================================
@@ -381,8 +392,13 @@
             e.preventDefault();
             const message = messageInput.value.trim();
             
+            console.log('📤 SEND BUTTON CLICKED');
+            console.log('📤 Message:', message);
+            console.log('📤 Current User:', currentUserId);
+            console.log('📤 Receiver:', currentReceiverId);
+            
             if (!message || !socket || !currentUserId || !currentReceiverId) {
-                console.error('❌ Cannot send message');
+                console.error('❌ Cannot send message - missing data');
                 return;
             }
             
@@ -394,9 +410,14 @@
                 timestamp: new Date().toISOString()
             };
             
-            console.log('📤 Sending message:', messageData);
+            console.log('📤 Sending message data:', messageData);
+            
+            // Display immediately for sender
             appendMessage(messageData, 'right');
+            
+            // Send to server
             socket.emit('send-message', messageData);
+            console.log('📤 Message emitted to server');
             
             messageInput.value = '';
             socket.emit('stop-typing', { 
