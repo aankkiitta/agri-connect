@@ -369,41 +369,44 @@ io.on('connection', (socket) => {
     // ========================================
     // SEND MESSAGE TO GROUP
     // ========================================
-    socket.on('send-message', (data) => {
-        try {
-            const user = chatUsers.get(socket.id);
-            if (!user) {
-                console.error('❌ User not found for socket:', socket.id);
-                return;
-            }
-            
-            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
-            
-            const messageData = {
-                id: Date.now(),
-                userId: user.id,
-                email: user.email,
-                name: user.name,
-                message: data.message,
-                message_type: data.message_type || 'text',
-                timestamp: new Date().toISOString()
-            };
-            
-            // ✅ Store in cache (array)
-            messageCache.push(messageData);
-            if (messageCache.length > 100) {
-                messageCache.shift();
-            }
-            
-            // ✅ Broadcast to ALL users in the group
-            io.emit('receive-message', messageData);
-            console.log(`📨 Broadcasted to ${chatUsers.size} users`);
-            
-        } catch (error) {
-            console.error('❌ Error sending message:', error);
-            socket.emit('message-error', { error: 'Failed to send message' });
+   // ========================================
+// SEND MESSAGE TO GROUP
+// ========================================
+socket.on('send-message', (data) => {
+    try {
+        const user = chatUsers.get(socket.id);
+        if (!user) {
+            console.error('❌ User not found for socket:', socket.id);
+            return;
         }
-    });
+        
+        console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+        
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.message,
+            message_type: data.message_type || 'text',
+            timestamp: new Date().toISOString()
+        };
+        
+        // Store in cache
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        // ✅ Broadcast to ALL users
+        io.emit('receive-message', messageData);
+        console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+        
+    } catch (error) {
+        console.error('❌ Error sending message:', error);
+        socket.emit('message-error', { error: 'Failed to send message' });
+    }
+});
 
     // ========================================
     // IMAGE UPLOAD

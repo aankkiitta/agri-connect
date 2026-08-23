@@ -267,51 +267,82 @@
         // ========================================
         // SEND MESSAGE - FIXED (No Page Refresh)
         // ========================================
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault(); // ✅ PREVENTS PAGE REFRESH
-                
-                const message = messageInput ? messageInput.value.trim() : '';
-                
-                console.log('📤 SEND BUTTON CLICKED');
-                console.log('📤 Message:', message);
-                
-                if (!message || !socket || !currentUser) {
-                    console.error('❌ Cannot send message');
-                    return;
-                }
-                
-                const messageData = {
-                    message: message,
-                    message_type: 'text'
-                };
-                
-                console.log('📤 Sending message data:', messageData);
-                
-                // Display immediately for sender
-                const displayData = {
-                    ...messageData,
-                    name: currentUser.name,
-                    email: currentUser.email,
-                    userId: currentUser.id,
-                    timestamp: new Date().toISOString()
-                };
-                appendMessage(displayData, 'right');
-                
-                // Send to server
-                socket.emit('send-message', messageData);
-                console.log('📤 Message emitted to server');
-                
-                // Clear input
-                if (messageInput) {
-                    messageInput.value = '';
-                }
-                socket.emit('stop-typing');
-                isTyping = false;
-                if (recordBtn) recordBtn.style.display = 'flex';
-                if (sendBtn) sendBtn.style.display = 'none';
-            });
+      // ========================================
+// SEND MESSAGE - COMPLETE FIX
+// ========================================
+if (form) {
+    // Remove any existing listeners to prevent duplicates
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+    
+    // Re-get the form reference
+    const updatedForm = document.getElementById('send-container');
+    const updatedMessageInput = document.getElementById('messageimp');
+    const updatedSendBtn = document.getElementById('send-btn');
+    const updatedRecordBtn = document.getElementById('record-btn');
+    
+    // Handle form submission
+    updatedForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // ✅ CRITICAL - Prevents page refresh
+        
+        const message = updatedMessageInput ? updatedMessageInput.value.trim() : '';
+        
+        console.log('📤 Sending message:', message);
+        
+        if (!message) {
+            console.log('❌ Empty message - ignoring');
+            return;
         }
+        
+        if (!socket || !socket.connected) {
+            console.log('❌ Socket not connected');
+            alert('Please wait, connecting to chat...');
+            return;
+        }
+        
+        if (!currentUser) {
+            console.log('❌ No user logged in');
+            alert('Please login first');
+            return;
+        }
+        
+        const messageData = {
+            message: message,
+            message_type: 'text'
+        };
+        
+        // Display immediately for sender
+        const displayData = {
+            message: message,
+            message_type: 'text',
+            name: currentUser.name,
+            email: currentUser.email,
+            userId: currentUser.id,
+            timestamp: new Date().toISOString()
+        };
+        appendMessage(displayData, 'right');
+        
+        // Send to server
+        socket.emit('send-message', messageData);
+        console.log('📤 Message sent to server');
+        
+        // Clear input
+        updatedMessageInput.value = '';
+        updatedMessageInput.focus();
+        
+        // Reset UI
+        if (updatedRecordBtn) updatedRecordBtn.style.display = 'flex';
+        if (updatedSendBtn) updatedSendBtn.style.display = 'none';
+    });
+    
+    // Handle Enter key (extra safety)
+    updatedMessageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // ✅ Prevents default Enter behavior
+            updatedForm.dispatchEvent(new Event('submit'));
+        }
+    });
+}
 
         // ========================================
         // TYPING
