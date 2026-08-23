@@ -369,44 +369,201 @@ io.on('connection', (socket) => {
     // ========================================
     // SEND MESSAGE TO GROUP
     // ========================================
-   // ========================================
-// SEND MESSAGE TO GROUP
-// ========================================
-socket.on('send-message', (data) => {
-    try {
-        const user = chatUsers.get(socket.id);
-        if (!user) {
-            console.error('❌ User not found for socket:', socket.id);
+   // ==================================================
+// CHAT STATE - GROUP CHAT
+// ==================================================
+const chatUsers = new Map();
+const chatRooms = new Map();
+const messageCache = [];
+
+// ==================================================
+// CHAT ROUTE
+// ==================================================
+app.get('/chat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
+// ==================================================
+// CHAT SOCKET EVENTS
+// ==================================================
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    },
+    transports: ['websocket', 'polling']
+});
+
+io.on('connection', (socket) => {
+    console.log('👤 New client connected:', socket.id);
+    
+    let currentUser = null;
+
+    socket.on('user-connected', (data) => {
+        console.log('📝 User data received:', data);
+        
+        const userId = data.userId || data.id || null;
+        const email = data.email || null;
+        const name = data.name || 'User';
+        
+        if (!userId && !email) {
+            console.error('❌ No user identifier provided');
             return;
         }
         
-        console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+        currentUser = {
+            id: userId,
+            email: email,
+            name: name,
+            socketId: socket.id
+        };
+        
+        chatUsers.set(socket.id, currentUser);
+        
+        console.log(`✅ User joined group chat: ${name} (${email || userId})`);
+        
+        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name
+        }));
+        io.emit('online-users', onlineUsers);
+        
+        if (messageCache.length > 0) {
+            const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
+            socket.emit('chat-history', recentMessages);
+        } else {
+            socket.emit('chat-history', []);
+        }
+        
+        io.emit('user-joined', {
+            name: name,
+            message: `${name} joined the chat`
+        });
+    });
+
+    socket.on('send-message', (data) => {
+        try {
+            const user = chatUsers.get(socket.id);
+            if (!user) {
+                console.error('❌ User not found for socket:', socket.id);
+                return;
+            }
+            
+            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
+            
+            const messageData = {
+                id: Date.now(),
+                userId: user.id,
+                email: user.email,
+                name: user.name,
+                message: data.message,
+                message_type: data.message_type || 'text',
+                timestamp: new Date().toISOString()
+            };
+            
+            messageCache.push(messageData);
+            if (messageCache.length > 100) {
+                messageCache.shift();
+            }
+            
+            io.emit('receive-message', messageData);
+            console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+            
+        } catch (error) {
+            console.error('❌ Error sending message:', error);
+            socket.emit('message-error', { error: 'Failed to send message' });
+        }
+    });
+
+    socket.on('send-image', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
         
         const messageData = {
             id: Date.now(),
             userId: user.id,
             email: user.email,
             name: user.name,
-            message: data.message,
-            message_type: data.message_type || 'text',
+            message: data.filePath,
+            message_type: 'image',
             timestamp: new Date().toISOString()
         };
         
-        // Store in cache
         messageCache.push(messageData);
         if (messageCache.length > 100) {
             messageCache.shift();
         }
         
-        // ✅ Broadcast to ALL users
         io.emit('receive-message', messageData);
-        console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+    });
+
+    socket.on('send-audio', (data) => {
+        const user = chatUsers.get(socket.id);
+        if (!user) return;
         
-    } catch (error) {
-        console.error('❌ Error sending message:', error);
-        socket.emit('message-error', { error: 'Failed to send message' });
-    }
+        const messageData = {
+            id: Date.now(),
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            message: data.filePath,
+            message_type: 'audio',
+            timestamp: new Date().toISOString()
+        };
+        
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        io.emit('receive-message', messageData);
+    });
+
+    socket.on('typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: true
+            });
+        }
+    });
+
+    socket.on('stop-typing', () => {
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            socket.broadcast.emit('user-typing', {
+                name: user.name,
+                isTyping: false
+            });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('👋 Client disconnected:', socket.id);
+        
+        const user = chatUsers.get(socket.id);
+        if (user) {
+            chatUsers.delete(socket.id);
+            
+            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
+                id: u.id,
+                email: u.email,
+                name: u.name
+            }));
+            io.emit('online-users', onlineUsers);
+            
+            io.emit('user-left', {
+                name: user.name,
+                message: `${user.name} left the chat`
+            });
+        }
+    });
 });
+
 
     // ========================================
     // IMAGE UPLOAD
@@ -1818,11 +1975,13 @@ app.delete('/api/admin/articles/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// ==================================================
+// SERVER START
+// ==================================================
+
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📡 Public API URL: ${process.env.PUBLIC_API_URL || 'auto-detected'}`);
-    console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'not configured'}`);
     console.log(`💬 Chat available at: /chat`);
 });
