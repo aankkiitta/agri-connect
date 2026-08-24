@@ -62,10 +62,89 @@
         };
     }
 
+    function injectFixedStyles(iframeDoc) {
+        // Override the problematic iframe CSS that causes the FAB to take full size
+        const style = iframeDoc.createElement('style');
+        style.textContent = `
+            /* Override the iframe-specific CSS that causes issues */
+            .in-iframe #chat-fab-container {
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                bottom: auto !important;
+                right: auto !important;
+                pointer-events: none !important;
+                background: transparent !important;
+            }
+            
+            .in-iframe #chat-fab-container .chat-fab {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 50% !important;
+                aspect-ratio: 1 / 1 !important;
+                pointer-events: auto !important;
+                flex-shrink: 0 !important;
+                min-width: 0 !important;
+                min-height: 0 !important;
+                max-width: none !important;
+                max-height: none !important;
+                box-shadow: 0 8px 28px rgba(108, 77, 255, 0.45) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            .in-iframe #chat-fab-container .chat-fab i {
+                font-size: 26px !important;
+                line-height: 1 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            @media (max-width: 480px) {
+                .in-iframe #chat-fab-container .chat-fab i {
+                    font-size: 22px !important;
+                }
+            }
+            
+            /* Ensure the FAB container doesn't interfere with the modal */
+            .in-iframe .chat-modal-overlay {
+                z-index: 1000000 !important;
+            }
+            
+            /* Make sure the iframe body is properly sized */
+            .in-iframe body {
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+            }
+            
+            /* Hide the FAB when modal is open */
+            .in-iframe .fab-hidden {
+                opacity: 0 !important;
+                pointer-events: none !important;
+                transform: scale(0.8) !important;
+            }
+        `;
+        iframeDoc.head.appendChild(style);
+    }
+
     function setIframeSize(open) {
         if (!chatIframe) return;
 
         if (open) {
+            // OPEN STATE - Show full chat
             const dims = getChatDimensions();
             chatIframe.style.width = dims.width;
             chatIframe.style.height = dims.height;
@@ -79,7 +158,7 @@
             chatIframe.style.overflow = 'visible';
             isChatOpen = true;
         } else {
-            // Shrink to icon size - perfect circle
+            // CLOSED STATE - Show only the circular icon
             const dims = getIconDimensions();
             chatIframe.style.width = dims.width + 'px';
             chatIframe.style.height = dims.height + 'px';
@@ -106,7 +185,7 @@
 
         console.log('🔄 Loading chat via iframe...');
 
-        // Clear and style container — it acts as a wrapper but iframe is fixed
+        // Clear and style container - invisible wrapper, only the iframe is visible
         container.innerHTML = '';
         container.style.cssText = `
             position: fixed;
@@ -159,7 +238,7 @@
             }
         });
 
-        // Handle resize events to adjust chat dimensions on the fly (for mobile/desktop switch)
+        // Handle resize events to adjust dimensions on mobile/desktop switch
         let resizeTimeout;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);
@@ -182,6 +261,18 @@
         chatIframe.onload = function() {
             console.log('✅ Chat iframe loaded successfully!');
             isLoaded = true;
+            
+            try {
+                // Inject CSS overrides into the iframe to fix the FAB layout
+                const iframeDoc = chatIframe.contentDocument || chatIframe.contentWindow.document;
+                if (iframeDoc) {
+                    injectFixedStyles(iframeDoc);
+                    console.log('✅ Injected style fixes into iframe');
+                }
+            } catch (e) {
+                console.warn('⚠️ Could not inject styles into iframe (cross-origin?)', e);
+            }
+            
             // Send initial state to chat.html so it knows it starts closed
             try {
                 chatIframe.contentWindow.postMessage({ type: 'chatbox-state', isOpen: false }, '*');
