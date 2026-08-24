@@ -1503,42 +1503,110 @@ if (listEquipmentBtn) {
 async function loadArticlesToMainPage() {
     // This targets the container in agri2.html
     const articleGrid = document.querySelector('#articles .grid-container');
-    if (!articleGrid) return;
+    if (!articleGrid) {
+        console.log('⚠️ Article grid container not found on this page');
+        return;
+    }
+
+    // Determine the correct API URL based on environment
+    function getApiUrl() {
+        const hostname = window.location.hostname;
+        // Production on Render
+        if (hostname === 'agri-connect-2kik.onrender.com') {
+            return window.location.origin + '/api';
+        }
+        // Local development
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:3000/api';
+        }
+        // Any other environment - use relative path
+        return '/api';
+    }
+
+    const API_BASE_URL = getApiUrl();
+    console.log(`🔗 Fetching articles from: ${API_BASE_URL}/articles`);
 
     try {
-        const res = await fetch('http://localhost:3000/api/articles');
+        const res = await fetch(`${API_BASE_URL}/articles`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const articles = await res.json();
+        console.log(`📚 Loaded ${articles.length} articles`);
         
         if (articles.length === 0) {
-            articleGrid.innerHTML = '<p style="text-align:center; width:100%;">No articles published yet.</p>';
+            articleGrid.innerHTML = '<p style="text-align:center; width:100%; padding: 20px; color: #64748b;">📝 No articles published yet. Check back soon!</p>';
             return;
         }
 
-        // Generate dynamic cards
-       articleGrid.innerHTML = articles.map(a => `
-    <div class="card">
-        <img src="${a.image_url || 'https://via.placeholder.com/300x150?text=AgriConnect'}" 
-             style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+        // Generate dynamic cards - Show latest 4 articles
+        const displayArticles = articles.slice(0, 4);
         
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>${a.title}</h3>
-            <button class="btn-listen" onclick="speakText('${a.content.substring(0, 200)}')">
-                <i class="fas fa-volume-up"></i>
-            </button>
-        </div>
-        <p>${a.content.substring(0, 100)}...</p>
-        <a href="article.html?id=${a.id}" class="article-link">Read More &rarr;</a>
-    </div>
-`).join('');
+        articleGrid.innerHTML = displayArticles.map(a => `
+            <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                <img src="${a.image_url || 'https://images.unsplash.com/photo-1523348837708-15f4ad4f8af6?w=300&h=150&fit=crop'}" 
+                     style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;"
+                     alt="${escapeHtml(a.title)}"
+                     onerror="this.src='https://images.unsplash.com/photo-1523348837708-15f4ad4f8af6?w=300&h=150&fit=crop'">
+                
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 8px; flex: 1;">
+                    <h3 style="font-size: 1rem; margin: 0; flex: 1;">${escapeHtml(a.title)}</h3>
+                    <button class="btn-listen" onclick="speakText('${escapeHtml(a.content ? a.content.substring(0, 200) : '')}')" 
+                            style="background: none; border: none; cursor: pointer; color: #0f3b2c; font-size: 1.1rem; flex-shrink: 0;"
+                            title="Listen to this article">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+                <p style="font-size: 0.9rem; color: #475569; margin: 8px 0; flex: 1;">${escapeHtml(a.content ? a.content.substring(0, 120) : '')}...</p>
+                <a href="article.html?id=${a.id}" class="article-link" style="color: #0f3b2c; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
+                    Read More &rarr;
+                </a>
+            </div>
+        `).join('');
+
     } catch (err) {
-        console.error("Fetch Error:", err);
-        articleGrid.innerHTML = '<p style="color:red;">Failed to load articles. Ensure server is running.</p>';
+        console.error("❌ Fetch Error:", err);
+        articleGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+                <p style="color: #dc2626; font-weight: 600;">⚠️ Failed to load articles</p>
+                <p style="color: #64748b; font-size: 0.9rem;">Please check server connection. API URL: ${API_BASE_URL}</p>
+                <button onclick="location.reload()" style="background: #0f3b2c; color: white; border: none; padding: 8px 20px; border-radius: 40px; margin-top: 10px; cursor: pointer;">↻ Retry</button>
+            </div>
+        `;
+    }
+}
+
+// Helper function to escape HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Helper function for speech (if not already defined)
+function speakText(text) {
+    if (!text) return;
+    if (window.speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
     }
 }
 
 // Call the function when the page loads
-document.addEventListener('DOMContentLoaded', loadArticlesToMainPage);
-
+document.addEventListener('DOMContentLoaded', function() {
+    loadArticlesToMainPage();
+});
 
 //weather part begin here
 // ======== MODULE 0: CIRCULAR WEATHER WIDGET ========
