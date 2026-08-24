@@ -6352,3 +6352,23 @@ footer .social-links {
 
 
 
+.view-more-btn {
+    display: block;
+    margin: 24px auto;
+    padding: 12px 28px;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+    transition: all 0.2s ease;
+}
+
+.view-more-btn:hover {
+    background: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.3);
+}
