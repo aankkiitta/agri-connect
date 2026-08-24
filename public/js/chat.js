@@ -9,9 +9,6 @@
     let isConnected = false;
     let isTyping = false;
     let typingTimer;
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
     
     // ========================================
     // GET USER FROM localStorage
@@ -70,6 +67,7 @@
         const existingMessages = messageContainer.querySelectorAll('.message');
         for (const existing of existingMessages) {
             if (existing.dataset.messageId && existing.dataset.messageId === String(data.id)) {
+                console.log(`⚠️ Message ${data.id} already exists, skipping duplicate`);
                 return;
             }
         }
@@ -104,6 +102,7 @@
         
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
+        console.log(`✅ Message appended: ${messageContent.substring(0, 20)}...`);
     }
     
     function appendSystemMessage(text, messageContainer) {
@@ -132,10 +131,12 @@
     // ========================================
     async function loadChatHistory(messageContainer) {
         try {
+            console.log('📥 Loading chat history...');
             const response = await fetch(`${SERVER_URL}/api/chat/messages`);
             const data = await response.json();
             
             if (data.success && data.messages) {
+                console.log(`📨 Received ${data.messages.length} messages from API`);
                 messageContainer.innerHTML = '';
                 if (data.messages.length === 0) {
                     appendSystemMessage('No messages yet. Start the conversation!', messageContainer);
@@ -146,6 +147,8 @@
                         appendMessage(msg, position, messageContainer);
                     });
                 }
+            } else {
+                console.error('❌ Failed to load messages:', data);
             }
         } catch (error) {
             console.error('Error loading chat history:', error);
@@ -208,20 +211,33 @@
         
         socket.on('online-users', (onlineUsers) => {
             const count = onlineUsers ? onlineUsers.length : 0;
+            console.log(`🟢 Online users: ${count}`);
             updateOnlineCount(count, elements);
         });
         
         socket.on('user-joined', (data) => {
+            console.log('👤 User joined:', data);
             appendSystemMessage(data.message || `${data.name} joined the chat`, elements.messageContainer);
         });
         
         socket.on('user-left', (data) => {
+            console.log('👤 User left:', data);
             appendSystemMessage(data.message || `${data.name} left the chat`, elements.messageContainer);
         });
         
         socket.on('receive-message', (data) => {
+            console.log('📨📨📨 New message received:', data);
             const position = data.sender_id === currentUser.id ? 'right' : 'left';
             appendMessage(data, position, elements.messageContainer);
+        });
+        
+        socket.on('message-sent', (data) => {
+            console.log('✅ Message sent confirmation:', data);
+        });
+        
+        socket.on('message-error', (data) => {
+            console.error('❌ Message error:', data);
+            alert('Failed to send message: ' + data.error);
         });
         
         socket.on('user-typing', (data) => {
@@ -258,7 +274,23 @@
                     e.stopPropagation();
                     
                     const message = messageInput.value.trim();
-                    if (!message || !socket || !socket.connected) return;
+                    console.log('📤 Attempting to send message:', message);
+                    
+                    if (!message) {
+                        console.log('❌ Empty message');
+                        return false;
+                    }
+                    
+                    if (!socket || !socket.connected) {
+                        console.log('❌ Socket not connected');
+                        alert('Please wait, connecting to chat...');
+                        return false;
+                    }
+                    
+                    if (!currentUser) {
+                        console.log('❌ No user');
+                        return false;
+                    }
                     
                     // Create temp message
                     const tempMessage = {
@@ -271,6 +303,8 @@
                         sender_email: currentUser.email
                     };
                     
+                    console.log('📤 Temp message:', tempMessage);
+                    
                     // Remove "No messages" system message
                     const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
                     systemMessages.forEach(el => {
@@ -281,13 +315,17 @@
                     
                     appendMessage(tempMessage, 'right', elements.messageContainer);
                     
-                    socket.emit('send-message', {
+                    const sendData = {
                         sender_id: currentUser.id,
                         sender_name: currentUser.name,
                         sender_email: currentUser.email,
                         message: message,
                         message_type: 'text'
-                    });
+                    };
+                    console.log('📤 Sending to socket:', sendData);
+                    
+                    socket.emit('send-message', sendData);
+                    console.log('📤 Message emitted to server');
                     
                     messageInput.value = '';
                     messageInput.focus();
@@ -328,62 +366,6 @@
                         });
                     }
                 }, 2000);
-            });
-        }
-        
-        // Image upload
-        if (elements.attachFileBtn && elements.imageInput) {
-            elements.attachFileBtn.addEventListener('click', () => {
-                elements.imageInput.click();
-            });
-            
-            elements.imageInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file || !currentUser) return;
-                
-                const formData = new FormData();
-                formData.append('image', file);
-                
-                try {
-                    const response = await fetch(`${SERVER_URL}/upload/image`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    
-                    if (data.filePath) {
-                        const tempMessage = {
-                            id: Date.now(),
-                            sender_id: currentUser.id,
-                            message: data.filePath,
-                            message_type: 'image',
-                            created_at: new Date().toISOString(),
-                            sender_name: currentUser.name,
-                            sender_email: currentUser.email
-                        };
-                        
-                        const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
-                        systemMessages.forEach(el => {
-                            if (el.innerText.includes('No messages yet')) {
-                                el.remove();
-                            }
-                        });
-                        
-                        appendMessage(tempMessage, 'right', elements.messageContainer);
-                        
-                        socket.emit('send-message', {
-                            sender_id: currentUser.id,
-                            sender_name: currentUser.name,
-                            sender_email: currentUser.email,
-                            message: data.filePath,
-                            message_type: 'image'
-                        });
-                    }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    alert('Failed to upload image');
-                }
-                e.target.value = null;
             });
         }
         
