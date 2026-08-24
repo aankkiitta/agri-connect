@@ -467,7 +467,7 @@
     #chat-modal-content { display:flex; flex:1; flex-direction:column; min-height:0; height:100%; }
     #chat-widget-placeholder { display:none; flex:1; flex-direction:column; min-height:0; height:100%; }
     .chat-modal-overlay.open { display:flex; }
-      /* Ensure modal overlay is on top */
+    /* Ensure modal overlay is on top */
     #chat-modal-overlay {
         z-index: 10001 !important;
     }
@@ -705,5 +705,57 @@
     #chat-widget-placeholder { display:none; flex:1; flex-direction:column; min-height:0; height:100%; }
     .chat-modal-overlay.open { display:flex; }
   </style>
+
+  <!-- ============================================ -->
+  <!-- IFRAME FIX - This makes chat work when embedded -->
+  <!-- ============================================ -->
+  <script>
+  (function() {
+    // Check if this page is loaded inside an iframe
+    if (window.self !== window.top) {
+      console.log('🔄 Chat running inside iframe - applying fixes');
+      
+      // Make background transparent so it blends with parent
+      document.body.style.background = 'transparent';
+      document.body.style.overflow = 'hidden';
+      
+      // Ensure FAB is visible and clickable
+      const fabContainer = document.getElementById('chat-fab-container');
+      if (fabContainer) {
+        fabContainer.style.position = 'fixed';
+        fabContainer.style.bottom = '28px';
+        fabContainer.style.right = '28px';
+        fabContainer.style.zIndex = '999999';
+        fabContainer.style.pointerEvents = 'auto';
+        fabContainer.classList.remove('fab-hidden');
+        fabContainer.style.opacity = '1';
+        fabContainer.style.transform = 'scale(1)';
+      }
+      
+      // Fix modal overlay z-index
+      const modalOverlay = document.getElementById('chat-modal-overlay');
+      if (modalOverlay) {
+        modalOverlay.style.zIndex = '1000000';
+      }
+      
+      // Fix chat modal z-index
+      const chatModal = document.getElementById('chat-modal');
+      if (chatModal) {
+        chatModal.style.zIndex = '1000001';
+      }
+      
+      // Force FAB button to be visible
+      const fab = document.getElementById('chat-fab');
+      if (fab) {
+        fab.style.display = 'flex';
+        fab.style.visibility = 'visible';
+        fab.style.opacity = '1';
+      }
+      
+      console.log('✅ Chat iframe fixes applied');
+    }
+  })();
+  </script>
+
 </body>
 </html>
