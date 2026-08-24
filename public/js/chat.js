@@ -1,3 +1,4 @@
+// public/js/chat.js
 (function() {
     console.log('🔄 KISAN CIRCLE Group Chat loaded...');
     
@@ -13,7 +14,7 @@
     // ========================================
     // GET USER FROM localStorage
     // ========================================
-    function getCurrentUser() {
+    window.getCurrentUser = function() {
         try {
             const keys = ['agriUser', 'user', 'userData', 'authUser'];
             for (const key of keys) {
@@ -36,7 +37,7 @@
         } catch (error) {
             return null;
         }
-    }
+    };
     
     // ========================================
     // GET DOM ELEMENTS
@@ -223,8 +224,8 @@
     // ========================================
     // INITIALIZE CHAT
     // ========================================
-    function initializeChat() {
-        currentUser = getCurrentUser();
+    window.initializeChat = function(user) {
+        currentUser = user || window.getCurrentUser();
         
         if (!currentUser) {
             console.log('❌ No user logged in');
@@ -291,12 +292,11 @@
         });
         
         // ========================================
-        // RECEIVE MESSAGE - FIXED DUPLICATE ISSUE
+        // RECEIVE MESSAGE
         // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨📨📨 New message received:', data);
             
-            // IMPORTANT: Skip if the message is from the current user (already displayed optimistically)
             if (data.sender_id === currentUser.id) {
                 console.log('⏭️ Skipping own message (already displayed from optimistic update)');
                 return;
@@ -340,11 +340,9 @@
         
         console.log('✅ Form and input found, setting up handlers...');
         
-        // Hide record button, show send button
         if (recordBtn) recordBtn.style.display = 'none';
         if (sendBtn) sendBtn.style.display = 'flex';
         
-        // Handle form submission (for Enter key)
         form.addEventListener('submit', function(e) {
             console.log('📤 Form submit event triggered');
             e.preventDefault();
@@ -353,7 +351,6 @@
             return false;
         });
         
-        // Handle Enter key directly
         messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 console.log('📤 Enter key pressed');
@@ -364,7 +361,6 @@
             }
         });
         
-        // Handle Send button click directly
         if (sendBtn) {
             sendBtn.addEventListener('click', function(e) {
                 console.log('📤 Send button clicked');
@@ -461,12 +457,13 @@
         
         console.log('✅ KISAN CIRCLE Group Chat ready!');
         console.log('📤 Type a message and press Enter or click Send');
-    }
-    
-    // Start chat
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeChat);
-    } else {
-        initializeChat();
+    };
+
+    // Auto-initialize if DOM is ready and user exists
+    if (document.readyState !== 'loading') {
+        const user = window.getCurrentUser();
+        if (user && document.getElementById('chat-widget-container')) {
+            window.initializeChat(user);
+        }
     }
 })();

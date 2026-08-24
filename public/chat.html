@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>KISAN CIRCLE · Responsive Chat</title>
+  <title>KISAN CIRCLE · Chat</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
     /* ----- global reset & base ----- */
@@ -35,7 +35,6 @@
       z-index: 9999;
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
-    /* mobile adjustment: keep away from edge */
     @media (max-width: 480px) {
       #chat-fab-container {
         bottom: 20px;
@@ -126,7 +125,6 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* ----- desktop comfortable size ----- */
     @media (min-width: 769px) {
       .chat-modal {
         width: 460px;
@@ -135,7 +133,6 @@
         max-height: 88vh;
       }
     }
-    /* ----- mobile optimization (320px – 768px) ----- */
     @media (max-width: 768px) {
       .chat-modal {
         width: 94vw;
@@ -154,7 +151,6 @@
         border-radius: 18px;
       }
     }
-    /* extra small screens (320px) */
     @media (max-width: 360px) {
       .chat-modal {
         width: 96vw;
@@ -447,7 +443,6 @@
       transform: scale(0.8);
     }
 
-    /* ----- extra small input tweaks ----- */
     @media (max-width: 480px) {
       .chat-fab { width: 54px; height: 54px; }
       .chat-fab i { font-size: 24px; }
@@ -467,6 +462,11 @@
       #messageimp { font-size: 13px; padding: 6px 10px; }
       .btn { width: 34px; height: 34px; }
     }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #chat-modal-content { display:flex; flex:1; flex-direction:column; min-height:0; height:100%; }
+    #chat-widget-placeholder { display:none; flex:1; flex-direction:column; min-height:0; height:100%; }
+    .chat-modal-overlay.open { display:flex; }
   </style>
 </head>
 <body>
