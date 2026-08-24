@@ -291,18 +291,20 @@ const io = socketIo(server, {
     },
     transports: ['websocket', 'polling']
 });
-
 // ==================================================
-// SOCKET.IO - PRIVATE CHAT IMPLEMENTATION
+// SOCKET.IO - GROUP CHAT IMPLEMENTATION
 // ==================================================
 
 const onlineUsers = new Map(); // userId -> Set of socketIds
 const userSockets = new Map(); // socketId -> userId
+const messageCache = []; // Array for group messages
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
+    console.log(`📊 Total connections: ${io.engine.clientsCount}`);
     
     let currentUserId = null;
+    let currentUserName = null;
     
     // ========================================
     // USER AUTHENTICATION & JOIN
@@ -320,6 +322,7 @@ io.on('connection', (socket) => {
         }
         
         currentUserId = userId;
+        currentUserName = name;
         
         // Store socket mapping
         userSockets.set(socket.id, userId);
@@ -330,9 +333,6 @@ io.on('connection', (socket) => {
         }
         onlineUsers.get(userId).add(socket.id);
         
-        // Join user's private room
-        socket.join(`user_${userId}`);
-        
         console.log(`✅ User ${name} (ID: ${userId}) connected`);
         console.log(`📊 Users online: ${onlineUsers.size}`);
         
@@ -340,24 +340,41 @@ io.on('connection', (socket) => {
         const onlineList = Array.from(onlineUsers.keys());
         io.emit('online-users', onlineList);
         
+        // Broadcast user joined message to everyone
+        io.emit('user-joined', {
+            userId: userId,
+            name: name,
+            message: `${name} joined the chat`
+        });
+        
         // Send confirmation to user
         socket.emit('user-connected-confirm', {
             success: true,
             userId: userId,
             name: name
         });
+        
+        // Send chat history to the new user
+        if (messageCache.length > 0) {
+            const recentMessages = messageCache.slice(-50);
+            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
+            socket.emit('chat-history', recentMessages);
+        } else {
+            console.log(`📨 No cached messages for ${name}`);
+            socket.emit('chat-history', []);
+        }
     });
     
     // ========================================
-    // SEND PRIVATE MESSAGE
+    // SEND GROUP MESSAGE
     // ========================================
-    socket.on('send-private-message', async (data) => {
+    socket.on('send-message', async (data) => {
         try {
-            console.log('📨 Private message received:', data);
+            console.log('📨 Group message received:', data);
             
-            const { sender_id, receiver_id, message, message_type } = data;
+            const { sender_id, sender_name, sender_email, message, message_type } = data;
             
-            if (!sender_id || !receiver_id || !message) {
+            if (!sender_id || !message) {
                 console.error('❌ Missing required fields');
                 return;
             }
@@ -368,11 +385,11 @@ io.on('connection', (socket) => {
                 return;
             }
             
-            // Insert into database
+            // Insert into database (receiver_id = NULL for group messages)
             const [result] = await db.query(`
                 INSERT INTO messages (sender_id, receiver_id, message, message_type)
-                VALUES (?, ?, ?, ?)
-            `, [sender_id, receiver_id, message, message_type || 'text']);
+                VALUES (?, NULL, ?, ?)
+            `, [sender_id, message, message_type || 'text']);
             
             // Get the complete message with user details
             const [newMessage] = await db.query(`
@@ -382,37 +399,27 @@ io.on('connection', (socket) => {
                     m.receiver_id,
                     m.message,
                     m.message_type,
-                    m.is_read,
                     m.created_at,
                     s.name AS sender_name,
-                    s.email AS sender_email,
-                    r.name AS receiver_name,
-                    r.email AS receiver_email
+                    s.email AS sender_email
                 FROM messages m
                 LEFT JOIN users s ON m.sender_id = s.id
-                LEFT JOIN users r ON m.receiver_id = r.id
                 WHERE m.id = ?
             `, [result.insertId]);
             
             const messageData = newMessage[0];
             
-            // Emit to sender (confirmation)
-            socket.emit('message-sent', {
-                success: true,
-                message: messageData
-            });
-            
-            // Emit to receiver if online
-            if (onlineUsers.has(receiver_id)) {
-                io.to(`user_${receiver_id}`).emit('new-private-message', {
-                    success: true,
-                    message: messageData
-                });
-                console.log(`📤 Message sent to user ${receiver_id}`);
-            } else {
-                console.log(`📤 User ${receiver_id} is offline, message saved to DB`);
-                // Message is already saved, will be loaded when user connects
+            // Store in cache
+            messageCache.push(messageData);
+            if (messageCache.length > 100) {
+                messageCache.shift();
             }
+            
+            console.log(`📨 Message cached, total: ${messageCache.length}`);
+            
+            // Broadcast to ALL connected users
+            io.emit('receive-message', messageData);
+            console.log(`📤 Broadcast message to ${io.engine.clientsCount} clients`);
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
@@ -423,49 +430,27 @@ io.on('connection', (socket) => {
     });
     
     // ========================================
-    // TYPING INDICATOR
+    // TYPING INDICATOR - GROUP CHAT
     // ========================================
     socket.on('typing', (data) => {
-        const { sender_id, receiver_id } = data;
-        if (sender_id && receiver_id && onlineUsers.has(receiver_id)) {
-            io.to(`user_${receiver_id}`).emit('user-typing', {
-                user_id: sender_id,
+        const { userId, name } = data;
+        if (userId && name) {
+            socket.broadcast.emit('user-typing', {
+                userId: userId,
+                name: name,
                 isTyping: true
             });
         }
     });
     
     socket.on('stop-typing', (data) => {
-        const { sender_id, receiver_id } = data;
-        if (sender_id && receiver_id && onlineUsers.has(receiver_id)) {
-            io.to(`user_${receiver_id}`).emit('user-typing', {
-                user_id: sender_id,
+        const { userId, name } = data;
+        if (userId && name) {
+            socket.broadcast.emit('user-typing', {
+                userId: userId,
+                name: name,
                 isTyping: false
             });
-        }
-    });
-    
-    // ========================================
-    // MARK MESSAGES AS READ
-    // ========================================
-    socket.on('mark-read', async (data) => {
-        const { user_id, other_user_id } = data;
-        try {
-            await db.query(`
-                UPDATE messages 
-                SET is_read = TRUE, read_at = NOW()
-                WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE
-            `, [other_user_id, user_id]);
-            
-            // Notify sender that messages were read
-            if (onlineUsers.has(other_user_id)) {
-                io.to(`user_${other_user_id}`).emit('messages-read', {
-                    by_user: user_id,
-                    from_user: other_user_id
-                });
-            }
-        } catch (error) {
-            console.error('Error marking messages as read:', error);
         }
     });
     
@@ -484,6 +469,8 @@ io.on('connection', (socket) => {
         console.log('👋 Client disconnected:', socket.id);
         
         const userId = userSockets.get(socket.id);
+        let userName = currentUserName;
+        
         if (userId) {
             // Remove socket from user's set
             const userSocketSet = onlineUsers.get(userId);
@@ -491,11 +478,18 @@ io.on('connection', (socket) => {
                 userSocketSet.delete(socket.id);
                 if (userSocketSet.size === 0) {
                     onlineUsers.delete(userId);
-                    console.log(`❌ User ${userId} is now offline`);
+                    console.log(`❌ User ${userId} (${userName || 'Unknown'}) is now offline`);
                     
                     // Broadcast updated online list
                     const onlineList = Array.from(onlineUsers.keys());
                     io.emit('online-users', onlineList);
+                    
+                    // Broadcast user left message
+                    io.emit('user-left', {
+                        userId: userId,
+                        name: userName || 'User',
+                        message: `${userName || 'User'} left the chat`
+                    });
                 } else {
                     console.log(`ℹ️ User ${userId} still has ${userSocketSet.size} active connections`);
                 }
@@ -509,148 +503,11 @@ io.on('connection', (socket) => {
 });
 
 // ==================================================
-// PRIVATE CHAT API ROUTES
+// GROUP CHAT API ROUTES
 // ==================================================
 
-// Get conversation history between two users
-app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
-    const { userId, otherUserId } = req.params;
-    
-    try {
-        // Verify both users exist
-        const [users] = await db.query(
-            'SELECT id FROM users WHERE id IN (?, ?)',
-            [userId, otherUserId]
-        );
-        
-        if (users.length !== 2) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'One or both users not found' 
-            });
-        }
-        
-        // Get conversation (both directions)
-        const [messages] = await db.query(`
-            SELECT 
-                m.id,
-                m.sender_id,
-                m.receiver_id,
-                m.message,
-                m.message_type,
-                m.is_read,
-                m.read_at,
-                m.created_at,
-                s.name AS sender_name,
-                s.email AS sender_email,
-                r.name AS receiver_name,
-                r.email AS receiver_email
-            FROM messages m
-            LEFT JOIN users s ON m.sender_id = s.id
-            LEFT JOIN users r ON m.receiver_id = r.id
-            WHERE (m.sender_id = ? AND m.receiver_id = ?)
-               OR (m.sender_id = ? AND m.receiver_id = ?)
-            ORDER BY m.created_at ASC
-        `, [userId, otherUserId, otherUserId, userId]);
-        
-        res.json({
-            success: true,
-            messages: messages
-        });
-    } catch (error) {
-        console.error('Error fetching messages:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to load messages' 
-        });
-    }
-});
-
-// Send a private message (HTTP fallback)
-app.post('/api/chat/messages/send', async (req, res) => {
-    const { sender_id, receiver_id, message, message_type } = req.body;
-    
-    try {
-        // Validate users
-        const [users] = await db.query(
-            'SELECT id FROM users WHERE id IN (?, ?)',
-            [sender_id, receiver_id]
-        );
-        
-        if (users.length !== 2) {
-            return res.status(404).json({
-                success: false,
-                message: 'Sender or receiver not found'
-            });
-        }
-        
-        // Insert message
-        const [result] = await db.query(`
-            INSERT INTO messages (sender_id, receiver_id, message, message_type)
-            VALUES (?, ?, ?, ?)
-        `, [sender_id, receiver_id, message, message_type || 'text']);
-        
-        // Get the inserted message with user details
-        const [newMessage] = await db.query(`
-            SELECT 
-                m.id,
-                m.sender_id,
-                m.receiver_id,
-                m.message,
-                m.message_type,
-                m.is_read,
-                m.read_at,
-                m.created_at,
-                s.name AS sender_name,
-                s.email AS sender_email,
-                r.name AS receiver_name,
-                r.email AS receiver_email
-            FROM messages m
-            LEFT JOIN users s ON m.sender_id = s.id
-            LEFT JOIN users r ON m.receiver_id = r.id
-            WHERE m.id = ?
-        `, [result.insertId]);
-        
-        res.json({
-            success: true,
-            message: newMessage[0]
-        });
-    } catch (error) {
-        console.error('Error sending message:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to send message'
-        });
-    }
-});
-
-// Mark messages as read
-app.post('/api/chat/messages/read', async (req, res) => {
-    const { user_id, other_user_id } = req.body;
-    
-    try {
-        await db.query(`
-            UPDATE messages 
-            SET is_read = TRUE, read_at = NOW()
-            WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE
-        `, [other_user_id, user_id]);
-        
-        res.json({
-            success: true,
-            message: 'Messages marked as read'
-        });
-    } catch (error) {
-        console.error('Error marking messages as read:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to mark messages as read'
-        });
-    }
-});
-// Get conversation history between two users
-app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
-    const { userId, otherUserId } = req.params;
-    
+// Get all group chat messages (receiver_id = NULL or 0)
+app.get('/api/chat/messages', async (req, res) => {
     try {
         const [messages] = await db.query(`
             SELECT 
@@ -659,27 +516,22 @@ app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
                 m.receiver_id,
                 m.message,
                 m.message_type,
-                m.is_read,
-                m.read_at,
                 m.created_at,
                 s.name AS sender_name,
-                s.email AS sender_email,
-                r.name AS receiver_name,
-                r.email AS receiver_email
+                s.email AS sender_email
             FROM messages m
             LEFT JOIN users s ON m.sender_id = s.id
-            LEFT JOIN users r ON m.receiver_id = r.id
-            WHERE (m.sender_id = ? AND m.receiver_id = ?)
-               OR (m.sender_id = ? AND m.receiver_id = ?)
+            WHERE m.receiver_id IS NULL OR m.receiver_id = 0
             ORDER BY m.created_at ASC
-        `, [userId, otherUserId, otherUserId, userId]);
+            LIMIT 100
+        `);
         
         res.json({
             success: true,
             messages: messages
         });
     } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching group messages:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Failed to load messages' 
@@ -687,7 +539,7 @@ app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
     }
 });
 
-// Get user by ID
+// Get user details
 app.get('/api/user/:id', async (req, res) => {
     try {
         const [rows] = await db.query(
@@ -711,32 +563,30 @@ app.get('/api/user/:id', async (req, res) => {
         res.status(500).json(null);
     }
 });
-// --- DEBUG ENDPOINT (Public Data Counts Only) ---
-app.get('/api/debug/public-data', async (req, res) => {
-    try {
-        const [farmers] = await db.query('SELECT COUNT(*) as count FROM farmer_directory');
-        const [approvedFarmers] = await db.query('SELECT COUNT(*) as count FROM farmer_directory WHERE status = "approved"');
-        const [stories] = await db.query('SELECT COUNT(*) as count FROM success_stories');
-        const [approvedStories] = await db.query('SELECT COUNT(*) as count FROM success_stories WHERE status = "approved"');
-        const [reviews] = await db.query('SELECT COUNT(*) as count FROM reviews');
 
-        res.json({
-            farmers: farmers[0].count,
-            approvedFarmers: approvedFarmers[0].count,
-            stories: stories[0].count,
-            approvedStories: approvedStories[0].count,
-            reviews: reviews[0].count
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Database error.' });
+// Get current user info (from session/token)
+app.get('/api/me', async (req, res) => {
+    try {
+        // This should get the user from the session/token
+        // For now, we'll rely on the frontend sending the user ID
+        res.json({ success: false, message: 'Use /api/user/:id instead' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
-// --- ROUTE HANDLER FOR ROOT URL ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'agri2.html'));
-});
+// ==================================================
+// SOCKET.IO STATUS ENDPOINT
+// ==================================================
 
+app.get('/api/chat/status', (req, res) => {
+    res.json({
+        success: true,
+        onlineUsers: Array.from(onlineUsers.keys()),
+        totalOnline: onlineUsers.size,
+        totalClients: io.engine.clientsCount
+    });
+});
 // ======== AUTHENTICATION ROUTES ========
 
 // /signup

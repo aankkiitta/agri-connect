@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KISAN CIRCLE Chat</title>
+    <title>KISAN CIRCLE - Group Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
         * {
@@ -76,7 +76,7 @@
             border-radius: 50%;
             display: inline-block;
             margin-right: 5px;
-            background-color: #ffaa00;
+            background-color: #32CD32;
         }
         
         #user-count-text {
@@ -161,6 +161,8 @@
             padding: 0 12px 6px 12px;
             display: flex;
             justify-content: flex-end;
+            gap: 8px;
+            align-items: center;
         }
         
         #chat-widget-container .message-name {
@@ -424,6 +426,21 @@
             text-decoration: underline;
         }
         
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         /* Mobile Responsive */
         @media (max-width: 480px) {
             #chat-widget-container {
@@ -526,7 +543,7 @@
             <h1>💬 KISAN CIRCLE</h1>
             <div id="user-count-container">
                 <span id="user-count-dot"></span>
-                <span id="user-count-text">0</span>
+                <span id="user-count-text">0 Online</span>
             </div>
             <button id="chat-widget-close" onclick="window.close()">&times;</button>
         </nav>

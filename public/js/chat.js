@@ -1,5 +1,5 @@
 (function() {
-    console.log('🔄 KISAN CIRCLE Chat loaded...');
+    console.log('🔄 KISAN CIRCLE Group Chat loaded...');
     console.log('📍 Current URL:', window.location.href);
     
     const SERVER_URL = window.location.origin;
@@ -7,13 +7,13 @@
     
     let socket = null;
     let currentUser = null;
-    let currentReceiverId = null;
     let isConnected = false;
     let isTyping = false;
     let typingTimer;
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let messageHistory = [];
     
     // ========================================
     // GET USER FROM localStorage
@@ -65,36 +65,6 @@
     }
     
     // ========================================
-    // CLEAR USER FROM localStorage (Logout)
-    // ========================================
-    function clearUser() {
-        try {
-            const keys = ['agriUser', 'user', 'userData', 'authUser'];
-            keys.forEach(key => localStorage.removeItem(key));
-            console.log('✅ User cleared from localStorage');
-            return true;
-        } catch (error) {
-            console.error('Error clearing user:', error);
-            return false;
-        }
-    }
-    
-    // ========================================
-    // GET RECEIVER ID FROM URL
-    // ========================================
-    function getReceiverIdFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('with');
-        if (id) {
-            const parsedId = parseInt(id);
-            if (!isNaN(parsedId) && parsedId > 0) {
-                return parsedId;
-            }
-        }
-        return null;
-    }
-    
-    // ========================================
     // GET DOM ELEMENTS
     // ========================================
     function getElements() {
@@ -135,7 +105,7 @@
                 <div id="login-prompt">
                     <div class="login-box">
                         <h2>🔐 Welcome Back</h2>
-                        <p>Login to continue chatting</p>
+                        <p>Login to join the group chat</p>
                         <form class="login-form" id="chat-login-form">
                             <input type="email" id="login-email" placeholder="Email address" required>
                             <input type="password" id="login-password" placeholder="Password" required>
@@ -215,86 +185,14 @@
     }
     
     // ========================================
-    // SHOW NO RECEIVER PROMPT
+    // UPDATE HEADER
     // ========================================
-    function showNoReceiverPrompt() {
-        const container = document.getElementById('chat-widget-container');
-        if (container) {
-            container.innerHTML = `
-                <nav>
-                    <h1>💬 KISAN CIRCLE</h1>
-                    <div id="user-count-container">
-                        <span id="user-count-dot"></span>
-                        <span id="user-count-text">0</span>
-                    </div>
-                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                </nav>
-                <div id="login-prompt">
-                    <div class="login-box">
-                        <h2>👤 SELECT A USER</h2>
-                        <p>Please specify who you want to chat with.</p>
-                        <p style="font-size:0.7rem;color:#999;margin-top:8px;">
-                            Example: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">/chat.html?userId=5</code>
-                        </p>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // ========================================
-    // SHOW USER NOT FOUND
-    // ========================================
-    function showUserNotFound(userId) {
-        const container = document.getElementById('chat-widget-container');
-        if (container) {
-            container.innerHTML = `
-                <nav>
-                    <h1>💬 KISAN CIRCLE</h1>
-                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                </nav>
-                <div id="login-prompt">
-                    <div class="login-box">
-                        <h2>❌ USER NOT FOUND</h2>
-                        <p>User with ID ${userId} does not exist.</p>
-                        <button onclick="window.location.reload()" style="margin-top:12px;background:linear-gradient(135deg,#6C4DFF,#8B5CFF);color:white;border:none;padding:8px 20px;border-radius:10px;cursor:pointer;">Try Again</button>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // ========================================
-    // SHOW SELF CHAT ERROR
-    // ========================================
-    function showSelfChatError() {
-        const container = document.getElementById('chat-widget-container');
-        if (container) {
-            container.innerHTML = `
-                <nav>
-                    <h1>💬 KISAN CIRCLE</h1>
-                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                </nav>
-                <div id="login-prompt">
-                    <div class="login-box">
-                        <h2>😅 CAN'T CHAT WITH YOURSELF</h2>
-                        <p>Please select a different user to chat with.</p>
-                        <button onclick="window.location.href='/'" style="margin-top:12px;background:linear-gradient(135deg,#6C4DFF,#8B5CFF);color:white;border:none;padding:8px 20px;border-radius:10px;cursor:pointer;">Go Home</button>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // ========================================
-    // UPDATE HEADER WITH RECEIVER NAME
-    // ========================================
-    function updateHeader(receiverName) {
+    function updateHeader(userName) {
         const container = document.getElementById('chat-widget-container');
         if (container) {
             const headerTitle = container.querySelector('nav h1');
-            if (headerTitle && receiverName) {
-                headerTitle.textContent = `💬 Chat with ${receiverName}`;
+            if (headerTitle && userName) {
+                headerTitle.textContent = `💬 KISAN CIRCLE`;
             }
         }
     }
@@ -342,7 +240,6 @@
             <div class="message-header">
                 <span class="message-name">${position === 'left' ? senderName + ' · ' : ''}</span>
                 <span class="message-info">${time}</span>
-                ${position === 'right' ? `<span class="message-status" style="margin-left:6px;font-size:0.55rem;color:#888;">${data.is_read ? '✓✓ Read' : '✓ Sent'}</span>` : ''}
             </div>
         `;
         
@@ -360,50 +257,24 @@
     }
     
     // ========================================
-    // UPDATE ONLINE STATUS
+    // UPDATE ONLINE COUNT
     // ========================================
-    function updateOnlineStatus(onlineUsers, elements, receiverId) {
+    function updateOnlineCount(count, elements) {
         if (elements.userCountText) {
-            elements.userCountText.textContent = onlineUsers.length > 0 ? `${onlineUsers.length} Online` : '0 Online';
+            elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
         }
         if (elements.userCountDot) {
-            elements.userCountDot.style.backgroundColor = onlineUsers.length > 0 ? '#32CD32' : '#ff4444';
-        }
-        
-        // Check if receiver is online
-        if (receiverId && elements.userCountText) {
-            const isOnline = onlineUsers.includes(receiverId);
-            elements.userCountText.textContent = isOnline ? '🟢 Online' : '🔴 Offline';
-            if (elements.userCountDot) {
-                elements.userCountDot.style.backgroundColor = isOnline ? '#32CD32' : '#ff4444';
-            }
+            elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
         }
     }
     
     // ========================================
-    // FETCH USER DETAILS
+    // LOAD CHAT HISTORY
     // ========================================
-    async function fetchUserDetails(userId) {
+    async function loadChatHistory(messageContainer) {
         try {
-            const response = await fetch(`${SERVER_URL}/api/user/${userId}`);
-            if (response.ok) {
-                const user = await response.json();
-                return user;
-            }
-            return null;
-        } catch (error) {
-            console.error('Error fetching user details:', error);
-            return null;
-        }
-    }
-    
-    // ========================================
-    // LOAD CONVERSATION HISTORY
-    // ========================================
-    async function loadConversationHistory(userId, receiverId, messageContainer) {
-        try {
-            console.log(`📥 Loading conversation between ${userId} and ${receiverId}`);
-            const response = await fetch(`${SERVER_URL}/api/chat/messages/${userId}/${receiverId}`);
+            console.log('📥 Loading chat history...');
+            const response = await fetch(`${SERVER_URL}/api/chat/messages`);
             const data = await response.json();
             
             if (data.success && data.messages) {
@@ -413,22 +284,10 @@
                     appendSystemMessage('No messages yet. Start the conversation!', messageContainer);
                 } else {
                     data.messages.forEach(msg => {
-                        const isOwn = msg.sender_id === userId;
+                        const isOwn = msg.sender_id === currentUser.id;
                         const position = isOwn ? 'right' : 'left';
                         appendMessage(msg, position, messageContainer);
                     });
-                    
-                    // Mark messages as read if this is the receiver
-                    const unreadMessages = data.messages.filter(msg => 
-                        msg.receiver_id === userId && !msg.is_read
-                    );
-                    if (unreadMessages.length > 0 && socket && socket.connected) {
-                        console.log(`📨 Marking ${unreadMessages.length} messages as read`);
-                        socket.emit('mark-read', {
-                            user_id: userId,
-                            other_user_id: receiverId
-                        });
-                    }
                 }
                 
                 return data.messages;
@@ -438,7 +297,7 @@
                 return [];
             }
         } catch (error) {
-            console.error('❌ Error loading conversation:', error);
+            console.error('❌ Error loading chat history:', error);
             messageContainer.innerHTML = '';
             appendSystemMessage('Failed to load messages. Please refresh.', messageContainer);
             return [];
@@ -449,7 +308,7 @@
     // INITIALIZE CHAT
     // ========================================
     async function initializeChat() {
-        console.log('🚀 Initializing KISAN CIRCLE Chat...');
+        console.log('🚀 Initializing KISAN CIRCLE Group Chat...');
         
         // Get current user
         currentUser = getCurrentUser();
@@ -461,38 +320,10 @@
             return;
         }
         
-        // Get receiver ID from URL
-        currentReceiverId = getReceiverIdFromURL();
+        console.log('✅ User logged in:', currentUser);
         
-        console.log(`📥 Receiver ID from URL: ${currentReceiverId}`);
-        
-        if (!currentReceiverId) {
-            console.log('❌ No receiver ID in URL');
-            showNoReceiverPrompt();
-            return;
-        }
-        
-        // Prevent chatting with self
-        if (currentUser.id === currentReceiverId) {
-            console.log('❌ Cannot chat with self');
-            showSelfChatError();
-            return;
-        }
-        
-        // Fetch receiver details
-        const receiverDetails = await fetchUserDetails(currentReceiverId);
-        if (!receiverDetails) {
-            console.log('❌ Receiver not found');
-            showUserNotFound(currentReceiverId);
-            return;
-        }
-        
-        console.log('✅ Starting chat...');
-        console.log('👤 Current User:', currentUser);
-        console.log('📥 Receiver:', receiverDetails);
-        
-        // Update header with receiver name
-        updateHeader(receiverDetails.name || `User ${currentReceiverId}`);
+        // Update header
+        updateHeader(currentUser.name);
         
         const elements = getElements();
         
@@ -549,67 +380,47 @@
         // ========================================
         socket.on('user-connected-confirm', (data) => {
             console.log('✅ User connection confirmed:', data);
-            // Load conversation history after connection
-            loadConversationHistory(currentUser.id, currentReceiverId, elements.messageContainer);
+            // Load chat history after connection
+            loadChatHistory(elements.messageContainer);
         });
         
         // ========================================
-        // ONLINE USERS LIST
+        // ONLINE USERS COUNT
         // ========================================
         socket.on('online-users', (onlineUsers) => {
             console.log('🟢 Online users:', onlineUsers);
-            updateOnlineStatus(onlineUsers, elements, currentReceiverId);
+            const count = onlineUsers ? onlineUsers.length : 0;
+            updateOnlineCount(count, elements);
         });
         
         // ========================================
-        // NEW PRIVATE MESSAGE
+        // USER JOINED/LEFT - GROUP CHAT
         // ========================================
-        socket.on('new-private-message', (data) => {
-            console.log('📨📨📨 New private message received:', data);
+        socket.on('user-joined', (data) => {
+            console.log('👤 User joined:', data);
+            appendSystemMessage(data.message || `${data.name} joined the chat`, elements.messageContainer);
+            // Update online count will come from online-users event
+        });
+        
+        socket.on('user-left', (data) => {
+            console.log('👤 User left:', data);
+            appendSystemMessage(data.message || `${data.name} left the chat`, elements.messageContainer);
+            // Update online count will come from online-users event
+        });
+        
+        // ========================================
+        // NEW GROUP MESSAGE
+        // ========================================
+        socket.on('receive-message', (data) => {
+            console.log('📨📨📨 New group message received:', data);
             
             if (!data.message) {
                 console.error('❌ Invalid message data:', data);
                 return;
             }
             
-            const msg = data.message;
-            
-            // Check if message is for this conversation
-            if ((msg.sender_id === currentUser.id && msg.receiver_id === currentReceiverId) ||
-                (msg.sender_id === currentReceiverId && msg.receiver_id === currentUser.id)) {
-                const position = msg.sender_id === currentUser.id ? 'right' : 'left';
-                appendMessage(msg, position, elements.messageContainer);
-                
-                // If we received a message, mark it as read
-                if (msg.sender_id === currentReceiverId && !msg.is_read) {
-                    socket.emit('mark-read', {
-                        user_id: currentUser.id,
-                        other_user_id: currentReceiverId
-                    });
-                }
-            }
-        });
-        
-        // ========================================
-        // MESSAGE SENT CONFIRMATION
-        // ========================================
-        socket.on('message-sent', (data) => {
-            console.log('✅ Message sent confirmation:', data);
-        });
-        
-        // ========================================
-        // MESSAGES READ CONFIRMATION
-        // ========================================
-        socket.on('messages-read', (data) => {
-            console.log('📨 Messages read by:', data.by_user);
-            // Update status indicators for messages
-            const messages = elements.messageContainer.querySelectorAll('.message.right');
-            messages.forEach(msg => {
-                const statusSpan = msg.querySelector('.message-status');
-                if (statusSpan) {
-                    statusSpan.textContent = '✓✓ Read';
-                }
-            });
+            const position = data.sender_id === currentUser.id ? 'right' : 'left';
+            appendMessage(data, position, elements.messageContainer);
         });
         
         // ========================================
@@ -617,8 +428,8 @@
         // ========================================
         socket.on('user-typing', (data) => {
             if (elements.typingIndicator) {
-                if (data.user_id === currentReceiverId && data.isTyping) {
-                    elements.typingIndicator.innerText = 'User is typing...';
+                if (data.isTyping && data.name !== currentUser.name) {
+                    elements.typingIndicator.innerText = `${data.name} is typing...`;
                 } else {
                     elements.typingIndicator.innerText = '';
                 }
@@ -626,7 +437,7 @@
         });
         
         // ========================================
-        // SEND MESSAGE
+        // SEND MESSAGE - GROUP CHAT
         // ========================================
         if (elements.form) {
             const form = document.getElementById('send-container');
@@ -665,7 +476,8 @@
                     return false;
                 }
                 
-                if (!currentUser || !currentReceiverId) {
+                if (!currentUser) {
+                    alert('Please login first');
                     return false;
                 }
                 
@@ -673,13 +485,13 @@
                 const tempMessage = {
                     id: Date.now(),
                     sender_id: currentUser.id,
-                    receiver_id: currentReceiverId,
+                    receiver_id: null, // Group chat
                     message: message,
                     message_type: 'text',
-                    is_read: false,
                     created_at: new Date().toISOString(),
                     sender_name: currentUser.name,
-                    sender_email: currentUser.email
+                    sender_email: currentUser.email,
+                    name: currentUser.name
                 };
                 
                 // Remove "No messages" system message if present
@@ -694,12 +506,14 @@
                 appendMessage(tempMessage, 'right', elements.messageContainer);
                 
                 // Send to server via Socket.IO
-                socket.emit('send-private-message', {
+                socket.emit('send-message', {
                     sender_id: currentUser.id,
-                    receiver_id: currentReceiverId,
+                    sender_name: currentUser.name,
+                    sender_email: currentUser.email,
                     message: message,
                     message_type: 'text'
                 });
+                console.log('📤 Message emitted to server');
                 
                 // Clear input
                 messageInput.value = '';
@@ -726,20 +540,20 @@
         // ========================================
         if (elements.messageInput) {
             elements.messageInput.addEventListener('input', function() {
-                if (!isTyping && socket && currentUser && currentReceiverId) { 
+                if (!isTyping && socket && currentUser) { 
                     isTyping = true; 
                     socket.emit('typing', {
-                        sender_id: currentUser.id,
-                        receiver_id: currentReceiverId
+                        userId: currentUser.id,
+                        name: currentUser.name
                     });
                 }
                 clearTimeout(typingTimer);
                 typingTimer = setTimeout(() => { 
                     isTyping = false; 
-                    if (socket && currentUser && currentReceiverId) {
+                    if (socket && currentUser) {
                         socket.emit('stop-typing', {
-                            sender_id: currentUser.id,
-                            receiver_id: currentReceiverId
+                            userId: currentUser.id,
+                            name: currentUser.name
                         });
                     }
                 }, 2000);
@@ -756,7 +570,7 @@
             
             elements.imageInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
-                if (!file || !currentUser || !currentReceiverId) return;
+                if (!file || !currentUser) return;
                 
                 const formData = new FormData();
                 formData.append('image', file);
@@ -772,13 +586,13 @@
                         const tempMessage = {
                             id: Date.now(),
                             sender_id: currentUser.id,
-                            receiver_id: currentReceiverId,
+                            receiver_id: null,
                             message: data.filePath,
                             message_type: 'image',
-                            is_read: false,
                             created_at: new Date().toISOString(),
                             sender_name: currentUser.name,
-                            sender_email: currentUser.email
+                            sender_email: currentUser.email,
+                            name: currentUser.name
                         };
                         
                         const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
@@ -790,9 +604,10 @@
                         
                         appendMessage(tempMessage, 'right', elements.messageContainer);
                         
-                        socket.emit('send-private-message', {
+                        socket.emit('send-message', {
                             sender_id: currentUser.id,
-                            receiver_id: currentReceiverId,
+                            sender_name: currentUser.name,
+                            sender_email: currentUser.email,
                             message: data.filePath,
                             message_type: 'image'
                         });
@@ -853,13 +668,13 @@
                             const tempMessage = {
                                 id: Date.now(),
                                 sender_id: currentUser.id,
-                                receiver_id: currentReceiverId,
+                                receiver_id: null,
                                 message: data.filePath,
                                 message_type: 'audio',
-                                is_read: false,
                                 created_at: new Date().toISOString(),
                                 sender_name: currentUser.name,
-                                sender_email: currentUser.email
+                                sender_email: currentUser.email,
+                                name: currentUser.name
                             };
                             
                             const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
@@ -871,9 +686,10 @@
                             
                             appendMessage(tempMessage, 'right', elements.messageContainer);
                             
-                            socket.emit('send-private-message', {
+                            socket.emit('send-message', {
                                 sender_id: currentUser.id,
-                                receiver_id: currentReceiverId,
+                                sender_name: currentUser.name,
+                                sender_email: currentUser.email,
                                 message: data.filePath,
                                 message_type: 'audio'
                             });
@@ -886,7 +702,7 @@
             });
         }
         
-        console.log('✅ KISAN CIRCLE Chat initialization complete');
+        console.log('✅ KISAN CIRCLE Group Chat initialization complete');
     }
     
     // ========================================
