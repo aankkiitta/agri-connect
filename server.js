@@ -366,30 +366,48 @@ io.on('connection', (socket) => {
     });
     
     // ========================================
-    // SEND GROUP MESSAGE
+    // SEND GROUP MESSAGE - FIXED
     // ========================================
     socket.on('send-message', async (data) => {
+        console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
+        console.log('📨 Data:', data);
+        console.log('📨 Socket ID:', socket.id);
+        console.log('📨 Current User:', currentUserId);
+        
         try {
-            console.log('📨 Group message received:', data);
-            
             const { sender_id, sender_name, sender_email, message, message_type } = data;
+            
+            // Log all fields
+            console.log('📨 sender_id:', sender_id);
+            console.log('📨 sender_name:', sender_name);
+            console.log('📨 message:', message);
+            console.log('📨 message_type:', message_type);
             
             if (!sender_id || !message) {
                 console.error('❌ Missing required fields');
+                socket.emit('message-error', {
+                    error: 'Missing required fields'
+                });
                 return;
             }
             
             // Security: Verify sender matches authenticated user
             if (parseInt(sender_id) !== parseInt(currentUserId)) {
                 console.error(`❌ Security: Sender mismatch. Socket user: ${currentUserId}, Message sender: ${sender_id}`);
+                socket.emit('message-error', {
+                    error: 'Unauthorized sender'
+                });
                 return;
             }
             
             // Insert into database (receiver_id = NULL for group messages)
+            console.log('📨 Inserting message into database...');
             const [result] = await db.query(`
                 INSERT INTO messages (sender_id, receiver_id, message, message_type)
                 VALUES (?, NULL, ?, ?)
             `, [sender_id, message, message_type || 'text']);
+            
+            console.log('📨 Database insert successful, ID:', result.insertId);
             
             // Get the complete message with user details
             const [newMessage] = await db.query(`
@@ -408,6 +426,7 @@ io.on('connection', (socket) => {
             `, [result.insertId]);
             
             const messageData = newMessage[0];
+            console.log('📨 Message data to broadcast:', messageData);
             
             // Store in cache
             messageCache.push(messageData);
@@ -418,19 +437,27 @@ io.on('connection', (socket) => {
             console.log(`📨 Message cached, total: ${messageCache.length}`);
             
             // Broadcast to ALL connected users
+            console.log(`📤 Broadcasting to ${io.engine.clientsCount} clients`);
             io.emit('receive-message', messageData);
-            console.log(`📤 Broadcast message to ${io.engine.clientsCount} clients`);
+            console.log('✅ Message broadcast successful');
+            
+            // Send confirmation to sender
+            socket.emit('message-sent', {
+                success: true,
+                message: messageData
+            });
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
+            console.error('❌ Error stack:', error.stack);
             socket.emit('message-error', {
-                error: 'Failed to send message'
+                error: 'Failed to send message: ' + error.message
             });
         }
     });
     
     // ========================================
-    // TYPING INDICATOR - GROUP CHAT
+    // TYPING INDICATOR
     // ========================================
     socket.on('typing', (data) => {
         const { userId, name } = data;
@@ -472,7 +499,6 @@ io.on('connection', (socket) => {
         let userName = currentUserName;
         
         if (userId) {
-            // Remove socket from user's set
             const userSocketSet = onlineUsers.get(userId);
             if (userSocketSet) {
                 userSocketSet.delete(socket.id);
@@ -480,11 +506,9 @@ io.on('connection', (socket) => {
                     onlineUsers.delete(userId);
                     console.log(`❌ User ${userId} (${userName || 'Unknown'}) is now offline`);
                     
-                    // Broadcast updated online list
                     const onlineList = Array.from(onlineUsers.keys());
                     io.emit('online-users', onlineList);
                     
-                    // Broadcast user left message
                     io.emit('user-left', {
                         userId: userId,
                         name: userName || 'User',
@@ -506,7 +530,7 @@ io.on('connection', (socket) => {
 // GROUP CHAT API ROUTES
 // ==================================================
 
-// Get all group chat messages (receiver_id = NULL or 0)
+// Get all group chat messages
 app.get('/api/chat/messages', async (req, res) => {
     try {
         const [messages] = await db.query(`
@@ -525,6 +549,8 @@ app.get('/api/chat/messages', async (req, res) => {
             ORDER BY m.created_at ASC
             LIMIT 100
         `);
+        
+        console.log(`📨 Fetching group messages: ${messages.length} messages found`);
         
         res.json({
             success: true,
@@ -564,27 +590,14 @@ app.get('/api/user/:id', async (req, res) => {
     }
 });
 
-// Get current user info (from session/token)
-app.get('/api/me', async (req, res) => {
-    try {
-        // This should get the user from the session/token
-        // For now, we'll rely on the frontend sending the user ID
-        res.json({ success: false, message: 'Use /api/user/:id instead' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// ==================================================
-// SOCKET.IO STATUS ENDPOINT
-// ==================================================
-
+// Socket.IO status endpoint
 app.get('/api/chat/status', (req, res) => {
     res.json({
         success: true,
         onlineUsers: Array.from(onlineUsers.keys()),
         totalOnline: onlineUsers.size,
-        totalClients: io.engine.clientsCount
+        totalClients: io.engine.clientsCount,
+        messageCacheSize: messageCache.length
     });
 });
 // ======== AUTHENTICATION ROUTES ========
