@@ -1541,11 +1541,11 @@ app.post('/api/hub/join-group', async (req, res) => {
 // Get All Articles (Public)
 app.get('/api/articles', async (req, res) => {
     try {
-        // Try to add column if missing (prevents 'Unknown column' error)
+        // Ensure the published_at column exists
         try {
             await db.query('ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at DATETIME DEFAULT CURRENT_TIMESTAMP');
         } catch (columnErr) {
-            // Ignore if column already exists
+            // Ignore if column already exists or error
         }
 
         const [articles] = await db.query('SELECT * FROM articles ORDER BY published_at DESC');
@@ -1558,25 +1558,82 @@ app.get('/api/articles', async (req, res) => {
             return article;
         });
 
+        console.log(`✅ GET /api/articles: ${processedArticles.length} articles returned`);
         res.status(200).json(processedArticles);
     } catch (err) {
-        console.error('Error fetching articles:', err);
-        res.status(500).json({ success: false, message: 'Database error' });
+        console.error('❌ Error fetching articles:', err);
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
     }
 });
 
-// Add Article (Admin)
+// Add Article (Public endpoint - used by Article Management page)
 app.post('/api/articles', async (req, res) => {
+    console.log('📝 POST /api/articles - Request received');
+    console.log('📝 Request body:', req.body);
+    
     const { title, category, content, image_url, date } = req.body;
+    
+    // Validate required fields
+    if (!title || !title.trim()) {
+        console.error('❌ Missing title');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Title is required' 
+        });
+    }
+    
     try {
+        // Ensure the published_at column exists
+        try {
+            await db.query('ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+        } catch (columnErr) {
+            // Ignore
+        }
+        
+        // Prepare date
+        let publishDate = new Date();
+        if (date) {
+            const parsedDate = new Date(date);
+            if (!isNaN(parsedDate.getTime())) {
+                publishDate = parsedDate;
+            }
+        }
+        
+        // Format date for MySQL
+        const formattedDate = publishDate.toISOString().slice(0, 19).replace('T', ' ');
+        
+        // Insert the article
         const sql = 'INSERT INTO articles (title, category, content, image_url, published_at) VALUES (?, ?, ?, ?, ?)';
-        const publishDate = date ? new Date(date) : new Date();
-
-        await db.query(sql, [title, category, content, image_url, publishDate]);
-        res.status(200).json({ success: true, message: 'Article published!' });
+        const [result] = await db.query(sql, [
+            title.trim(),
+            category || 'General',
+            content || '',
+            image_url || null,
+            formattedDate
+        ]);
+        
+        console.log(`✅ Article published successfully! ID: ${result.insertId}`);
+        
+        // Fetch the newly created article
+        const [newArticle] = await db.query('SELECT * FROM articles WHERE id = ?', [result.insertId]);
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Article published successfully!',
+            article: newArticle[0] || null
+        });
+        
     } catch (err) {
-        console.error('Error saving article:', err);
-        res.status(500).json({ success: false, message: 'Failed to save article.' });
+        console.error('❌ Error saving article:', err);
+        console.error('❌ Error details:', err.message);
+        console.error('❌ SQL Error code:', err.code);
+        console.error('❌ SQL Error errno:', err.errno);
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to publish article: ' + err.message,
+            error: err.code || 'UNKNOWN_ERROR'
+        });
     }
 });
 
@@ -1842,21 +1899,51 @@ app.delete('/api/admin/schemes/:id', async (req, res) => {
 });
 
 // Admin: Save or Update Article
+
+// Admin: Save or Update Article (Admin panel endpoint)
 app.post('/api/admin/articles/save', async (req, res) => {
+    console.log('📝 POST /api/admin/articles/save - Request received');
+    console.log('📝 Request body:', req.body);
+    
     const { id, title, category, content, image_url, date } = req.body;
+    
     try {
-        if (id) {
+        // Ensure the published_at column exists
+        try {
+            await db.query('ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+        } catch (columnErr) {
+            // Ignore
+        }
+        
+        // Prepare date
+        let publishDate = new Date();
+        if (date) {
+            const parsedDate = new Date(date);
+            if (!isNaN(parsedDate.getTime())) {
+                publishDate = parsedDate;
+            }
+        }
+        const formattedDate = publishDate.toISOString().slice(0, 19).replace('T', ' ');
+        
+        if (id && id !== 'null' && id !== 'undefined' && !isNaN(id)) {
+            // Update existing article
             const sql = 'UPDATE articles SET title=?, category=?, content=?, image_url=?, published_at=? WHERE id=?';
-            await db.query(sql, [title, category, content, image_url, date || new Date(), id]);
-            res.json({ success: true, message: 'Updated' });
+            await db.query(sql, [title, category, content, image_url, formattedDate, parseInt(id)]);
+            console.log(`✅ Article updated! ID: ${id}`);
+            res.json({ success: true, message: 'Article updated successfully!' });
         } else {
+            // Insert new article
             const sql = 'INSERT INTO articles (title, category, content, image_url, published_at) VALUES (?, ?, ?, ?, ?)';
-            await db.query(sql, [title, category, content, image_url, date || new Date()]);
-            res.json({ success: true, message: 'Published' });
+            const [result] = await db.query(sql, [title, category, content, image_url, formattedDate]);
+            console.log(`✅ New article published! ID: ${result.insertId}`);
+            res.json({ success: true, message: 'Article published successfully!' });
         }
     } catch (err) {
-        console.error('Error saving article:', err);
-        res.status(500).json({ success: false, message: 'Database error during save.' });
+        console.error('❌ Error saving article:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Database error: ' + err.message 
+        });
     }
 });
 
@@ -1864,13 +1951,29 @@ app.post('/api/admin/articles/save', async (req, res) => {
 app.delete('/api/admin/articles/:id', async (req, res) => {
     try {
         await db.query('DELETE FROM articles WHERE id = ?', [req.params.id]);
-        res.json({ success: true, message: 'Deleted' });
+        res.json({ success: true, message: 'Article deleted successfully' });
     } catch (err) {
         console.error('Error deleting article:', err);
         res.status(500).json({ success: false, message: 'Failed to delete article.' });
     }
 });
 
+// Get single article by ID (Public)
+app.get('/api/articles/:id', async (req, res) => {
+    try {
+        const [article] = await db.query('SELECT * FROM articles WHERE id = ?', [req.params.id]);
+        if (article.length === 0) {
+            return res.status(404).json({ success: false, message: 'Article not found' });
+        }
+        if (article[0].image_url) {
+            article[0].image_url = getPublicUrl(req, article[0].image_url);
+        }
+        res.json(article[0]);
+    } catch (err) {
+        console.error('Error fetching article:', err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
 
 // ==================================================
 // SERVER START
