@@ -411,7 +411,7 @@
 
     #record-btn { display: none; }
 
-    /* --- login fallback --- */
+    /* --- login screen inside chatbox --- */
     #login-required {
       flex: 1;
       display: flex;
@@ -672,7 +672,7 @@
 </head>
 <body>
 
-  <!-- FAB -->
+  <!-- FAB - ALWAYS THE SAME CHAT ICON -->
   <div id="chat-fab-container">
     <button id="chat-fab" class="chat-fab" aria-label="Open chat">
       <i class="fas fa-comment-dots"></i>
@@ -816,9 +816,9 @@
           <div class="login-box">
             <span class="lock-icon">🔒</span>
             <h2>Please Login to Chat</h2>
-            <p>Please login to your AgriConnect account to start chatting with other users.</p>
+            <p>Please login to your AgriConnect account to start chatting.</p>
             <a href="/login.html?redirect=/chat.html" class="login-btn">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> LOGIN
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Chat
             </a>
           </div>
         `;
@@ -902,8 +902,8 @@
 
         let widget;
         if (!isAuthenticated || !user || !user.id) {
-          // Show login-required screen
-          console.log('🔒 User not authenticated - showing login screen');
+          // Show login-required screen inside chatbox
+          console.log('🔒 User not authenticated - showing login screen inside chatbox');
           widget = buildLoginRequiredWidget();
         } else {
           // Show full chat
