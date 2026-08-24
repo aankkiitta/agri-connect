@@ -26,8 +26,8 @@
         }
         
         #chat-widget-container {
-            width: 370px !important;
-            height: 520px !important;
+            width: 400px !important;
+            height: 550px !important;
             max-width: 95vw !important;
             max-height: 90vh !important;
             display: flex !important;
@@ -328,8 +328,8 @@
             animation: pulse-record 1.5s infinite;
         }
         
-        /* Login Prompt - Enhanced */
-        #login-prompt {
+        /* Unauthorized / Login Required */
+        #login-required {
             flex: 1;
             display: flex;
             align-items: center;
@@ -339,7 +339,7 @@
             padding: 20px;
         }
         
-        #login-prompt .login-box {
+        #login-required .login-box {
             background: white;
             padding: 32px 24px;
             border-radius: 16px;
@@ -349,96 +349,92 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         
-        #login-prompt .login-box h2 {
+        #login-required .login-box h2 {
             color: #333;
             margin-bottom: 8px;
             font-size: 1.2rem;
         }
         
-        #login-prompt .login-box p {
+        #login-required .login-box p {
             color: #666;
             margin: 10px 0 20px 0;
             font-size: 0.85rem;
         }
         
-        #login-prompt .login-box .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        #login-prompt .login-box .login-form input {
-            padding: 10px 14px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        
-        #login-prompt .login-box .login-form input:focus {
-            border-color: #6C4DFF;
-        }
-        
-        #login-prompt .login-box .login-btn {
+        #login-required .login-box .login-btn {
             background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
             color: white;
-            padding: 10px 20px;
+            padding: 10px 30px;
             border: none;
             border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
             font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-block;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        #login-prompt .login-box .login-btn:hover {
+        #login-required .login-box .login-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(108, 77, 255, 0.3);
         }
         
-        #login-prompt .login-box .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        #login-prompt .login-box .error-message {
-            color: #e74c3c;
-            font-size: 0.8rem;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-        
-        #login-prompt .login-box .signup-link {
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
-        #login-prompt .login-box .signup-link a {
-            color: #6C4DFF;
-            text-decoration: none;
+        #login-required .login-box .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            transition: opacity 0.2s;
         }
         
-        #login-prompt .login-box .signup-link a:hover {
-            text-decoration: underline;
+        #login-required .login-box .logout-btn:hover {
+            opacity: 0.8;
         }
         
-        /* Loading State */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+        
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            flex-shrink: 0;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .user-info .user-details {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .user-info .user-details .name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        
+        .user-info .user-details .email {
+            color: #888;
+            font-size: 0.75rem;
         }
         
         /* Mobile Responsive */
@@ -530,7 +526,7 @@
                 padding: 3px 8px;
             }
             
-            #login-prompt .login-box {
+            #login-required .login-box {
                 padding: 24px 16px;
             }
         }
@@ -576,10 +572,64 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     
     <script>
-        // Debug: Log when form is submitted
+        // Check if user is logged in
+        function getCurrentUser() {
+            try {
+                const keys = ['agriUser', 'user', 'userData', 'authUser'];
+                for (const key of keys) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        try {
+                            const user = JSON.parse(data);
+                            const userId = user.id || user.user_id || user.userId || user._id || null;
+                            if (userId) {
+                                return {
+                                    id: parseInt(userId),
+                                    email: user.email || null,
+                                    name: user.name || user.username || 'User'
+                                };
+                            }
+                        } catch (e) {}
+                    }
+                }
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+        
+        // If not logged in, show login prompt
+        const user = getCurrentUser();
+        if (!user) {
+            document.getElementById('chat-widget-container').innerHTML = `
+                <nav>
+                    <h1>🔐 KISAN CIRCLE</h1>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                </nav>
+                <div id="login-required">
+                    <div class="login-box">
+                        <h2>🔐 Login Required</h2>
+                        <p>Please login to join the group chat</p>
+                        <a href="/login.html?redirect=/chat.html" class="login-btn">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                        </a>
+                    </div>
+                </div>
+            `;
+        } else {
+            // User is logged in, load the chat
+            console.log('✅ User logged in:', user);
+            // Load chat.js dynamically
+            const script = document.createElement('script');
+            script.src = '/js/chat.js';
+            document.body.appendChild(script);
+        }
+    </script>
+    
+    <script>
+        // Debug: Prevent form submission from reloading page
         document.addEventListener('submit', function(e) {
             if (e.target && e.target.id === 'send-container') {
-                console.log('🔴 FORM SUBMITTED - preventing default');
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -588,14 +638,11 @@
         
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'messageimp') {
-                console.log('🔴 ENTER KEY PRESSED - preventing default');
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
         }, true);
     </script>
-    
-    <script src="/js/chat.js"></script>
 </body>
 </html>
