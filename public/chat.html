@@ -527,9 +527,9 @@
               } catch (_) {}
             }
           }
-          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
+          return null;
         } catch (_) {
-          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
+          return null;
         }
       }
       const user = getCurrentUser();
@@ -626,14 +626,7 @@
               if (window.initializeChat) window.initializeChat(user);
             };
             script.onerror = function() {
-              console.warn('⚠️ chat.js not found – mock mode');
-              const container = document.getElementById('messageContainer');
-              if (container) {
-                const mock = document.createElement('div');
-                mock.className = 'message middle';
-                mock.textContent = '💬 Chat ready (mock mode)';
-                container.appendChild(mock);
-              }
+              console.error('❌ chat.js could not be loaded');
             };
             document.body.appendChild(script);
             window._chatScriptLoaded = true;
