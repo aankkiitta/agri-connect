@@ -5,6 +5,7 @@
     let isLoaded = false;
     let chatIframe = null;
     let isChatOpen = false;
+    let isUserLoggedIn = false;
 
     // Icon size (small floating button area)
     const ICON_WIDTH = 60;
@@ -23,6 +24,78 @@
     const CHAT_HEIGHT_DESKTOP = 620;
     const CHAT_WIDTH_MOBILE = '94vw';
     const CHAT_HEIGHT_MOBILE = '88vh';
+
+    // ===== AUTHENTICATION CHECK =====
+    function checkUserAuthentication() {
+        try {
+            // Check multiple possible storage keys for user data
+            const keys = ['agriUser', 'user', 'userData', 'authUser'];
+            for (const key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const user = JSON.parse(data);
+                        const userId = user.id || user.user_id || user.userId || user._id || null;
+                        if (userId) {
+                            console.log('✅ User authenticated:', user.name || 'User');
+                            return true;
+                        }
+                    } catch (_) {}
+                }
+            }
+            
+            // Also check sessionStorage
+            const sessionData = sessionStorage.getItem('user');
+            if (sessionData) {
+                try {
+                    const user = JSON.parse(sessionData);
+                    const userId = user.id || user.user_id || user.userId || user._id || null;
+                    if (userId) {
+                        console.log('✅ User authenticated (session):', user.name || 'User');
+                        return true;
+                    }
+                } catch (_) {}
+            }
+            
+            // Check for auth token
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            if (token) {
+                console.log('✅ Auth token found');
+                return true;
+            }
+            
+            console.log('❌ No authenticated user found');
+            return false;
+        } catch (e) {
+            console.warn('⚠️ Auth check error:', e);
+            return false;
+        }
+    }
+
+    function getCurrentUser() {
+        try {
+            const keys = ['agriUser', 'user', 'userData', 'authUser'];
+            for (const key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const user = JSON.parse(data);
+                        const userId = user.id || user.user_id || user.userId || user._id || null;
+                        if (userId) {
+                            return {
+                                id: parseInt(userId),
+                                email: user.email || null,
+                                name: user.name || user.username || 'User'
+                            };
+                        }
+                    } catch (_) {}
+                }
+            }
+            return null;
+        } catch (_) {
+            return null;
+        }
+    }
 
     function isMobile() {
         return window.innerWidth <= 768;
@@ -63,10 +136,8 @@
     }
 
     function injectFixedStyles(iframeDoc) {
-        // Override the problematic iframe CSS that causes the FAB to take full size
         const style = iframeDoc.createElement('style');
         style.textContent = `
-            /* Override the iframe-specific CSS that causes issues */
             .in-iframe #chat-fab-container {
                 width: 100% !important;
                 height: 100% !important;
@@ -117,12 +188,10 @@
                 }
             }
             
-            /* Ensure the FAB container doesn't interfere with the modal */
             .in-iframe .chat-modal-overlay {
                 z-index: 1000000 !important;
             }
             
-            /* Make sure the iframe body is properly sized */
             .in-iframe body {
                 overflow: hidden !important;
                 margin: 0 !important;
@@ -130,7 +199,6 @@
                 background: transparent !important;
             }
             
-            /* Hide the FAB when modal is open */
             .in-iframe .fab-hidden {
                 opacity: 0 !important;
                 pointer-events: none !important;
@@ -144,7 +212,6 @@
         if (!chatIframe) return;
 
         if (open) {
-            // OPEN STATE - Show full chat
             const dims = getChatDimensions();
             chatIframe.style.width = dims.width;
             chatIframe.style.height = dims.height;
@@ -158,7 +225,6 @@
             chatIframe.style.overflow = 'visible';
             isChatOpen = true;
         } else {
-            // CLOSED STATE - Show only the circular icon
             const dims = getIconDimensions();
             chatIframe.style.width = dims.width + 'px';
             chatIframe.style.height = dims.height + 'px';
@@ -175,7 +241,17 @@
     }
 
     function loadChat() {
-        if (isLoaded) return;
+        // ===== AUTHENTICATION CHECK =====
+        if (!checkUserAuthentication()) {
+            console.log('🔒 User not logged in - chatbox disabled');
+            hideChatbox();
+            return;
+        }
+
+        if (isLoaded) {
+            showChatbox();
+            return;
+        }
 
         const container = document.getElementById('chatbox-container');
         if (!container) {
@@ -185,7 +261,6 @@
 
         console.log('🔄 Loading chat via iframe...');
 
-        // Clear and style container - invisible wrapper, only the iframe is visible
         container.innerHTML = '';
         container.style.cssText = `
             position: fixed;
@@ -200,7 +275,6 @@
             padding: 0;
         `;
 
-        // Create iframe
         chatIframe = document.createElement('iframe');
         chatIframe.src = '/chat.html';
         
@@ -229,7 +303,6 @@
 
         container.appendChild(chatIframe);
 
-        // Listen for postMessage from chat.html
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'chatbox-toggle') {
                 const isOpen = event.data.isOpen;
@@ -238,7 +311,6 @@
             }
         });
 
-        // Handle resize events to adjust dimensions on mobile/desktop switch
         let resizeTimeout;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimeout);
@@ -246,7 +318,6 @@
                 if (isChatOpen) {
                     setIframeSize(true);
                 } else {
-                    // Update icon size on resize
                     const dims = getIconDimensions();
                     if (chatIframe) {
                         chatIframe.style.width = dims.width + 'px';
@@ -263,7 +334,6 @@
             isLoaded = true;
             
             try {
-                // Inject CSS overrides into the iframe to fix the FAB layout
                 const iframeDoc = chatIframe.contentDocument || chatIframe.contentWindow.document;
                 if (iframeDoc) {
                     injectFixedStyles(iframeDoc);
@@ -273,21 +343,92 @@
                 console.warn('⚠️ Could not inject styles into iframe (cross-origin?)', e);
             }
             
-            // Send initial state to chat.html so it knows it starts closed
             try {
                 chatIframe.contentWindow.postMessage({ type: 'chatbox-state', isOpen: false }, '*');
-            } catch (e) {
-                // ignore
-            }
+            } catch (e) {}
         };
 
         console.log('✅ Chat iframe created!');
+        showChatbox();
     }
 
-    // Auto-initialize
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadChat);
-    } else {
-        loadChat();
+    function hideChatbox() {
+        const container = document.getElementById('chatbox-container');
+        if (container) {
+            container.style.display = 'none';
+        }
+        isLoaded = false;
+        chatIframe = null;
+        isChatOpen = false;
     }
+
+    function showChatbox() {
+        const container = document.getElementById('chatbox-container');
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+
+    function destroyChatbox() {
+        const container = document.getElementById('chatbox-container');
+        if (container) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+        }
+        isLoaded = false;
+        chatIframe = null;
+        isChatOpen = false;
+        console.log('🗑️ Chatbox destroyed');
+    }
+
+    // ===== MONITOR AUTHENTICATION STATE CHANGES =====
+    function monitorAuthChanges() {
+        let lastAuthState = checkUserAuthentication();
+        
+        setInterval(() => {
+            const currentAuthState = checkUserAuthentication();
+            if (currentAuthState !== lastAuthState) {
+                console.log(`🔄 Auth state changed: ${lastAuthState} → ${currentAuthState}`);
+                lastAuthState = currentAuthState;
+                
+                if (currentAuthState) {
+                    // User logged in - load chat
+                    loadChat();
+                } else {
+                    // User logged out - destroy chat
+                    destroyChatbox();
+                }
+            }
+        }, 2000); // Check every 2 seconds
+    }
+
+    // ===== INITIALIZATION =====
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkUserAuthentication()) {
+                loadChat();
+            } else {
+                console.log('🔒 User not logged in - chatbox disabled');
+                hideChatbox();
+            }
+            monitorAuthChanges();
+        });
+    } else {
+        if (checkUserAuthentication()) {
+            loadChat();
+        } else {
+            console.log('🔒 User not logged in - chatbox disabled');
+            hideChatbox();
+        }
+        monitorAuthChanges();
+    }
+
+    // ===== EXPOSE FOR DEBUGGING =====
+    window.__chatbox = {
+        loadChat,
+        hideChatbox,
+        destroyChatbox,
+        checkAuth: checkUserAuthentication,
+        getUser: getCurrentUser
+    };
 })();

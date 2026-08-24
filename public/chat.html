@@ -640,230 +640,302 @@
       </div>
     </div>
   </div>
+<script>
+(function() {
+  "use strict";
 
+  // ===== AUTHENTICATION CHECK =====
+  function checkUserAuthentication() {
+    try {
+      const keys = ['agriUser', 'user', 'userData', 'authUser'];
+      for (const key of keys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const user = JSON.parse(data);
+            const userId = user.id || user.user_id || user.userId || user._id || null;
+            if (userId) {
+              return true;
+            }
+          } catch (_) {}
+        }
+      }
+      
+      const sessionData = sessionStorage.getItem('user');
+      if (sessionData) {
+        try {
+          const user = JSON.parse(sessionData);
+          const userId = user.id || user.user_id || user.userId || user._id || null;
+          if (userId) {
+            return true;
+          }
+        } catch (_) {}
+      }
+      
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      if (token) {
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // If not authenticated, redirect to login and STOP execution
+  if (!checkUserAuthentication()) {
+    console.log('🔒 Unauthenticated access to chat.html - redirecting to login');
+    // Show a message while redirecting
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;flex-direction:column;gap:16px;">
+        <div style="font-size:48px;">🔒</div>
+        <h2 style="color:#1e293b;">Authentication Required</h2>
+        <p style="color:#64748b;">Please login to access the chat</p>
+        <a href="/login.html?redirect=/chat.html" style="background:#6C4DFF;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Login</a>
+      </div>
+    `;
+    // REDIRECT - stop all further execution
+    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    return; // IMPORTANT: Stop the script execution here
+  }
+  
+  console.log('✅ User authenticated for chat');
+
+  // ===== REST OF THE CODE ONLY RUNS IF AUTHENTICATED =====
+  
+  // ===== DETECT IFRAME =====
+  const isInIframe = window.self !== window.top;
+  if (isInIframe) {
+    document.documentElement.classList.add('in-iframe');
+    document.body.classList.add('in-iframe');
+    console.log('🔄 Chat running in iframe mode');
+  }
+
+  const fabContainer = document.getElementById('chat-fab-container');
+  const fab = document.getElementById('chat-fab');
+  const overlay = document.getElementById('chat-modal-overlay');
+  const modal = document.getElementById('chat-modal');
+  const placeholder = document.getElementById('chat-widget-placeholder');
+  const loadingEl = document.getElementById('chat-loading');
+
+  // get current user (now guaranteed to exist)
+  function getCurrentUser() {
+    try {
+      const keys = ['agriUser', 'user', 'userData', 'authUser'];
+      for (const key of keys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const user = JSON.parse(data);
+            const userId = user.id || user.user_id || user.userId || user._id || null;
+            if (userId) {
+              return {
+                id: parseInt(userId),
+                email: user.email || null,
+                name: user.name || user.username || 'User'
+              };
+            }
+          } catch (_) {}
+        }
+      }
+      
+      // Try sessionStorage as fallback
+      const sessionData = sessionStorage.getItem('user');
+      if (sessionData) {
+        try {
+          const user = JSON.parse(sessionData);
+          const userId = user.id || user.user_id || user.userId || user._id || null;
+          if (userId) {
+            return {
+              id: parseInt(userId),
+              email: user.email || null,
+              name: user.name || user.username || 'User'
+            };
+          }
+        } catch (_) {}
+      }
+      
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  const user = getCurrentUser();
+  
+  // If we somehow don't have a user despite passing auth check, show login
+  if (!user || !user.id) {
+    console.warn('⚠️ Auth check passed but no user data found');
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;flex-direction:column;gap:16px;">
+        <div style="font-size:48px;">🔒</div>
+        <h2 style="color:#1e293b;">Session Expired</h2>
+        <p style="color:#64748b;">Please login again to access the chat</p>
+        <a href="/login.html" style="background:#6C4DFF;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Login</a>
+      </div>
+    `;
+    return;
+  }
+
+  function buildChatWidget() {
+    const container = document.createElement('div');
+    container.id = 'chat-widget-container';
+    container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
+
+    const nav = document.createElement('nav');
+    nav.innerHTML = `
+      <h1>💬 KISAN CIRCLE</h1>
+      <div id="user-count-container">
+        <span id="user-count-dot"></span>
+        <span id="user-count-text">0 Online</span>
+      </div>
+      <button id="chat-widget-close" aria-label="Close chat">&times;</button>
+    `;
+    container.appendChild(nav);
+
+    const msgContainer = document.createElement('div');
+    msgContainer.className = 'container active';
+    msgContainer.id = 'messageContainer';
+    container.appendChild(msgContainer);
+
+    const typing = document.createElement('div');
+    typing.id = 'typing-indicator';
+    container.appendChild(typing);
+
+    const sendArea = document.createElement('div');
+    sendArea.className = 'send active';
+    sendArea.id = 'chat-input-area';
+    sendArea.innerHTML = `
+      <input type="file" id="image-input" accept="image/*" style="display:none;">
+      <form id="send-container">
+        <button type="button" class="btn-icon" id="attach-file-btn">
+          <i class="fa-solid fa-paperclip"></i>
+        </button>
+        <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+        <button class="btn" type="submit" id="send-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+        <button type="button" class="btn" id="record-btn" style="display:none;">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+      </form>
+    `;
+    container.appendChild(sendArea);
+
+    // close button
+    const closeBtn = container.querySelector('#chat-widget-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        closeChat();
+      });
+    }
+
+    return container;
+  }
+
+  function injectChatWidget() {
+    loadingEl.style.display = 'none';
+    placeholder.style.display = 'flex';
+    placeholder.innerHTML = '';
+    const widget = buildChatWidget();
+    placeholder.appendChild(widget);
+
+    if (user && user.id) {
+      if (!window._chatScriptLoaded) {
+        const script = document.createElement('script');
+        script.src = '/js/chat.js';
+        script.onload = function() {
+          console.log('✅ chat.js loaded');
+          if (window.initializeChat) window.initializeChat(user);
+        };
+        script.onerror = function() {
+          console.warn('⚠️ chat.js not found – mock mode');
+          const container = document.getElementById('messageContainer');
+          if (container) {
+            const mock = document.createElement('div');
+            mock.className = 'message middle';
+            mock.textContent = '💬 Chat ready (mock mode)';
+            container.appendChild(mock);
+          }
+        };
+        document.body.appendChild(script);
+        window._chatScriptLoaded = true;
+      } else if (window.initializeChat) {
+        window.initializeChat(user);
+      }
+    }
+  }
+
+  // ---- open / close ----
+  function openChat() {
+    fabContainer.classList.add('fab-hidden');
+    overlay.classList.add('open');
+    if (placeholder.children.length === 0) {
+      injectChatWidget();
+    }
+    loadingEl.style.display = 'none';
+    placeholder.style.display = 'flex';
+    
+    // Notify parent if in iframe
+    if (isInIframe) {
+      try {
+        window.parent.postMessage({ 
+          type: 'chatbox-toggle', 
+          isOpen: true 
+        }, '*');
+      } catch(e) {}
+    }
+  }
+
+  window.closeChat = function(event) {
+    if (event && event.target !== event.currentTarget) return;
+    overlay.classList.remove('open');
+    fabContainer.classList.remove('fab-hidden');
+    const notif = document.getElementById('chatNotification');
+    if (notif) notif.classList.remove('active');
+    
+    // Notify parent if in iframe
+    if (isInIframe) {
+      try {
+        window.parent.postMessage({ 
+          type: 'chatbox-toggle', 
+          isOpen: false 
+        }, '*');
+      } catch(e) {}
+    }
+  };
+
+  window.toggleChat = function() {
+    if (overlay.classList.contains('open')) {
+      closeChat();
+    } else {
+      openChat();
+    }
+  };
+
+  fab.addEventListener('click', function(e) {
+    e.stopPropagation();
+    window.toggleChat();
+  });
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeChat();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeChat();
+  });
+
+  // ensure FAB visible initially
+  fabContainer.classList.remove('fab-hidden');
+
+  console.log('🔁 Responsive chat toggle ready.');
+})();
+</script>
   <!-- socket.io + chat logic -->
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-  <script>
-    (function() {
-      "use strict";
-
-      // ===== DETECT IFRAME =====
-      const isInIframe = window.self !== window.top;
-      if (isInIframe) {
-        document.documentElement.classList.add('in-iframe');
-        document.body.classList.add('in-iframe');
-        console.log('🔄 Chat running in iframe mode');
-      }
-
-      const fabContainer = document.getElementById('chat-fab-container');
-      const fab = document.getElementById('chat-fab');
-      const overlay = document.getElementById('chat-modal-overlay');
-      const modal = document.getElementById('chat-modal');
-      const placeholder = document.getElementById('chat-widget-placeholder');
-      const loadingEl = document.getElementById('chat-loading');
-
-      // mock user
-      function getCurrentUser() {
-        try {
-          const keys = ['agriUser', 'user', 'userData', 'authUser'];
-          for (const key of keys) {
-            const data = localStorage.getItem(key);
-            if (data) {
-              try {
-                const user = JSON.parse(data);
-                const userId = user.id || user.user_id || user.userId || user._id || null;
-                if (userId) {
-                  return {
-                    id: parseInt(userId),
-                    email: user.email || null,
-                    name: user.name || user.username || 'User'
-                  };
-                }
-              } catch (_) {}
-            }
-          }
-          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
-        } catch (_) {
-          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
-        }
-      }
-      const user = getCurrentUser();
-
-      function buildChatWidget() {
-        const container = document.createElement('div');
-        container.id = 'chat-widget-container';
-        container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
-
-        const nav = document.createElement('nav');
-        nav.innerHTML = `
-          <h1>💬 KISAN CIRCLE</h1>
-          <div id="user-count-container">
-            <span id="user-count-dot"></span>
-            <span id="user-count-text">0 Online</span>
-          </div>
-          <button id="chat-widget-close" aria-label="Close chat">&times;</button>
-        `;
-        container.appendChild(nav);
-
-        const msgContainer = document.createElement('div');
-        msgContainer.className = 'container active';
-        msgContainer.id = 'messageContainer';
-        container.appendChild(msgContainer);
-
-        const typing = document.createElement('div');
-        typing.id = 'typing-indicator';
-        container.appendChild(typing);
-
-        const sendArea = document.createElement('div');
-        sendArea.className = 'send active';
-        sendArea.id = 'chat-input-area';
-        sendArea.innerHTML = `
-          <input type="file" id="image-input" accept="image/*" style="display:none;">
-          <form id="send-container">
-            <button type="button" class="btn-icon" id="attach-file-btn">
-              <i class="fa-solid fa-paperclip"></i>
-            </button>
-            <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-            <button class="btn" type="submit" id="send-btn">
-              <i class="fa-solid fa-paper-plane"></i>
-            </button>
-            <button type="button" class="btn" id="record-btn" style="display:none;">
-              <i class="fa-solid fa-microphone"></i>
-            </button>
-          </form>
-        `;
-        container.appendChild(sendArea);
-
-        // login fallback if no user
-        if (!user || !user.id) {
-          container.innerHTML = `
-            <nav>
-              <h1>🔐 KISAN CIRCLE</h1>
-              <button id="chat-widget-close">&times;</button>
-            </nav>
-            <div id="login-required">
-              <div class="login-box">
-                <h2>🔐 Login Required</h2>
-                <p>Please login to join the group chat</p>
-                <a href="/login.html?redirect=/chat.html" class="login-btn">
-                  <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
-                </a>
-              </div>
-            </div>
-          `;
-        }
-
-        // close button
-        const closeBtn = container.querySelector('#chat-widget-close');
-        if (closeBtn) {
-          closeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            closeChat();
-          });
-        }
-
-        return container;
-      }
-
-      function injectChatWidget() {
-        loadingEl.style.display = 'none';
-        placeholder.style.display = 'flex';
-        placeholder.innerHTML = '';
-        const widget = buildChatWidget();
-        placeholder.appendChild(widget);
-
-        if (user && user.id) {
-          if (!window._chatScriptLoaded) {
-            const script = document.createElement('script');
-            script.src = '/js/chat.js';
-            script.onload = function() {
-              console.log('✅ chat.js loaded');
-              if (window.initializeChat) window.initializeChat(user);
-            };
-            script.onerror = function() {
-              console.warn('⚠️ chat.js not found – mock mode');
-              const container = document.getElementById('messageContainer');
-              if (container) {
-                const mock = document.createElement('div');
-                mock.className = 'message middle';
-                mock.textContent = '💬 Chat ready (mock mode)';
-                container.appendChild(mock);
-              }
-            };
-            document.body.appendChild(script);
-            window._chatScriptLoaded = true;
-          } else if (window.initializeChat) {
-            window.initializeChat(user);
-          }
-        }
-      }
-
-      // ---- open / close ----
-      function openChat() {
-        fabContainer.classList.add('fab-hidden');
-        overlay.classList.add('open');
-        if (placeholder.children.length === 0) {
-          injectChatWidget();
-        }
-        loadingEl.style.display = 'none';
-        placeholder.style.display = 'flex';
-        
-        // Notify parent if in iframe
-        if (isInIframe) {
-          try {
-            window.parent.postMessage({ 
-              type: 'chatbox-toggle', 
-              isOpen: true 
-            }, '*');
-          } catch(e) {}
-        }
-      }
-
-      window.closeChat = function(event) {
-        if (event && event.target !== event.currentTarget) return;
-        overlay.classList.remove('open');
-        fabContainer.classList.remove('fab-hidden');
-        const notif = document.getElementById('chatNotification');
-        if (notif) notif.classList.remove('active');
-        
-        // Notify parent if in iframe
-        if (isInIframe) {
-          try {
-            window.parent.postMessage({ 
-              type: 'chatbox-toggle', 
-              isOpen: false 
-            }, '*');
-          } catch(e) {}
-        }
-      };
-
-      window.toggleChat = function() {
-        if (overlay.classList.contains('open')) {
-          closeChat();
-        } else {
-          openChat();
-        }
-      };
-
-      fab.addEventListener('click', function(e) {
-        e.stopPropagation();
-        window.toggleChat();
-      });
-
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) closeChat();
-      });
-
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) closeChat();
-      });
-
-      // ensure FAB visible initially
-      fabContainer.classList.remove('fab-hidden');
-
-      console.log('🔁 Responsive chat toggle ready.');
-    })();
-  </script>
 
   <!-- ===== IFRAME OPTIMIZATION ===== -->
   <script>
