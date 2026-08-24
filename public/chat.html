@@ -423,15 +423,29 @@
     }
     #login-required .login-box {
       background: white;
-      padding: 28px 20px;
+      padding: 32px 24px;
       border-radius: 18px;
       text-align: center;
-      max-width: 260px;
+      max-width: 280px;
       width: 100%;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    #login-required .login-box h2 { color: #333; font-size: 1.1rem; }
-    #login-required .login-box p { color: #666; margin: 10px 0 18px; font-size: 0.85rem; }
+    #login-required .login-box .lock-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    #login-required .login-box h2 {
+      color: #1e293b;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+    #login-required .login-box p {
+      color: #64748b;
+      margin: 8px 0 20px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
     #login-required .login-box .login-btn {
       background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
       color: white;
@@ -443,6 +457,14 @@
       font-size: 0.95rem;
       text-decoration: none;
       display: inline-block;
+      transition: all 0.2s ease;
+    }
+    #login-required .login-box .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108,77,255,0.35);
+    }
+    #login-required .login-box .login-btn i {
+      margin-right: 8px;
     }
 
     /* hide FAB when modal is open */
@@ -454,6 +476,19 @@
 
     @media (max-width: 480px) {
       .chat-fab i { font-size: 22px; }
+      #login-required .login-box {
+        padding: 24px 18px;
+        max-width: 240px;
+      }
+      #login-required .login-box .lock-icon {
+        font-size: 36px;
+      }
+      #login-required .login-box h2 {
+        font-size: 1rem;
+      }
+      #login-required .login-box p {
+        font-size: 0.75rem;
+      }
     }
     @media (max-width: 360px) {
       #chat-widget-container nav { padding: 6px 10px; }
@@ -462,6 +497,23 @@
       #user-count-container { padding: 2px 8px; }
       #messageimp { font-size: 13px; padding: 6px 10px; }
       .btn { width: 34px; height: 34px; }
+      #login-required .login-box {
+        padding: 20px 14px;
+        max-width: 200px;
+      }
+      #login-required .login-box .lock-icon {
+        font-size: 30px;
+      }
+      #login-required .login-box h2 {
+        font-size: 0.9rem;
+      }
+      #login-required .login-box p {
+        font-size: 0.7rem;
+      }
+      #login-required .login-box .login-btn {
+        padding: 8px 20px;
+        font-size: 0.8rem;
+      }
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -640,319 +692,331 @@
       </div>
     </div>
   </div>
-<script>
-(function() {
-  "use strict";
 
-  // ===== AUTHENTICATION CHECK =====
-  function checkUserAuthentication() {
-    try {
-      const keys = ['agriUser', 'user', 'userData', 'authUser'];
-      for (const key of keys) {
-        const data = localStorage.getItem(key);
-        if (data) {
-          try {
-            const user = JSON.parse(data);
-            const userId = user.id || user.user_id || user.userId || user._id || null;
-            if (userId) {
-              return true;
-            }
-          } catch (_) {}
-        }
-      }
-      
-      const sessionData = sessionStorage.getItem('user');
-      if (sessionData) {
-        try {
-          const user = JSON.parse(sessionData);
-          const userId = user.id || user.user_id || user.userId || user._id || null;
-          if (userId) {
-            return true;
-          }
-        } catch (_) {}
-      }
-      
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      if (token) {
-        return true;
-      }
-      
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // If not authenticated, redirect to login and STOP execution
-  if (!checkUserAuthentication()) {
-    console.log('🔒 Unauthenticated access to chat.html - redirecting to login');
-    // Show a message while redirecting
-    document.body.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;flex-direction:column;gap:16px;">
-        <div style="font-size:48px;">🔒</div>
-        <h2 style="color:#1e293b;">Authentication Required</h2>
-        <p style="color:#64748b;">Please login to access the chat</p>
-        <a href="/login.html?redirect=/chat.html" style="background:#6C4DFF;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Login</a>
-      </div>
-    `;
-    // REDIRECT - stop all further execution
-    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
-    return; // IMPORTANT: Stop the script execution here
-  }
-  
-  console.log('✅ User authenticated for chat');
-
-  // ===== REST OF THE CODE ONLY RUNS IF AUTHENTICATED =====
-  
-  // ===== DETECT IFRAME =====
-  const isInIframe = window.self !== window.top;
-  if (isInIframe) {
-    document.documentElement.classList.add('in-iframe');
-    document.body.classList.add('in-iframe');
-    console.log('🔄 Chat running in iframe mode');
-  }
-
-  const fabContainer = document.getElementById('chat-fab-container');
-  const fab = document.getElementById('chat-fab');
-  const overlay = document.getElementById('chat-modal-overlay');
-  const modal = document.getElementById('chat-modal');
-  const placeholder = document.getElementById('chat-widget-placeholder');
-  const loadingEl = document.getElementById('chat-loading');
-
-  // get current user (now guaranteed to exist)
-  function getCurrentUser() {
-    try {
-      const keys = ['agriUser', 'user', 'userData', 'authUser'];
-      for (const key of keys) {
-        const data = localStorage.getItem(key);
-        if (data) {
-          try {
-            const user = JSON.parse(data);
-            const userId = user.id || user.user_id || user.userId || user._id || null;
-            if (userId) {
-              return {
-                id: parseInt(userId),
-                email: user.email || null,
-                name: user.name || user.username || 'User'
-              };
-            }
-          } catch (_) {}
-        }
-      }
-      
-      // Try sessionStorage as fallback
-      const sessionData = sessionStorage.getItem('user');
-      if (sessionData) {
-        try {
-          const user = JSON.parse(sessionData);
-          const userId = user.id || user.user_id || user.userId || user._id || null;
-          if (userId) {
-            return {
-              id: parseInt(userId),
-              email: user.email || null,
-              name: user.name || user.username || 'User'
-            };
-          }
-        } catch (_) {}
-      }
-      
-      return null;
-    } catch (_) {
-      return null;
-    }
-  }
-  
-  const user = getCurrentUser();
-  
-  // If we somehow don't have a user despite passing auth check, show login
-  if (!user || !user.id) {
-    console.warn('⚠️ Auth check passed but no user data found');
-    document.body.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f8fafc;flex-direction:column;gap:16px;">
-        <div style="font-size:48px;">🔒</div>
-        <h2 style="color:#1e293b;">Session Expired</h2>
-        <p style="color:#64748b;">Please login again to access the chat</p>
-        <a href="/login.html" style="background:#6C4DFF;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Login</a>
-      </div>
-    `;
-    return;
-  }
-
-  function buildChatWidget() {
-    const container = document.createElement('div');
-    container.id = 'chat-widget-container';
-    container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
-
-    const nav = document.createElement('nav');
-    nav.innerHTML = `
-      <h1>💬 KISAN CIRCLE</h1>
-      <div id="user-count-container">
-        <span id="user-count-dot"></span>
-        <span id="user-count-text">0 Online</span>
-      </div>
-      <button id="chat-widget-close" aria-label="Close chat">&times;</button>
-    `;
-    container.appendChild(nav);
-
-    const msgContainer = document.createElement('div');
-    msgContainer.className = 'container active';
-    msgContainer.id = 'messageContainer';
-    container.appendChild(msgContainer);
-
-    const typing = document.createElement('div');
-    typing.id = 'typing-indicator';
-    container.appendChild(typing);
-
-    const sendArea = document.createElement('div');
-    sendArea.className = 'send active';
-    sendArea.id = 'chat-input-area';
-    sendArea.innerHTML = `
-      <input type="file" id="image-input" accept="image/*" style="display:none;">
-      <form id="send-container">
-        <button type="button" class="btn-icon" id="attach-file-btn">
-          <i class="fa-solid fa-paperclip"></i>
-        </button>
-        <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-        <button class="btn" type="submit" id="send-btn">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
-        <button type="button" class="btn" id="record-btn" style="display:none;">
-          <i class="fa-solid fa-microphone"></i>
-        </button>
-      </form>
-    `;
-    container.appendChild(sendArea);
-
-    // close button
-    const closeBtn = container.querySelector('#chat-widget-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        closeChat();
-      });
-    }
-
-    return container;
-  }
-
-  function injectChatWidget() {
-    loadingEl.style.display = 'none';
-    placeholder.style.display = 'flex';
-    placeholder.innerHTML = '';
-    const widget = buildChatWidget();
-    placeholder.appendChild(widget);
-
-    if (user && user.id) {
-      if (!window._chatScriptLoaded) {
-        const script = document.createElement('script');
-        script.src = '/js/chat.js';
-        script.onload = function() {
-          console.log('✅ chat.js loaded');
-          if (window.initializeChat) window.initializeChat(user);
-        };
-        script.onerror = function() {
-          console.warn('⚠️ chat.js not found – mock mode');
-          const container = document.getElementById('messageContainer');
-          if (container) {
-            const mock = document.createElement('div');
-            mock.className = 'message middle';
-            mock.textContent = '💬 Chat ready (mock mode)';
-            container.appendChild(mock);
-          }
-        };
-        document.body.appendChild(script);
-        window._chatScriptLoaded = true;
-      } else if (window.initializeChat) {
-        window.initializeChat(user);
-      }
-    }
-  }
-
-  // ---- open / close ----
-  function openChat() {
-    fabContainer.classList.add('fab-hidden');
-    overlay.classList.add('open');
-    if (placeholder.children.length === 0) {
-      injectChatWidget();
-    }
-    loadingEl.style.display = 'none';
-    placeholder.style.display = 'flex';
-    
-    // Notify parent if in iframe
-    if (isInIframe) {
-      try {
-        window.parent.postMessage({ 
-          type: 'chatbox-toggle', 
-          isOpen: true 
-        }, '*');
-      } catch(e) {}
-    }
-  }
-
-  window.closeChat = function(event) {
-    if (event && event.target !== event.currentTarget) return;
-    overlay.classList.remove('open');
-    fabContainer.classList.remove('fab-hidden');
-    const notif = document.getElementById('chatNotification');
-    if (notif) notif.classList.remove('active');
-    
-    // Notify parent if in iframe
-    if (isInIframe) {
-      try {
-        window.parent.postMessage({ 
-          type: 'chatbox-toggle', 
-          isOpen: false 
-        }, '*');
-      } catch(e) {}
-    }
-  };
-
-  window.toggleChat = function() {
-    if (overlay.classList.contains('open')) {
-      closeChat();
-    } else {
-      openChat();
-    }
-  };
-
-  fab.addEventListener('click', function(e) {
-    e.stopPropagation();
-    window.toggleChat();
-  });
-
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closeChat();
-  });
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && overlay.classList.contains('open')) closeChat();
-  });
-
-  // ensure FAB visible initially
-  fabContainer.classList.remove('fab-hidden');
-
-  console.log('🔁 Responsive chat toggle ready.');
-})();
-</script>
   <!-- socket.io + chat logic -->
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script>
+    (function() {
+      "use strict";
+
+      // ===== AUTHENTICATION FUNCTIONS =====
+      function checkUserAuthentication() {
+        try {
+          const keys = ['agriUser', 'user', 'userData', 'authUser'];
+          for (const key of keys) {
+            const data = localStorage.getItem(key);
+            if (data) {
+              try {
+                const user = JSON.parse(data);
+                const userId = user.id || user.user_id || user.userId || user._id || null;
+                if (userId) {
+                  return true;
+                }
+              } catch (_) {}
+            }
+          }
+          
+          const sessionData = sessionStorage.getItem('user');
+          if (sessionData) {
+            try {
+              const user = JSON.parse(sessionData);
+              const userId = user.id || user.user_id || user.userId || user._id || null;
+              if (userId) {
+                return true;
+              }
+            } catch (_) {}
+          }
+          
+          const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+          if (token) {
+            return true;
+          }
+          
+          return false;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getCurrentUser() {
+        try {
+          const keys = ['agriUser', 'user', 'userData', 'authUser'];
+          for (const key of keys) {
+            const data = localStorage.getItem(key);
+            if (data) {
+              try {
+                const user = JSON.parse(data);
+                const userId = user.id || user.user_id || user.userId || user._id || null;
+                if (userId) {
+                  return {
+                    id: parseInt(userId),
+                    email: user.email || null,
+                    name: user.name || user.username || 'User'
+                  };
+                }
+              } catch (_) {}
+            }
+          }
+          
+          const sessionData = sessionStorage.getItem('user');
+          if (sessionData) {
+            try {
+              const user = JSON.parse(sessionData);
+              const userId = user.id || user.user_id || user.userId || user._id || null;
+              if (userId) {
+                return {
+                  id: parseInt(userId),
+                  email: user.email || null,
+                  name: user.name || user.username || 'User'
+                };
+              }
+            } catch (_) {}
+          }
+          
+          return null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      const isAuthenticated = checkUserAuthentication();
+      const user = getCurrentUser();
+
+      // ===== DETECT IFRAME =====
+      const isInIframe = window.self !== window.top;
+      if (isInIframe) {
+        document.documentElement.classList.add('in-iframe');
+        document.body.classList.add('in-iframe');
+        console.log('🔄 Chat running in iframe mode');
+      }
+
+      const fabContainer = document.getElementById('chat-fab-container');
+      const fab = document.getElementById('chat-fab');
+      const overlay = document.getElementById('chat-modal-overlay');
+      const modal = document.getElementById('chat-modal');
+      const placeholder = document.getElementById('chat-widget-placeholder');
+      const loadingEl = document.getElementById('chat-loading');
+
+      // ===== BUILD LOGIN-REQUIRED WIDGET =====
+      function buildLoginRequiredWidget() {
+        const container = document.createElement('div');
+        container.id = 'chat-widget-container';
+        container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
+
+        const nav = document.createElement('nav');
+        nav.innerHTML = `
+          <h1>💬 KISAN CIRCLE</h1>
+          <button id="chat-widget-close" aria-label="Close chat">&times;</button>
+        `;
+        container.appendChild(nav);
+
+        const loginSection = document.createElement('div');
+        loginSection.id = 'login-required';
+        loginSection.innerHTML = `
+          <div class="login-box">
+            <span class="lock-icon">🔒</span>
+            <h2>Please Login to Chat</h2>
+            <p>Please login to your AgriConnect account to start chatting with other users.</p>
+            <a href="/login.html?redirect=/chat.html" class="login-btn">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> LOGIN
+            </a>
+          </div>
+        `;
+        container.appendChild(loginSection);
+
+        // close button
+        const closeBtn = container.querySelector('#chat-widget-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeChat();
+          });
+        }
+
+        return container;
+      }
+
+      // ===== BUILD FULL CHAT WIDGET =====
+      function buildFullChatWidget() {
+        const container = document.createElement('div');
+        container.id = 'chat-widget-container';
+        container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
+
+        const nav = document.createElement('nav');
+        nav.innerHTML = `
+          <h1>💬 KISAN CIRCLE</h1>
+          <div id="user-count-container">
+            <span id="user-count-dot"></span>
+            <span id="user-count-text">0 Online</span>
+          </div>
+          <button id="chat-widget-close" aria-label="Close chat">&times;</button>
+        `;
+        container.appendChild(nav);
+
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'container active';
+        msgContainer.id = 'messageContainer';
+        container.appendChild(msgContainer);
+
+        const typing = document.createElement('div');
+        typing.id = 'typing-indicator';
+        container.appendChild(typing);
+
+        const sendArea = document.createElement('div');
+        sendArea.className = 'send active';
+        sendArea.id = 'chat-input-area';
+        sendArea.innerHTML = `
+          <input type="file" id="image-input" accept="image/*" style="display:none;">
+          <form id="send-container">
+            <button type="button" class="btn-icon" id="attach-file-btn">
+              <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+            <button class="btn" type="submit" id="send-btn">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+            <button type="button" class="btn" id="record-btn" style="display:none;">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+          </form>
+        `;
+        container.appendChild(sendArea);
+
+        // close button
+        const closeBtn = container.querySelector('#chat-widget-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeChat();
+          });
+        }
+
+        return container;
+      }
+
+      // ===== INJECT CHAT WIDGET =====
+      function injectChatWidget() {
+        loadingEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+        placeholder.innerHTML = '';
+
+        let widget;
+        if (!isAuthenticated || !user || !user.id) {
+          // Show login-required screen
+          console.log('🔒 User not authenticated - showing login screen');
+          widget = buildLoginRequiredWidget();
+        } else {
+          // Show full chat
+          console.log('✅ User authenticated - loading full chat');
+          widget = buildFullChatWidget();
+          
+          // Load chat.js only when authenticated
+          if (!window._chatScriptLoaded) {
+            const script = document.createElement('script');
+            script.src = '/js/chat.js';
+            script.onload = function() {
+              console.log('✅ chat.js loaded');
+              if (window.initializeChat) window.initializeChat(user);
+            };
+            script.onerror = function() {
+              console.warn('⚠️ chat.js not found – mock mode');
+              const container = document.getElementById('messageContainer');
+              if (container) {
+                const mock = document.createElement('div');
+                mock.className = 'message middle';
+                mock.textContent = '💬 Chat ready (mock mode)';
+                container.appendChild(mock);
+              }
+            };
+            document.body.appendChild(script);
+            window._chatScriptLoaded = true;
+          } else if (window.initializeChat) {
+            window.initializeChat(user);
+          }
+        }
+
+        placeholder.appendChild(widget);
+      }
+
+      // ===== OPEN / CLOSE =====
+      function openChat() {
+        fabContainer.classList.add('fab-hidden');
+        overlay.classList.add('open');
+        if (placeholder.children.length === 0) {
+          injectChatWidget();
+        }
+        loadingEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+        
+        if (isInIframe) {
+          try {
+            window.parent.postMessage({ 
+              type: 'chatbox-toggle', 
+              isOpen: true 
+            }, '*');
+          } catch(e) {}
+        }
+      }
+
+      window.closeChat = function(event) {
+        if (event && event.target !== event.currentTarget) return;
+        overlay.classList.remove('open');
+        fabContainer.classList.remove('fab-hidden');
+        const notif = document.getElementById('chatNotification');
+        if (notif) notif.classList.remove('active');
+        
+        if (isInIframe) {
+          try {
+            window.parent.postMessage({ 
+              type: 'chatbox-toggle', 
+              isOpen: false 
+            }, '*');
+          } catch(e) {}
+        }
+      };
+
+      window.toggleChat = function() {
+        if (overlay.classList.contains('open')) {
+          closeChat();
+        } else {
+          openChat();
+        }
+      };
+
+      // ===== EVENT LISTENERS =====
+      fab.addEventListener('click', function(e) {
+        e.stopPropagation();
+        window.toggleChat();
+      });
+
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeChat();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closeChat();
+      });
+
+      // ensure FAB visible initially
+      fabContainer.classList.remove('fab-hidden');
+
+      console.log('🔁 Responsive chat toggle ready.');
+      console.log(`🔐 Authentication status: ${isAuthenticated ? 'Logged in' : 'Logged out'}`);
+    })();
+  </script>
 
   <!-- ===== IFRAME OPTIMIZATION ===== -->
   <script>
   (function() {
-    // Only run when inside iframe
     if (window.self === window.top) return;
     
     console.log('🔄 Optimizing chat for iframe embed');
     
-    // 1. Hide the background placeholder
     const bg = document.querySelector('.bg-placeholder');
     if (bg) bg.style.display = 'none';
     
-    // 2. Make background transparent
     document.body.style.background = 'transparent';
     
-    // 3. When FAB is clicked, open modal and notify parent
     const fab = document.getElementById('chat-fab');
     if (fab) {
       fab.addEventListener('click', function(e) {
@@ -961,13 +1025,11 @@
         if (overlay) {
           overlay.classList.add('open');
           document.getElementById('chat-fab-container').classList.add('fab-hidden');
-          // Notify parent to expand iframe
           window.parent.postMessage({ type: 'chatbox-toggle', isOpen: true }, '*');
         }
       });
     }
     
-    // 4. When close button is clicked, close and notify parent
     document.addEventListener('click', function(e) {
       const closeBtn = e.target.closest('#chat-widget-close');
       if (closeBtn) {
@@ -975,13 +1037,11 @@
         if (overlay) {
           overlay.classList.remove('open');
           document.getElementById('chat-fab-container').classList.remove('fab-hidden');
-          // Notify parent to shrink iframe
           window.parent.postMessage({ type: 'chatbox-toggle', isOpen: false }, '*');
         }
       }
     });
     
-    // 5. Click outside modal closes it
     const overlay = document.getElementById('chat-modal-overlay');
     if (overlay) {
       overlay.addEventListener('click', function(e) {
