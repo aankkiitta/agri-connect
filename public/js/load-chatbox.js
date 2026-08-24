@@ -240,13 +240,153 @@
         }
     }
 
+    // ===== CREATE LOGIN PROMPT IFRAME =====
+    function createLoginPrompt() {
+        const container = document.getElementById('chatbox-container');
+        if (!container) {
+            console.error('❌ #chatbox-container not found!');
+            return;
+        }
+
+        // Clear container
+        container.innerHTML = '';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 999999;
+            overflow: visible;
+            margin: 0;
+            padding: 0;
+        `;
+
+        // Create a small login prompt button
+        const loginBtn = document.createElement('div');
+        loginBtn.id = 'chat-login-prompt';
+        loginBtn.style.cssText = `
+            position: fixed;
+            bottom: ${getIconDimensions().bottom}px;
+            right: ${getIconDimensions().right}px;
+            width: ${getIconDimensions().width}px;
+            height: ${getIconDimensions().height}px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+            color: white;
+            border: none;
+            box-shadow: 0 8px 28px rgba(108, 77, 255, 0.45);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 999999;
+            pointer-events: auto;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        `;
+        loginBtn.innerHTML = `<i class="fas fa-lock" style="font-size:22px;"></i>`;
+        loginBtn.title = 'Login to join KISAN CIRCLE chat';
+        
+        // Tooltip/label that appears on hover or click
+        const tooltip = document.createElement('div');
+        tooltip.id = 'chat-login-tooltip';
+        tooltip.style.cssText = `
+            position: fixed;
+            bottom: ${getIconDimensions().bottom + getIconDimensions().height + 12}px;
+            right: ${getIconDimensions().right}px;
+            background: #1e293b;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 999999;
+            max-width: 200px;
+            text-align: center;
+            line-height: 1.4;
+        `;
+        tooltip.innerHTML = '🔐 Login to join chat';
+        document.body.appendChild(tooltip);
+
+        // Show tooltip on hover
+        loginBtn.addEventListener('mouseenter', function() {
+            tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translateY(0)';
+        });
+        
+        loginBtn.addEventListener('mouseleave', function() {
+            tooltip.style.opacity = '0';
+            tooltip.style.transform = 'translateY(8px)';
+        });
+
+        // On click, redirect to login
+        loginBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        });
+
+        container.appendChild(loginBtn);
+
+        // Also create a small floating text indicator
+        const indicator = document.createElement('div');
+        indicator.id = 'chat-login-indicator';
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: ${getIconDimensions().bottom + getIconDimensions().height + 8}px;
+            right: ${getIconDimensions().right}px;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(8px);
+            color: #94a3b8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            letter-spacing: 0.3px;
+            z-index: 999998;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.08);
+            opacity: 0.7;
+        `;
+        indicator.textContent = '💬 KISAN CIRCLE';
+        document.body.appendChild(indicator);
+
+        console.log('🔒 Login prompt created');
+    }
+
+    function removeLoginPrompt() {
+        const container = document.getElementById('chatbox-container');
+        if (container) {
+            container.innerHTML = '';
+        }
+        const tooltip = document.getElementById('chat-login-tooltip');
+        if (tooltip) tooltip.remove();
+        const indicator = document.getElementById('chat-login-indicator');
+        if (indicator) indicator.remove();
+        console.log('🗑️ Login prompt removed');
+    }
+
     function loadChat() {
         // ===== AUTHENTICATION CHECK =====
         if (!checkUserAuthentication()) {
-            console.log('🔒 User not logged in - chatbox disabled');
-            hideChatbox();
+            console.log('🔒 User not logged in - showing login prompt');
+            removeLoginPrompt();
+            createLoginPrompt();
             return;
         }
+
+        // Remove login prompt if it exists
+        removeLoginPrompt();
 
         if (isLoaded) {
             showChatbox();
@@ -378,6 +518,7 @@
         isLoaded = false;
         chatIframe = null;
         isChatOpen = false;
+        removeLoginPrompt();
         console.log('🗑️ Chatbox destroyed');
     }
 
@@ -395,8 +536,9 @@
                     // User logged in - load chat
                     loadChat();
                 } else {
-                    // User logged out - destroy chat
+                    // User logged out - show login prompt
                     destroyChatbox();
+                    createLoginPrompt();
                 }
             }
         }, 2000); // Check every 2 seconds
@@ -408,8 +550,8 @@
             if (checkUserAuthentication()) {
                 loadChat();
             } else {
-                console.log('🔒 User not logged in - chatbox disabled');
-                hideChatbox();
+                console.log('🔒 User not logged in - showing login prompt');
+                createLoginPrompt();
             }
             monitorAuthChanges();
         });
@@ -417,8 +559,8 @@
         if (checkUserAuthentication()) {
             loadChat();
         } else {
-            console.log('🔒 User not logged in - chatbox disabled');
-            hideChatbox();
+            console.log('🔒 User not logged in - showing login prompt');
+            createLoginPrompt();
         }
         monitorAuthChanges();
     }
@@ -428,6 +570,8 @@
         loadChat,
         hideChatbox,
         destroyChatbox,
+        createLoginPrompt,
+        removeLoginPrompt,
         checkAuth: checkUserAuthentication,
         getUser: getCurrentUser
     };
