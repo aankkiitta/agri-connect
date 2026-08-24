@@ -61,7 +61,21 @@
         const params = new URLSearchParams(window.location.search);
         const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('with');
         console.log('📥 Receiver ID from URL:', id);
-        return id ? parseInt(id) : null;
+        if (id) {
+            const parsedId = parseInt(id);
+            if (!isNaN(parsedId) && parsedId > 0) {
+                return parsedId;
+            }
+        }
+        return null;
+    }
+    
+    // ========================================
+    // GET RECEIVER NAME FROM URL OR USER DATA
+    // ========================================
+    function getReceiverNameFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('name') || null;
     }
     
     // ========================================
@@ -79,14 +93,16 @@
             imageInput: document.getElementById('image-input'),
             sendBtn: document.getElementById('send-btn'),
             recordBtn: document.getElementById('record-btn'),
-            typingIndicator: document.getElementById('typing-indicator')
+            typingIndicator: document.getElementById('typing-indicator'),
+            headerTitle: document.querySelector('nav h1')
         };
         
         console.log('📋 DOM Elements found:', {
             widget: !!elements.widget,
             form: !!elements.form,
             messageInput: !!elements.messageInput,
-            messageContainer: !!elements.messageContainer
+            messageContainer: !!elements.messageContainer,
+            headerTitle: !!elements.headerTitle
         });
         
         if (!elements.messageContainer) {
@@ -120,27 +136,28 @@
     }
     
     // ========================================
-    // SHOW NO RECEIVER PROMPT
+    // SHOW LOADING STATE
     // ========================================
-    function showNoReceiverPrompt() {
+    function showLoadingState() {
         const container = document.getElementById('chat-widget-container');
         if (container) {
-            container.innerHTML = `
-                <nav>
-                    <h1>💬 KISAN CIRCLE</h1>
-                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                </nav>
-                <div id="login-prompt">
-                    <div class="login-box">
-                        <h2>👤 SELECT A USER</h2>
-                        <p>Use: <code>/chat?userId=2</code></p>
-                        <p style="font-size:0.7rem;color:#999;margin-top:12px;">
-                            Example: <br> 
-                            <code>https://your-app.com/chat?userId=5</code>
-                        </p>
-                    </div>
-                </div>
-            `;
+            const headerTitle = container.querySelector('nav h1');
+            if (headerTitle) {
+                headerTitle.textContent = '⏳ Loading Chat...';
+            }
+        }
+    }
+    
+    // ========================================
+    // UPDATE HEADER WITH RECEIVER NAME
+    // ========================================
+    function updateHeader(receiverName) {
+        const container = document.getElementById('chat-widget-container');
+        if (container) {
+            const headerTitle = container.querySelector('nav h1');
+            if (headerTitle && receiverName) {
+                headerTitle.textContent = `💬 Chat with ${receiverName}`;
+            }
         }
     }
     
@@ -229,6 +246,23 @@
     }
     
     // ========================================
+    // FETCH USER DETAILS
+    // ========================================
+    async function fetchUserDetails(userId) {
+        try {
+            const response = await fetch(`${SERVER_URL}/api/user/${userId}`);
+            if (response.ok) {
+                const user = await response.json();
+                return user;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            return null;
+        }
+    }
+    
+    // ========================================
     // LOAD CONVERSATION HISTORY
     // ========================================
     async function loadConversationHistory(userId, receiverId, messageContainer) {
@@ -240,31 +274,39 @@
             if (data.success && data.messages) {
                 console.log(`📨 Received ${data.messages.length} messages`);
                 messageContainer.innerHTML = '';
-                data.messages.forEach(msg => {
-                    const isOwn = msg.sender_id === userId;
-                    const position = isOwn ? 'right' : 'left';
-                    appendMessage(msg, position, messageContainer);
-                });
-                
-                // Mark messages as read if this is the receiver
-                const unreadMessages = data.messages.filter(msg => 
-                    msg.receiver_id === userId && !msg.is_read
-                );
-                if (unreadMessages.length > 0) {
-                    console.log(`📨 Marking ${unreadMessages.length} messages as read`);
-                    socket.emit('mark-read', {
-                        user_id: userId,
-                        other_user_id: receiverId
+                if (data.messages.length === 0) {
+                    appendSystemMessage('No messages yet. Start the conversation!', messageContainer);
+                } else {
+                    data.messages.forEach(msg => {
+                        const isOwn = msg.sender_id === userId;
+                        const position = isOwn ? 'right' : 'left';
+                        appendMessage(msg, position, messageContainer);
                     });
+                    
+                    // Mark messages as read if this is the receiver
+                    const unreadMessages = data.messages.filter(msg => 
+                        msg.receiver_id === userId && !msg.is_read
+                    );
+                    if (unreadMessages.length > 0 && socket && socket.connected) {
+                        console.log(`📨 Marking ${unreadMessages.length} messages as read`);
+                        socket.emit('mark-read', {
+                            user_id: userId,
+                            other_user_id: receiverId
+                        });
+                    }
                 }
                 
                 return data.messages;
             } else {
                 console.log('📨 No messages found');
+                messageContainer.innerHTML = '';
+                appendSystemMessage('No messages yet. Start the conversation!', messageContainer);
                 return [];
             }
         } catch (error) {
             console.error('❌ Error loading conversation:', error);
+            messageContainer.innerHTML = '';
+            appendSystemMessage('Failed to load messages. Please refresh.', messageContainer);
             return [];
         }
     }
@@ -272,9 +314,13 @@
     // ========================================
     // INITIALIZE CHAT
     // ========================================
-    function initializeChat() {
+    async function initializeChat() {
         console.log('🚀 Initializing KISAN CIRCLE Chat...');
         
+        // Show loading state
+        showLoadingState();
+        
+        // Get current user
         currentUser = getCurrentUser();
         
         if (!currentUser) {
@@ -283,11 +329,32 @@
             return;
         }
         
+        // Get receiver ID from URL
         currentReceiverId = getReceiverIdFromURL();
+        
+        console.log(`📥 Receiver ID from URL: ${currentReceiverId}`);
         
         if (!currentReceiverId) {
             console.log('❌ No receiver ID in URL');
-            showNoReceiverPrompt();
+            // Show a better message without the "use: /chat?userId=2" text
+            const container = document.getElementById('chat-widget-container');
+            if (container) {
+                container.innerHTML = `
+                    <nav>
+                        <h1>💬 KISAN CIRCLE</h1>
+                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                    </nav>
+                    <div id="login-prompt">
+                        <div class="login-box">
+                            <h2>👤 Select a User to Chat</h2>
+                            <p>Please specify which user you want to chat with.</p>
+                            <p style="font-size:0.8rem;color:#999;margin-top:8px;">
+                                Example: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">/chat.html?userId=5</code>
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
             return;
         }
         
@@ -303,7 +370,7 @@
                     </nav>
                     <div id="login-prompt">
                         <div class="login-box">
-                            <h2>😅 CAN'T CHAT WITH YOURSELF</h2>
+                            <h2>😅 Can't Chat With Yourself</h2>
                             <p>Please select a different user to chat with.</p>
                         </div>
                     </div>
@@ -312,9 +379,34 @@
             return;
         }
         
+        // Fetch receiver details
+        const receiverDetails = await fetchUserDetails(currentReceiverId);
+        if (!receiverDetails) {
+            console.log('❌ Receiver not found');
+            const container = document.getElementById('chat-widget-container');
+            if (container) {
+                container.innerHTML = `
+                    <nav>
+                        <h1>💬 KISAN CIRCLE</h1>
+                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                    </nav>
+                    <div id="login-prompt">
+                        <div class="login-box">
+                            <h2>❌ User Not Found</h2>
+                            <p>User with ID ${currentReceiverId} does not exist.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
         console.log('✅ Starting chat...');
-        console.log('👤 User:', currentUser);
-        console.log('📥 Receiver:', currentReceiverId);
+        console.log('👤 Current User:', currentUser);
+        console.log('📥 Receiver:', receiverDetails);
+        
+        // Update header with receiver name
+        updateHeader(receiverDetails.name || `User ${currentReceiverId}`);
         
         const elements = getElements();
         
@@ -516,6 +608,14 @@
                     sender_email: currentUser.email
                 };
                 
+                // Remove "No messages" system message if present
+                const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
+                systemMessages.forEach(el => {
+                    if (el.innerText.includes('No messages yet')) {
+                        el.remove();
+                    }
+                });
+                
                 // Display immediately for sender
                 appendMessage(tempMessage, 'right', elements.messageContainer);
                 
@@ -607,6 +707,15 @@
                             sender_name: currentUser.name,
                             sender_email: currentUser.email
                         };
+                        
+                        // Remove "No messages" system message if present
+                        const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
+                        systemMessages.forEach(el => {
+                            if (el.innerText.includes('No messages yet')) {
+                                el.remove();
+                            }
+                        });
+                        
                         appendMessage(tempMessage, 'right', elements.messageContainer);
                         
                         socket.emit('send-private-message', {
@@ -680,6 +789,15 @@
                                 sender_name: currentUser.name,
                                 sender_email: currentUser.email
                             };
+                            
+                            // Remove "No messages" system message if present
+                            const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
+                            systemMessages.forEach(el => {
+                                if (el.innerText.includes('No messages yet')) {
+                                    el.remove();
+                                }
+                            });
+                            
                             appendMessage(tempMessage, 'right', elements.messageContainer);
                             
                             socket.emit('send-private-message', {
