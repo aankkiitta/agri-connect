@@ -368,93 +368,77 @@ io.on('connection', (socket) => {
     // ========================================
     // SEND GROUP MESSAGE - FIXED
     // ========================================
-    socket.on('send-message', async (data) => {
-        console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
-        console.log('📨 Data:', data);
-        console.log('📨 Socket ID:', socket.id);
-        console.log('📨 Current User:', currentUserId);
+// Send message - FIXED
+socket.on('send-message', async (data) => {
+    console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
+    console.log('📨 Data:', data);
+    
+    try {
+        const { sender_id, sender_name, sender_email, message, message_type } = data;
         
-        try {
-            const { sender_id, sender_name, sender_email, message, message_type } = data;
-            
-            // Log all fields
-            console.log('📨 sender_id:', sender_id);
-            console.log('📨 sender_name:', sender_name);
-            console.log('📨 message:', message);
-            console.log('📨 message_type:', message_type);
-            
-            if (!sender_id || !message) {
-                console.error('❌ Missing required fields');
-                socket.emit('message-error', {
-                    error: 'Missing required fields'
-                });
-                return;
-            }
-            
-            // Security: Verify sender matches authenticated user
-            if (parseInt(sender_id) !== parseInt(currentUserId)) {
-                console.error(`❌ Security: Sender mismatch. Socket user: ${currentUserId}, Message sender: ${sender_id}`);
-                socket.emit('message-error', {
-                    error: 'Unauthorized sender'
-                });
-                return;
-            }
-            
-            // Insert into database (receiver_id = NULL for group messages)
-            console.log('📨 Inserting message into database...');
-            const [result] = await db.query(`
-                INSERT INTO messages (sender_id, receiver_id, message, message_type)
-                VALUES (?, NULL, ?, ?)
-            `, [sender_id, message, message_type || 'text']);
-            
-            console.log('📨 Database insert successful, ID:', result.insertId);
-            
-            // Get the complete message with user details
-            const [newMessage] = await db.query(`
-                SELECT 
-                    m.id,
-                    m.sender_id,
-                    m.receiver_id,
-                    m.message,
-                    m.message_type,
-                    m.created_at,
-                    s.name AS sender_name,
-                    s.email AS sender_email
-                FROM messages m
-                LEFT JOIN users s ON m.sender_id = s.id
-                WHERE m.id = ?
-            `, [result.insertId]);
-            
-            const messageData = newMessage[0];
-            console.log('📨 Message data to broadcast:', messageData);
-            
-            // Store in cache
-            messageCache.push(messageData);
-            if (messageCache.length > 100) {
-                messageCache.shift();
-            }
-            
-            console.log(`📨 Message cached, total: ${messageCache.length}`);
-            
-            // Broadcast to ALL connected users
-            console.log(`📤 Broadcasting to ${io.engine.clientsCount} clients`);
-            io.emit('receive-message', messageData);
-            console.log('✅ Message broadcast successful');
-            
-            // Send confirmation to sender
-            socket.emit('message-sent', {
-                success: true,
-                message: messageData
-            });
-            
-        } catch (error) {
-            console.error('❌ Error sending message:', error);
-            console.error('❌ Error stack:', error.stack);
-            socket.emit('message-error', {
-                error: 'Failed to send message: ' + error.message
-            });
+        if (!sender_id || !message) {
+            console.error('❌ Missing required fields');
+            return;
         }
-    });
+        
+        // Check column names
+        let [columns] = await db.query('DESCRIBE messages');
+        let columnNames = columns.map(c => c.Field);
+        
+        let senderCol = columnNames.includes('sender_id') ? 'sender_id' : 'sender';
+        let receiverCol = columnNames.includes('receiver_id') ? 'receiver_id' : 'receiver';
+        let messageCol = columnNames.includes('message') ? 'message' : 'content';
+        let typeCol = columnNames.includes('message_type') ? 'message_type' : 'type';
+        let timeCol = columnNames.includes('created_at') ? 'created_at' : 'timestamp';
+        
+        // Insert into database
+        const [result] = await db.query(`
+            INSERT INTO messages (${senderCol}, ${receiverCol}, ${messageCol}, ${typeCol})
+            VALUES (?, NULL, ?, ?)
+        `, [sender_id, message, message_type || 'text']);
+        
+        // Get the complete message
+        const [newMessage] = await db.query(`
+            SELECT 
+                m.id,
+                m.${senderCol} AS sender_id,
+                m.${receiverCol} AS receiver_id,
+                m.${messageCol} AS message,
+                m.${typeCol} AS message_type,
+                m.${timeCol} AS created_at,
+                s.name AS sender_name,
+                s.email AS sender_email
+            FROM messages m
+            LEFT JOIN users s ON m.${senderCol} = s.id
+            WHERE m.id = ?
+        `, [result.insertId]);
+        
+        const messageData = newMessage[0];
+        console.log('📨 Message data to broadcast:', messageData);
+        
+        // Store in cache
+        messageCache.push(messageData);
+        if (messageCache.length > 100) {
+            messageCache.shift();
+        }
+        
+        // Broadcast to ALL connected users
+        io.emit('receive-message', messageData);
+        console.log('✅ Message broadcast successful');
+        
+        // Send confirmation to sender
+        socket.emit('message-sent', {
+            success: true,
+            message: messageData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error sending message:', error);
+        socket.emit('message-error', {
+            error: 'Failed to send message: ' + error.message
+        });
+    }
+});
     
     // ========================================
     // TYPING INDICATOR
@@ -533,24 +517,33 @@ io.on('connection', (socket) => {
 // Get all group chat messages
 app.get('/api/chat/messages', async (req, res) => {
     try {
+        // Try to detect the column names first
+        let [columns] = await db.query('DESCRIBE messages');
+        let columnNames = columns.map(c => c.Field);
+        
+        // Map column names to what we need
+        let senderCol = columnNames.includes('sender_id') ? 'sender_id' : 'sender';
+        let receiverCol = columnNames.includes('receiver_id') ? 'receiver_id' : 'receiver';
+        let messageCol = columnNames.includes('message') ? 'message' : 'content';
+        let typeCol = columnNames.includes('message_type') ? 'message_type' : 'type';
+        let timeCol = columnNames.includes('created_at') ? 'created_at' : 'timestamp';
+        
         const [messages] = await db.query(`
             SELECT 
                 m.id,
-                m.sender_id,
-                m.receiver_id,
-                m.message,
-                m.message_type,
-                m.created_at,
+                m.${senderCol} AS sender_id,
+                m.${receiverCol} AS receiver_id,
+                m.${messageCol} AS message,
+                m.${typeCol} AS message_type,
+                m.${timeCol} AS created_at,
                 s.name AS sender_name,
                 s.email AS sender_email
             FROM messages m
-            LEFT JOIN users s ON m.sender_id = s.id
-            WHERE m.receiver_id IS NULL OR m.receiver_id = 0
-            ORDER BY m.created_at ASC
+            LEFT JOIN users s ON m.${senderCol} = s.id
+            WHERE m.${receiverCol} IS NULL OR m.${receiverCol} = 0
+            ORDER BY m.${timeCol} ASC
             LIMIT 100
         `);
-        
-        console.log(`📨 Fetching group messages: ${messages.length} messages found`);
         
         res.json({
             success: true,
@@ -564,6 +557,7 @@ app.get('/api/chat/messages', async (req, res) => {
         });
     }
 });
+
 
 // Get user details
 app.get('/api/user/:id', async (req, res) => {
