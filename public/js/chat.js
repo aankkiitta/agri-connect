@@ -1,5 +1,5 @@
 (function() {
-    console.log('🔄 Chat.js loaded...');
+    console.log('🔄 KISAN CIRCLE Chat loaded...');
     console.log('📍 Current URL:', window.location.href);
     
     const SERVER_URL = window.location.origin;
@@ -8,13 +8,13 @@
     let socket = null;
     let currentUser = null;
     let currentReceiverId = null;
-    let currentRoomId = null;
     let isConnected = false;
     let isTyping = false;
     let typingTimer;
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let messageHistory = [];
     
     // ========================================
     // GET USER FROM localStorage
@@ -37,8 +37,8 @@
                         const name = user.name || user.username || 'User';
                         
                         if (userId || email) {
-                            console.log(`✅ User: ${name} (${email})`);
-                            return { id: userId, email, name };
+                            console.log(`✅ User: ${name} (ID: ${userId}, Email: ${email})`);
+                            return { id: parseInt(userId), email, name };
                         }
                     } catch (e) {
                         console.warn(`⚠️ Failed to parse data from key: ${key}`);
@@ -53,17 +53,17 @@
             return null;
         }
     }
-
+    
     // ========================================
     // GET RECEIVER ID FROM URL
     // ========================================
     function getReceiverIdFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const id = params.get('userId') || params.get('receiverId') || params.get('id');
+        const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('with');
         console.log('📥 Receiver ID from URL:', id);
         return id ? parseInt(id) : null;
     }
-
+    
     // ========================================
     // GET DOM ELEMENTS
     // ========================================
@@ -96,7 +96,7 @@
         
         return elements;
     }
-
+    
     // ========================================
     // SHOW LOGIN PROMPT
     // ========================================
@@ -106,6 +106,7 @@
             container.innerHTML = `
                 <nav>
                     <h1>🔐 KISAN CIRCLE</h1>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
                 </nav>
                 <div id="login-prompt">
                     <div class="login-box">
@@ -117,7 +118,7 @@
             `;
         }
     }
-
+    
     // ========================================
     // SHOW NO RECEIVER PROMPT
     // ========================================
@@ -127,19 +128,24 @@
             container.innerHTML = `
                 <nav>
                     <h1>💬 KISAN CIRCLE</h1>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
                 </nav>
                 <div id="login-prompt">
                     <div class="login-box">
                         <h2>👤 SELECT A USER</h2>
                         <p>Use: <code>/chat?userId=2</code></p>
+                        <p style="font-size:0.7rem;color:#999;margin-top:12px;">
+                            Example: <br> 
+                            <code>https://your-app.com/chat?userId=5</code>
+                        </p>
                     </div>
                 </div>
             `;
         }
     }
-
+    
     // ========================================
-    // APPEND MESSAGE
+    // APPEND MESSAGE TO UI
     // ========================================
     function appendMessage(data, position, messageContainer) {
         if (!messageContainer) {
@@ -149,16 +155,28 @@
         
         console.log(`📝 Appending message: ${data.message} (${position})`);
         
+        // Prevent duplicates
+        const existingMessages = messageContainer.querySelectorAll('.message');
+        for (const existing of existingMessages) {
+            if (existing.dataset.messageId && existing.dataset.messageId === String(data.id)) {
+                console.log(`⚠️ Message ${data.id} already exists, skipping duplicate`);
+                return;
+            }
+        }
+        
         const messageElement = document.createElement('div');
         messageElement.classList.add('message');
         messageElement.classList.add(position);
-
-        const time = data.timestamp 
-            ? new Date(data.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+        if (data.id) {
+            messageElement.dataset.messageId = data.id;
+        }
+        
+        const time = data.created_at || data.timestamp 
+            ? new Date(data.created_at || data.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
             : new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-
+        
         let messageContent = data.message || data.text || '';
-        let senderName = data.name || data.email || 'User';
+        let senderName = data.sender_name || data.name || data.email || 'User';
         
         if (data.message_type === 'image') {
             messageContent = `<a href="${data.message}" target="_blank"><img src="${data.message}" class="message-image" /></a>`;
@@ -171,6 +189,7 @@
             <div class="message-header">
                 <span class="message-name">${position === 'left' ? senderName + ' · ' : ''}</span>
                 <span class="message-info">${time}</span>
+                ${position === 'right' ? `<span class="message-status" style="margin-left:6px;font-size:0.55rem;color:#888;">${data.is_read ? '✓✓ Read' : '✓ Sent'}</span>` : ''}
             </div>
         `;
         
@@ -178,7 +197,7 @@
         messageContainer.scrollTop = messageContainer.scrollHeight;
         console.log('✅ Message appended to UI');
     }
-
+    
     function appendSystemMessage(text, messageContainer) {
         if (!messageContainer) return;
         const messageElement = document.createElement('div');
@@ -187,38 +206,74 @@
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
-
+    
     // ========================================
-    // UPDATE USER COUNT
+    // UPDATE USER COUNT / ONLINE STATUS
     // ========================================
-    function updateUserCount(count, elements) {
+    function updateOnlineStatus(onlineUsers, elements, receiverId) {
         if (elements.userCountText) {
-            elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
+            elements.userCountText.textContent = onlineUsers.length > 0 ? `${onlineUsers.length} Online` : '0 Online';
         }
         if (elements.userCountDot) {
-            elements.userCountDot.style.backgroundColor = count > 0 ? '#32CD32' : '#ff4444';
+            elements.userCountDot.style.backgroundColor = onlineUsers.length > 0 ? '#32CD32' : '#ff4444';
         }
-        console.log(`👥 User count updated: ${count} online`);
+        
+        // Check if receiver is online
+        if (receiverId && elements.userCountText) {
+            const isOnline = onlineUsers.includes(receiverId);
+            elements.userCountText.textContent = isOnline ? '🟢 Online' : '🔴 Offline';
+            if (elements.userCountDot) {
+                elements.userCountDot.style.backgroundColor = isOnline ? '#32CD32' : '#ff4444';
+            }
+        }
     }
-
+    
     // ========================================
-    // UPDATE RECEIVER PRESENCE
+    // LOAD CONVERSATION HISTORY
     // ========================================
-    function updateReceiverPresence(online, elements) {
-        if (elements.userCountText) {
-            elements.userCountText.textContent = online ? '🟢 Online' : '🔴 Offline';
+    async function loadConversationHistory(userId, receiverId, messageContainer) {
+        try {
+            console.log(`📥 Loading conversation between ${userId} and ${receiverId}`);
+            const response = await fetch(`${SERVER_URL}/api/chat/messages/${userId}/${receiverId}`);
+            const data = await response.json();
+            
+            if (data.success && data.messages) {
+                console.log(`📨 Received ${data.messages.length} messages`);
+                messageContainer.innerHTML = '';
+                data.messages.forEach(msg => {
+                    const isOwn = msg.sender_id === userId;
+                    const position = isOwn ? 'right' : 'left';
+                    appendMessage(msg, position, messageContainer);
+                });
+                
+                // Mark messages as read if this is the receiver
+                const unreadMessages = data.messages.filter(msg => 
+                    msg.receiver_id === userId && !msg.is_read
+                );
+                if (unreadMessages.length > 0) {
+                    console.log(`📨 Marking ${unreadMessages.length} messages as read`);
+                    socket.emit('mark-read', {
+                        user_id: userId,
+                        other_user_id: receiverId
+                    });
+                }
+                
+                return data.messages;
+            } else {
+                console.log('📨 No messages found');
+                return [];
+            }
+        } catch (error) {
+            console.error('❌ Error loading conversation:', error);
+            return [];
         }
-        if (elements.userCountDot) {
-            elements.userCountDot.style.backgroundColor = online ? '#32CD32' : '#ff4444';
-        }
-        console.log(`📡 Receiver presence: ${online ? 'Online' : 'Offline'}`);
     }
-
+    
     // ========================================
     // INITIALIZE CHAT
     // ========================================
     function initializeChat() {
-        console.log('🚀 Initializing chat...');
+        console.log('🚀 Initializing KISAN CIRCLE Chat...');
         
         currentUser = getCurrentUser();
         
@@ -236,6 +291,27 @@
             return;
         }
         
+        // Prevent chatting with self
+        if (currentUser.id === currentReceiverId) {
+            console.log('❌ Cannot chat with self');
+            const container = document.getElementById('chat-widget-container');
+            if (container) {
+                container.innerHTML = `
+                    <nav>
+                        <h1>💬 KISAN CIRCLE</h1>
+                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                    </nav>
+                    <div id="login-prompt">
+                        <div class="login-box">
+                            <h2>😅 CAN'T CHAT WITH YOURSELF</h2>
+                            <p>Please select a different user to chat with.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
         console.log('✅ Starting chat...');
         console.log('👤 User:', currentUser);
         console.log('📥 Receiver:', currentReceiverId);
@@ -246,20 +322,19 @@
             console.error('❌ Chat widget not found');
             return;
         }
-
-        console.log(`🔗 Server URL: ${SERVER_URL}`);
-
+        
+        console.log(`🔗 Connecting to Socket.IO at ${SERVER_URL}`);
+        
         // ========================================
         // CONNECT TO SOCKET.IO
         // ========================================
-        console.log('📡 Connecting to Socket.IO...');
         socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionAttempts: 10,
             reconnectionDelay: 1000
         });
-
+        
         // ========================================
         // SOCKET EVENTS
         // ========================================
@@ -267,8 +342,6 @@
             console.log('✅ Connected to chat server');
             console.log('🆔 Socket ID:', socket.id);
             isConnected = true;
-            
-            updateReceiverPresence(false, elements);
             
             if (currentUser) {
                 console.log('📤 Sending user data:', currentUser);
@@ -278,126 +351,106 @@
                     name: currentUser.name
                 });
             }
-            
-            // Join conversation
-            socket.emit('join-conversation', {
-                userId: currentUser.id,
-                receiverId: currentReceiverId
-            });
         });
-
-        socket.on('disconnect', () => {
-            console.log('❌ Disconnected from chat server');
-            isConnected = false;
-            updateReceiverPresence(false, elements);
-        });
-
+        
         socket.on('connect_error', (error) => {
             console.error('❌ Connection error:', error);
             if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ffaa00';
             if (elements.userCountText) elements.userCountText.textContent = 'Reconnecting...';
         });
-
+        
+        socket.on('disconnect', () => {
+            console.log('❌ Disconnected from chat server');
+            isConnected = false;
+            if (elements.userCountText) elements.userCountText.textContent = 'Disconnected';
+            if (elements.userCountDot) elements.userCountDot.style.backgroundColor = '#ff4444';
+        });
+        
         // ========================================
-        // RECEIVE CHAT HISTORY
+        // USER CONNECTED CONFIRMATION
         // ========================================
-        socket.on('chat-history', (messages) => {
-            console.log(`📨 Received ${messages ? messages.length : 0} messages`);
-            if (elements.messageContainer) {
-                elements.messageContainer.innerHTML = '';
-                if (messages && messages.length > 0) {
-                    messages.forEach(msg => {
-                        const isOwn = msg.sender_id === currentUser.id;
-                        const position = isOwn ? 'right' : 'left';
-                        appendMessage(msg, position, elements.messageContainer);
+        socket.on('user-connected-confirm', (data) => {
+            console.log('✅ User connection confirmed:', data);
+            // Load conversation history after connection
+            loadConversationHistory(currentUser.id, currentReceiverId, elements.messageContainer);
+        });
+        
+        // ========================================
+        // ONLINE USERS LIST
+        // ========================================
+        socket.on('online-users', (onlineUsers) => {
+            console.log('🟢 Online users:', onlineUsers);
+            updateOnlineStatus(onlineUsers, elements, currentReceiverId);
+        });
+        
+        // ========================================
+        // NEW PRIVATE MESSAGE
+        // ========================================
+        socket.on('new-private-message', (data) => {
+            console.log('📨📨📨 New private message received:', data);
+            
+            if (!data.message) {
+                console.error('❌ Invalid message data:', data);
+                return;
+            }
+            
+            const msg = data.message;
+            
+            // Check if message is for this conversation
+            if ((msg.sender_id === currentUser.id && msg.receiver_id === currentReceiverId) ||
+                (msg.sender_id === currentReceiverId && msg.receiver_id === currentUser.id)) {
+                const position = msg.sender_id === currentUser.id ? 'right' : 'left';
+                appendMessage(msg, position, elements.messageContainer);
+                
+                // If we received a message, mark it as read
+                if (msg.sender_id === currentReceiverId && !msg.is_read) {
+                    socket.emit('mark-read', {
+                        user_id: currentUser.id,
+                        other_user_id: currentReceiverId
                     });
                 }
             }
         });
-
+        
         // ========================================
-        // RECEIVER PRESENCE
+        // MESSAGE SENT CONFIRMATION
         // ========================================
-        socket.on('receiver-presence', (data) => {
-            console.log('📡 Receiver presence update:', data);
-            if (data.userId === currentReceiverId) {
-                updateReceiverPresence(data.online, elements);
+        socket.on('message-sent', (data) => {
+            console.log('✅ Message sent confirmation:', data);
+            if (data.success && data.message) {
+                // Update UI if needed (already added optimistically)
+                // Could update status from "Sent" to "Delivered/Read"
             }
         });
-
+        
         // ========================================
-        // RECEIVE MESSAGE (REAL-TIME)
+        // MESSAGES READ CONFIRMATION
         // ========================================
-        socket.on('receive-message', (data) => {
-            console.log('📨📨📨 MESSAGE RECEIVED:', data);
-            console.log('📨 From:', data.name, 'Message:', data.message);
-            
-            // Check if message is for this conversation
-            if ((data.sender_id === currentUser.id && data.receiver_id === currentReceiverId) ||
-                (data.sender_id === currentReceiverId && data.receiver_id === currentUser.id)) {
-                const position = data.sender_id === currentUser.id ? 'right' : 'left';
-                appendMessage(data, position, elements.messageContainer);
-            }
+        socket.on('messages-read', (data) => {
+            console.log('📨 Messages read by:', data.by_user);
+            // Update status indicators for messages
+            const messages = elements.messageContainer.querySelectorAll('.message.right');
+            messages.forEach(msg => {
+                const statusSpan = msg.querySelector('.message-status');
+                if (statusSpan) {
+                    statusSpan.textContent = '✓✓ Read';
+                }
+            });
         });
-
-        // ========================================
-        // ONLINE USERS
-        // ========================================
-        socket.on('online-users', (users) => {
-            console.log('🟢 Online users:', users);
-            const count = users ? users.length : 0;
-            
-            // Check if receiver is online
-            const receiverOnline = users && users.some(u => u.id === currentReceiverId);
-            if (receiverOnline !== undefined) {
-                updateReceiverPresence(receiverOnline, elements);
-            }
-            
-            if (elements.userCountText) {
-                elements.userCountText.textContent = count > 0 ? `${count} Online` : '0 Online';
-            }
-        });
-
-        // ========================================
-        // USER JOINED/LEFT
-        // ========================================
-        socket.on('user-joined', (data) => {
-            console.log('👤 User joined:', data);
-            if (data.userId === currentReceiverId) {
-                updateReceiverPresence(true, elements);
-            }
-            appendSystemMessage(data.message, elements.messageContainer);
-        });
-
-        socket.on('user-left', (data) => {
-            console.log('👤 User left:', data);
-            if (data.userId === currentReceiverId) {
-                updateReceiverPresence(false, elements);
-            }
-            appendSystemMessage(data.message, elements.messageContainer);
-        });
-
-        // ========================================
-        // CONVERSATION JOINED
-        // ========================================
-        socket.on('conversation-joined', (data) => {
-            console.log('✅ Conversation joined:', data);
-            currentRoomId = data.roomId;
-        });
-
+        
         // ========================================
         // TYPING INDICATOR
         // ========================================
         socket.on('user-typing', (data) => {
             if (elements.typingIndicator) {
-                if (data.userId === currentReceiverId && data.isTyping) {
-                    elements.typingIndicator.innerText = `${data.name || 'User'} is typing...`;
+                if (data.user_id === currentReceiverId && data.isTyping) {
+                    elements.typingIndicator.innerText = 'User is typing...';
                 } else {
                     elements.typingIndicator.innerText = '';
                 }
             }
         });
-
+        
         // ========================================
         // SEND MESSAGE
         // ========================================
@@ -409,17 +462,23 @@
             const sendBtn = document.getElementById('send-btn');
             const recordBtn = document.getElementById('record-btn');
             
-            if (!form) {
-                console.error('❌ Form not found!');
-                return;
-            }
-            
-            if (!messageInput) {
-                console.error('❌ Message input not found!');
+            if (!form || !messageInput) {
+                console.error('❌ Form or input not found!');
                 return;
             }
             
             console.log('✅ Form and input found');
+            
+            // Show send button when typing
+            messageInput.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    if (sendBtn) sendBtn.style.display = 'flex';
+                    if (recordBtn) recordBtn.style.display = 'none';
+                } else {
+                    if (sendBtn) sendBtn.style.display = 'none';
+                    if (recordBtn) recordBtn.style.display = 'flex';
+                }
+            });
             
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -444,35 +503,36 @@
                     return false;
                 }
                 
-                const messageData = {
+                // Create temporary message for UI
+                const tempMessage = {
+                    id: Date.now(),
+                    sender_id: currentUser.id,
+                    receiver_id: currentReceiverId,
+                    message: message,
+                    message_type: 'text',
+                    is_read: false,
+                    created_at: new Date().toISOString(),
+                    sender_name: currentUser.name,
+                    sender_email: currentUser.email
+                };
+                
+                // Display immediately for sender
+                appendMessage(tempMessage, 'right', elements.messageContainer);
+                
+                // Send to server via Socket.IO
+                socket.emit('send-private-message', {
                     sender_id: currentUser.id,
                     receiver_id: currentReceiverId,
                     message: message,
                     message_type: 'text'
-                };
-                
-                // Display immediately for sender
-                const displayData = {
-                    sender_id: currentUser.id,
-                    receiver_id: currentReceiverId,
-                    name: currentUser.name,
-                    email: currentUser.email,
-                    message: message,
-                    message_type: 'text',
-                    timestamp: new Date().toISOString()
-                };
-                appendMessage(displayData, 'right', elements.messageContainer);
-                
-                // Send to server
-                socket.emit('send-message', messageData);
+                });
                 console.log('📤 Message emitted to server');
                 
                 // Clear input
                 messageInput.value = '';
                 messageInput.focus();
-                
-                if (recordBtn) recordBtn.style.display = 'flex';
                 if (sendBtn) sendBtn.style.display = 'none';
+                if (recordBtn) recordBtn.style.display = 'flex';
                 
                 return false;
             });
@@ -486,29 +546,18 @@
                     return false;
                 }
             });
-            
-            // Show/hide send button
-            messageInput.addEventListener('input', function() {
-                if (this.value.trim() !== '') {
-                    if (sendBtn) sendBtn.style.display = 'flex';
-                    if (recordBtn) recordBtn.style.display = 'none';
-                } else {
-                    if (sendBtn) sendBtn.style.display = 'none';
-                    if (recordBtn) recordBtn.style.display = 'flex';
-                }
-            });
         }
-
+        
         // ========================================
-        // TYPING
+        // TYPING INDICATOR
         // ========================================
         if (elements.messageInput) {
             elements.messageInput.addEventListener('input', function() {
                 if (!isTyping && socket && currentUser && currentReceiverId) { 
                     isTyping = true; 
                     socket.emit('typing', {
-                        userId: currentUser.id,
-                        receiverId: currentReceiverId
+                        sender_id: currentUser.id,
+                        receiver_id: currentReceiverId
                     });
                 }
                 clearTimeout(typingTimer);
@@ -516,19 +565,21 @@
                     isTyping = false; 
                     if (socket && currentUser && currentReceiverId) {
                         socket.emit('stop-typing', {
-                            userId: currentUser.id,
-                            receiverId: currentReceiverId
+                            sender_id: currentUser.id,
+                            receiver_id: currentReceiverId
                         });
                     }
                 }, 2000);
             });
         }
-
+        
         // ========================================
         // IMAGE UPLOAD
         // ========================================
         if (elements.attachFileBtn && elements.imageInput) {
-            elements.attachFileBtn.addEventListener('click', () => { elements.imageInput.click(); });
+            elements.attachFileBtn.addEventListener('click', () => { 
+                elements.imageInput.click(); 
+            });
             
             elements.imageInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
@@ -545,20 +596,24 @@
                     const data = await response.json();
                     
                     if (data.filePath) {
-                        const displayData = {
+                        const tempMessage = {
+                            id: Date.now(),
                             sender_id: currentUser.id,
                             receiver_id: currentReceiverId,
-                            name: currentUser.name,
-                            email: currentUser.email,
                             message: data.filePath,
                             message_type: 'image',
-                            timestamp: new Date().toISOString()
+                            is_read: false,
+                            created_at: new Date().toISOString(),
+                            sender_name: currentUser.name,
+                            sender_email: currentUser.email
                         };
-                        appendMessage(displayData, 'right', elements.messageContainer);
-                        socket.emit('send-image', {
+                        appendMessage(tempMessage, 'right', elements.messageContainer);
+                        
+                        socket.emit('send-private-message', {
                             sender_id: currentUser.id,
                             receiver_id: currentReceiverId,
-                            filePath: data.filePath
+                            message: data.filePath,
+                            message_type: 'image'
                         });
                     }
                 } catch (error) {
@@ -568,7 +623,7 @@
                 e.target.value = null;
             });
         }
-
+        
         // ========================================
         // AUDIO RECORDING
         // ========================================
@@ -594,7 +649,7 @@
                         alert('Could not access microphone');
                     });
             });
-
+            
             elements.recordBtn.addEventListener('mouseup', async () => {
                 if (!isRecording || !mediaRecorder) return;
                 isRecording = false; 
@@ -614,20 +669,24 @@
                         const data = await response.json();
                         
                         if (data.filePath) {
-                            const displayData = {
+                            const tempMessage = {
+                                id: Date.now(),
                                 sender_id: currentUser.id,
                                 receiver_id: currentReceiverId,
-                                name: currentUser.name,
-                                email: currentUser.email,
                                 message: data.filePath,
                                 message_type: 'audio',
-                                timestamp: new Date().toISOString()
+                                is_read: false,
+                                created_at: new Date().toISOString(),
+                                sender_name: currentUser.name,
+                                sender_email: currentUser.email
                             };
-                            appendMessage(displayData, 'right', elements.messageContainer);
-                            socket.emit('send-audio', {
+                            appendMessage(tempMessage, 'right', elements.messageContainer);
+                            
+                            socket.emit('send-private-message', {
                                 sender_id: currentUser.id,
                                 receiver_id: currentReceiverId,
-                                filePath: data.filePath
+                                message: data.filePath,
+                                message_type: 'audio'
                             });
                         }
                     } catch (error) {
@@ -638,9 +697,10 @@
             });
         }
         
-        console.log('✅ Chat initialization complete');
+        console.log('✅ KISAN CIRCLE Chat initialization complete');
+        console.log('📊 Waiting for messages...');
     }
-
+    
     // ========================================
     // START
     // ========================================

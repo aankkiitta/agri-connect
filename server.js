@@ -282,268 +282,387 @@ async function initializeDatabase() {
 }
 
 initializeDatabase();
+// ==================================================
+// SOCKET.IO - PRIVATE CHAT IMPLEMENTATION
+// ==================================================
 
-// ==================================================
-// CHAT STATE - GROUP CHAT (FIXED)
-// ==================================================
-const chatUsers = new Map(); // socketId -> user data
-const messageCache = []; // Array for messages
-
-// ==================================================
-// CHAT ROUTE
-// ==================================================
-app.get('/chat', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
-});
-
-// ==================================================
-// CHAT SOCKET EVENTS - COMPLETE FIX
-// ==================================================
-const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    },
-    transports: ['websocket', 'polling']
-});
+const onlineUsers = new Map(); // userId -> Set of socketIds
+const userSockets = new Map(); // socketId -> userId
 
 io.on('connection', (socket) => {
     console.log('👤 New client connected:', socket.id);
-    console.log(`📊 Total connections: ${io.engine.clientsCount}`);
     
-    let currentUser = null;
-
+    let currentUserId = null;
+    
     // ========================================
-    // USER JOINS CHAT
+    // USER AUTHENTICATION & JOIN
     // ========================================
-    socket.on('user-connected', (data) => {
-        console.log('📝 User data received:', data);
+    socket.on('user-connected', async (data) => {
+        console.log('📝 User connected data:', data);
         
-        const userId = data.userId || data.id || null;
-        const email = data.email || null;
+        const userId = data.userId || data.id;
+        const email = data.email;
         const name = data.name || 'User';
         
-        if (!userId && !email) {
-            console.error('❌ No user identifier provided');
+        if (!userId) {
+            console.error('❌ No user ID provided');
             return;
         }
         
-        currentUser = {
-            id: userId,
-            email: email,
-            name: name,
-            socketId: socket.id
-        };
+        currentUserId = userId;
         
-        chatUsers.set(socket.id, currentUser);
+        // Store socket mapping
+        userSockets.set(socket.id, userId);
         
-        console.log(`✅ User joined: ${name} (${email})`);
-        console.log(`📊 Total users online: ${chatUsers.size}`);
-        
-        // ✅ Send updated online users list to ALL clients
-        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-            id: u.id,
-            email: u.email,
-            name: u.name
-        }));
-        io.emit('online-users', onlineUsers);
-        console.log(`📤 Sent online users: ${onlineUsers.length} users`);
-        
-        // ✅ Send chat history to the new user
-        if (messageCache.length > 0) {
-            const recentMessages = messageCache.slice(-50);
-            console.log(`📨 Sending ${recentMessages.length} cached messages to ${name}`);
-            socket.emit('chat-history', recentMessages);
-        } else {
-            console.log(`📨 No cached messages for ${name}`);
-            socket.emit('chat-history', []);
+        // Add to online users
+        if (!onlineUsers.has(userId)) {
+            onlineUsers.set(userId, new Set());
         }
+        onlineUsers.get(userId).add(socket.id);
         
-        // ✅ Broadcast user joined message
-        io.emit('user-joined', {
-            name: name,
-            message: `${name} joined the chat`
-        });
+        // Join user's private room
+        socket.join(`user_${userId}`);
         
-        // ✅ Send the user their own info for debugging
-        socket.emit('user-joined-confirm', {
+        console.log(`✅ User ${name} (ID: ${userId}) connected`);
+        console.log(`📊 Users online: ${onlineUsers.size}`);
+        
+        // Send online users list to everyone
+        const onlineList = Array.from(onlineUsers.keys());
+        io.emit('online-users', onlineList);
+        
+        // Send confirmation to user
+        socket.emit('user-connected-confirm', {
             success: true,
-            user: currentUser,
-            usersOnline: chatUsers.size
+            userId: userId,
+            name: name
         });
     });
-
+    
     // ========================================
-    // SEND MESSAGE - CRITICAL FIX
+    // SEND PRIVATE MESSAGE
     // ========================================
-    socket.on('send-message', (data) => {
+    socket.on('send-private-message', async (data) => {
         try {
-            console.log('📨📨📨 SEND-MESSAGE EVENT RECEIVED');
-            console.log('📨 Data:', data);
-            console.log('📨 Socket ID:', socket.id);
+            console.log('📨 Private message received:', data);
             
-            const user = chatUsers.get(socket.id);
-            if (!user) {
-                console.error('❌ User not found for socket:', socket.id);
-                // Try to find user by socket id in chatUsers
-                console.log('📊 Current chatUsers:', Array.from(chatUsers.keys()));
+            const { sender_id, receiver_id, message, message_type } = data;
+            
+            if (!sender_id || !receiver_id || !message) {
+                console.error('❌ Missing required fields');
                 return;
             }
             
-            console.log(`📨 Message from ${user.name} (${user.email}): "${data.message}"`);
-            console.log(`📊 Users online: ${chatUsers.size}`);
-            
-            const messageData = {
-                id: Date.now(),
-                userId: user.id,
-                email: user.email,
-                name: user.name,
-                message: data.message,
-                message_type: data.message_type || 'text',
-                timestamp: new Date().toISOString()
-            };
-            
-            // Store in cache
-            messageCache.push(messageData);
-            if (messageCache.length > 100) {
-                messageCache.shift();
+            // Security: Verify sender matches authenticated user
+            if (parseInt(sender_id) !== parseInt(currentUserId)) {
+                console.error(`❌ Security: Sender mismatch. Socket user: ${currentUserId}, Message sender: ${sender_id}`);
+                return;
             }
             
-            console.log(`📨 Message cached, total: ${messageCache.length}`);
+            // Insert into database
+            const [result] = await db.query(`
+                INSERT INTO messages (sender_id, receiver_id, message, message_type)
+                VALUES (?, ?, ?, ?)
+            `, [sender_id, receiver_id, message, message_type || 'text']);
             
-            // ✅ BROADCAST TO ALL CONNECTED USERS
-            io.emit('receive-message', messageData);
-            console.log(`📨 Broadcasted to ${chatUsers.size} users`);
+            // Get the complete message with user details
+            const [newMessage] = await db.query(`
+                SELECT 
+                    m.id,
+                    m.sender_id,
+                    m.receiver_id,
+                    m.message,
+                    m.message_type,
+                    m.is_read,
+                    m.created_at,
+                    s.name AS sender_name,
+                    s.email AS sender_email,
+                    r.name AS receiver_name,
+                    r.email AS receiver_email
+                FROM messages m
+                LEFT JOIN users s ON m.sender_id = s.id
+                LEFT JOIN users r ON m.receiver_id = r.id
+                WHERE m.id = ?
+            `, [result.insertId]);
             
-            // ✅ Also send to sender to confirm
-            socket.emit('message-sent-confirm', {
+            const messageData = newMessage[0];
+            
+            // Emit to sender (confirmation)
+            socket.emit('message-sent', {
                 success: true,
                 message: messageData
             });
             
-            // Log all connected sockets
-            const socketIds = Array.from(chatUsers.keys());
-            console.log(`📨 Active sockets: ${socketIds.join(', ')}`);
+            // Emit to receiver if online
+            if (onlineUsers.has(receiver_id)) {
+                io.to(`user_${receiver_id}`).emit('new-private-message', {
+                    success: true,
+                    message: messageData
+                });
+                console.log(`📤 Message sent to user ${receiver_id}`);
+            } else {
+                console.log(`📤 User ${receiver_id} is offline, message saved to DB`);
+                // Message is already saved, will be loaded when user connects
+            }
             
         } catch (error) {
             console.error('❌ Error sending message:', error);
-            socket.emit('message-error', { error: 'Failed to send message' });
+            socket.emit('message-error', {
+                error: 'Failed to send message'
+            });
         }
     });
-
-    // ========================================
-    // IMAGE UPLOAD
-    // ========================================
-    socket.on('send-image', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'image',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
-    // ========================================
-    // AUDIO UPLOAD
-    // ========================================
-    socket.on('send-audio', (data) => {
-        const user = chatUsers.get(socket.id);
-        if (!user) return;
-        
-        const messageData = {
-            id: Date.now(),
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            message: data.filePath,
-            message_type: 'audio',
-            timestamp: new Date().toISOString()
-        };
-        
-        messageCache.push(messageData);
-        if (messageCache.length > 100) {
-            messageCache.shift();
-        }
-        
-        io.emit('receive-message', messageData);
-    });
-
+    
     // ========================================
     // TYPING INDICATOR
     // ========================================
-    socket.on('typing', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            socket.broadcast.emit('user-typing', {
-                name: user.name,
+    socket.on('typing', (data) => {
+        const { sender_id, receiver_id } = data;
+        if (sender_id && receiver_id && onlineUsers.has(receiver_id)) {
+            io.to(`user_${receiver_id}`).emit('user-typing', {
+                user_id: sender_id,
                 isTyping: true
             });
         }
     });
-
-    socket.on('stop-typing', () => {
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            socket.broadcast.emit('user-typing', {
-                name: user.name,
+    
+    socket.on('stop-typing', (data) => {
+        const { sender_id, receiver_id } = data;
+        if (sender_id && receiver_id && onlineUsers.has(receiver_id)) {
+            io.to(`user_${receiver_id}`).emit('user-typing', {
+                user_id: sender_id,
                 isTyping: false
             });
         }
     });
-
+    
     // ========================================
-    // GET ONLINE USERS (manual request)
+    // MARK MESSAGES AS READ
+    // ========================================
+    socket.on('mark-read', async (data) => {
+        const { user_id, other_user_id } = data;
+        try {
+            await db.query(`
+                UPDATE messages 
+                SET is_read = TRUE, read_at = NOW()
+                WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE
+            `, [other_user_id, user_id]);
+            
+            // Notify sender that messages were read
+            if (onlineUsers.has(other_user_id)) {
+                io.to(`user_${other_user_id}`).emit('messages-read', {
+                    by_user: user_id,
+                    from_user: other_user_id
+                });
+            }
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+        }
+    });
+    
+    // ========================================
+    // GET ONLINE USERS
     // ========================================
     socket.on('get-online-users', () => {
-        const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-            id: u.id,
-            email: u.email,
-            name: u.name
-        }));
-        socket.emit('online-users', onlineUsers);
+        const onlineList = Array.from(onlineUsers.keys());
+        socket.emit('online-users', onlineList);
     });
-
+    
     // ========================================
     // DISCONNECT
     // ========================================
     socket.on('disconnect', () => {
         console.log('👋 Client disconnected:', socket.id);
         
-        const user = chatUsers.get(socket.id);
-        if (user) {
-            chatUsers.delete(socket.id);
-            console.log(`❌ User removed: ${user.name}`);
-            console.log(`📊 Users online: ${chatUsers.size}`);
+        const userId = userSockets.get(socket.id);
+        if (userId) {
+            // Remove socket from user's set
+            const userSocketSet = onlineUsers.get(userId);
+            if (userSocketSet) {
+                userSocketSet.delete(socket.id);
+                if (userSocketSet.size === 0) {
+                    onlineUsers.delete(userId);
+                    console.log(`❌ User ${userId} is now offline`);
+                    
+                    // Broadcast updated online list
+                    const onlineList = Array.from(onlineUsers.keys());
+                    io.emit('online-users', onlineList);
+                } else {
+                    console.log(`ℹ️ User ${userId} still has ${userSocketSet.size} active connections`);
+                }
+            }
             
-            // ✅ Send updated online users list
-            const onlineUsers = Array.from(chatUsers.values()).map(u => ({
-                id: u.id,
-                email: u.email,
-                name: u.name
-            }));
-            io.emit('online-users', onlineUsers);
-            
-            // ✅ Broadcast user left message
-            io.emit('user-left', {
-                name: user.name,
-                message: `${user.name} left the chat`
+            userSockets.delete(socket.id);
+        }
+        
+        console.log(`📊 Users online: ${onlineUsers.size}`);
+    });
+});
+
+
+// ======== PRIVATE CHAT MESSAGES ROUTES ========
+
+// Get conversation history between two users
+app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
+    const { userId, otherUserId } = req.params;
+    
+    try {
+        // Verify both users exist
+        const [users] = await db.query(
+            'SELECT id FROM users WHERE id IN (?, ?)',
+            [userId, otherUserId]
+        );
+        
+        if (users.length !== 2) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'One or both users not found' 
             });
         }
-    });
+        
+        // Get conversation (both directions)
+        const [messages] = await db.query(`
+            SELECT 
+                m.id,
+                m.sender_id,
+                m.receiver_id,
+                m.message,
+                m.message_type,
+                m.is_read,
+                m.read_at,
+                m.created_at,
+                s.name AS sender_name,
+                s.email AS sender_email,
+                r.name AS receiver_name,
+                r.email AS receiver_email
+            FROM messages m
+            LEFT JOIN users s ON m.sender_id = s.id
+            LEFT JOIN users r ON m.receiver_id = r.id
+            WHERE (m.sender_id = ? AND m.receiver_id = ?)
+               OR (m.sender_id = ? AND m.receiver_id = ?)
+            ORDER BY m.created_at ASC
+        `, [userId, otherUserId, otherUserId, userId]);
+        
+        res.json({
+            success: true,
+            messages: messages
+        });
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to load messages' 
+        });
+    }
+});
+
+// Send a private message
+app.post('/api/chat/messages/send', async (req, res) => {
+    const { sender_id, receiver_id, message, message_type } = req.body;
+    
+    // Security: Validate sender from authenticated session
+    // For now, we'll trust it but validate existence
+    
+    try {
+        // Validate users
+        const [users] = await db.query(
+            'SELECT id FROM users WHERE id IN (?, ?)',
+            [sender_id, receiver_id]
+        );
+        
+        if (users.length !== 2) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sender or receiver not found'
+            });
+        }
+        
+        // Insert message
+        const [result] = await db.query(`
+            INSERT INTO messages (sender_id, receiver_id, message, message_type)
+            VALUES (?, ?, ?, ?)
+        `, [sender_id, receiver_id, message, message_type || 'text']);
+        
+        // Get the inserted message with user details
+        const [newMessage] = await db.query(`
+            SELECT 
+                m.id,
+                m.sender_id,
+                m.receiver_id,
+                m.message,
+                m.message_type,
+                m.is_read,
+                m.read_at,
+                m.created_at,
+                s.name AS sender_name,
+                s.email AS sender_email,
+                r.name AS receiver_name,
+                r.email AS receiver_email
+            FROM messages m
+            LEFT JOIN users s ON m.sender_id = s.id
+            LEFT JOIN users r ON m.receiver_id = r.id
+            WHERE m.id = ?
+        `, [result.insertId]);
+        
+        res.json({
+            success: true,
+            message: newMessage[0]
+        });
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send message'
+        });
+    }
+});
+
+// Mark messages as read
+app.post('/api/chat/messages/read', async (req, res) => {
+    const { user_id, other_user_id } = req.body;
+    
+    try {
+        await db.query(`
+            UPDATE messages 
+            SET is_read = TRUE, read_at = NOW()
+            WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE
+        `, [other_user_id, user_id]);
+        
+        res.json({
+            success: true,
+            message: 'Messages marked as read'
+        });
+    } catch (error) {
+        console.error('Error marking messages as read:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to mark messages as read'
+        });
+    }
+});
+
+// Get unread count for a user
+app.get('/api/chat/unread/:userId', async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        const [result] = await db.query(`
+            SELECT sender_id, COUNT(*) as unread_count
+            FROM messages
+            WHERE receiver_id = ? AND is_read = FALSE
+            GROUP BY sender_id
+        `, [userId]);
+        
+        res.json({
+            success: true,
+            unread: result
+        });
+    } catch (error) {
+        console.error('Error fetching unread count:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get unread count'
+        });
+    }
 });
 
 
