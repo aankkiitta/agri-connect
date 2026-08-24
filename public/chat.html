@@ -1,652 +1,733 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KISAN CIRCLE - Group Chat</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        #chat-widget-container {
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
-            display: flex !important;
-            flex-direction: column !important;
-            background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            overflow: hidden !important;
-            position: relative !important;
-        }
-        
-        /* Header */
-        #chat-widget-container nav {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.15);
-            padding: 12px 16px;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-        
-        #chat-widget-container h1 {
-            font-size: 1rem;
-            margin: 0;
-            flex: 1;
-            color: white;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-            font-weight: 600;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        #user-count-container {
-            display: flex;
-            align-items: center;
-            margin-right: 8px;
-            padding: 3px 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-        }
-        
-        #user-count-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            background-color: #32CD32;
-        }
-        
-        #user-count-text {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-            white-space: nowrap;
-        }
-        
-        #chat-widget-close {
-            background: none;
-            border: none;
-            font-size: 1.6rem;
-            line-height: 1;
-            color: white;
-            cursor: pointer;
-            padding: 0 5px;
-            opacity: 0.8;
-            transition: opacity 0.3s ease;
-        }
-        
-        #chat-widget-close:hover {
-            opacity: 1;
-        }
-        
-        /* Messages Area */
-        #chat-widget-container .container {
-            flex: 1;
-            width: 100%;
-            background-color: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(6px);
-            padding: 12px 14px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        
-        #chat-widget-container .container::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        #chat-widget-container .container::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
-        
-        /* Message Bubbles */
-        #chat-widget-container .message {
-            max-width: 80%;
-            padding: 0;
-            margin: 4px 0;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.4;
-            word-wrap: break-word;
-            clear: both;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-        }
-        
-        #chat-widget-container .right {
-            background-color: #DCF8C6;
-            color: #1a1a2e;
-            float: right;
-            align-self: flex-end;
-            border-bottom-right-radius: 3px;
-        }
-        
-        #chat-widget-container .left {
-            background-color: #ffffff;
-            color: #1a1a2e;
-            float: left;
-            align-self: flex-start;
-            border-bottom-left-radius: 3px;
-        }
-        
-        #chat-widget-container .message-body {
-            padding: 8px 12px 3px 12px;
-            font-size: 0.9rem;
-        }
-        
-        #chat-widget-container .message-header {
-            padding: 0 12px 6px 12px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        #chat-widget-container .message-name {
-            font-weight: 700;
-            color: #6C4DFF;
-            font-size: 0.7rem;
-        }
-        
-        #chat-widget-container .message-info {
-            font-size: 0.6rem;
-            color: #888;
-            opacity: 0.6;
-        }
-        
-        #chat-widget-container .right .message-header {
-            display: none;
-        }
-        
-        #chat-widget-container .right .message-body {
-            padding-bottom: 8px;
-        }
-        
-        /* System Messages */
-        #chat-widget-container .message.middle {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            background: rgba(0, 0, 0, 0.12);
-            font-style: italic;
-            font-size: 10px;
-            border: none;
-            padding: 4px 12px;
-            margin: 4px auto;
-            width: fit-content;
-            max-width: 80%;
-            align-self: center;
-            float: none;
-            box-shadow: none;
-            border-radius: 12px;
-        }
-        
-        /* Image Messages */
-        #chat-widget-container .message-body a {
-            text-decoration: none;
-        }
-        
-        #chat-widget-container .message-image {
-            max-width: 180px;
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 4px;
-            cursor: pointer;
-        }
-        
-        #chat-widget-container .message-body:has(.message-image) {
-            padding: 4px 4px 0 4px;
-        }
-        
-        #chat-widget-container .right .message-body:has(.message-image) {
-            padding-bottom: 0;
-        }
-        
-        /* Audio Messages */
-        #chat-widget-container .message-body audio {
-            width: 100%;
-            min-width: 140px;
-            height: 32px;
-            border-radius: 6px;
-        }
-        
-        /* Typing Indicator */
-        #typing-indicator {
-            height: 22px;
-            padding: 0 14px 4px 14px;
-            font-size: 0.75rem;
-            font-style: italic;
-            color: rgba(255, 255, 255, 0.85);
-            background: transparent;
-            min-height: 22px;
-        }
-        
-        /* Input Area */
-        #chat-widget-container .send {
-            width: 100%;
-            display: flex;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.92);
-            flex-shrink: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        #send-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            gap: 6px;
-        }
-        
-        #messageimp {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 13px;
-            border-radius: 18px;
-            border: 1px solid #ccc;
-            outline: none;
-            font-family: 'Segoe UI', sans-serif;
-            background: #f8f8f8;
-            transition: border-color 0.3s ease;
-        }
-        
-        #messageimp:focus {
-            border-color: #6C4DFF;
-            background: white;
-        }
-        
-        .btn-icon {
-            background: none;
-            border: none;
-            font-size: 1rem;
-            color: #555;
-            cursor: pointer;
-            padding: 0 6px;
-            transition: color 0.2s ease;
-        }
-        
-        .btn-icon:hover {
-            color: #6C4DFF;
-        }
-        
-        .btn {
-            padding: 0;
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(108, 77, 255, 0.3);
-        }
-        
-        .btn i {
-            font-size: 13px;
-        }
-        
-        /* Make Send Button Always Visible */
-        #send-btn {
-            display: flex !important;
-        }
-        
-        /* Recording Animation */
-        @keyframes pulse-record {
-            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
-            70% { box-shadow: 0 0 0 12px rgba(244, 67, 54, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
-        }
-        
-        #record-btn.recording {
-            background-color: #F44336;
-            animation: pulse-record 1.5s infinite;
-        }
-        
-        /* Unauthorized / Login Required */
-        #login-required {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-        }
-        
-        #login-required .login-box {
-            background: white;
-            padding: 32px 24px;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 280px;
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        #login-required .login-box h2 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 1.2rem;
-        }
-        
-        #login-required .login-box p {
-            color: #666;
-            margin: 10px 0 20px 0;
-            font-size: 0.85rem;
-        }
-        
-        #login-required .login-box .login-btn {
-            background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95rem;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        #login-required .login-box .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(108, 77, 255, 0.3);
-        }
-        
-        #login-required .login-box .logout-btn {
-            background: #e74c3c;
-            color: white;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-top: 10px;
-            transition: opacity 0.2s;
-        }
-        
-        #login-required .login-box .logout-btn:hover {
-            opacity: 0.8;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 10px;
-        }
-        
-        .user-info .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        
-        .user-info .user-details {
-            flex: 1;
-            text-align: left;
-        }
-        
-        .user-info .user-details .name {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.95rem;
-        }
-        
-        .user-info .user-details .email {
-            color: #888;
-            font-size: 0.75rem;
-        }
-        
-        /* Mobile Responsive */
-        @media (max-width: 480px) {
-            #chat-widget-container nav {
-                padding: 8px 12px;
-            }
-            
-            #chat-widget-container h1 {
-                font-size: 0.85rem;
-            }
-            
-            #user-count-text {
-                font-size: 0.65rem;
-            }
-            
-            #user-count-container {
-                padding: 2px 8px;
-            }
-            
-            #user-count-dot {
-                width: 6px;
-                height: 6px;
-                margin-right: 4px;
-            }
-            
-            #chat-widget-container .container {
-                padding: 8px 10px;
-            }
-            
-            #chat-widget-container .message-body {
-                font-size: 0.85rem;
-                padding: 6px 10px 2px 10px;
-            }
-            
-            #chat-widget-container .message-header {
-                padding: 0 10px 4px 10px;
-            }
-            
-            #chat-widget-container .message-name {
-                font-size: 0.6rem;
-            }
-            
-            #chat-widget-container .message-info {
-                font-size: 0.55rem;
-            }
-            
-            #chat-widget-container .send {
-                padding: 6px 10px;
-            }
-            
-            #messageimp {
-                font-size: 12px;
-                padding: 6px 10px;
-            }
-            
-            .btn {
-                width: 32px;
-                height: 32px;
-            }
-            
-            .btn i {
-                font-size: 12px;
-            }
-            
-            .btn-icon {
-                font-size: 0.9rem;
-                padding: 0 4px;
-            }
-            
-            #chat-widget-container .message-image {
-                max-width: 130px;
-            }
-            
-            #chat-widget-container .message-body audio {
-                min-width: 100px;
-                height: 28px;
-            }
-            
-            #chat-widget-container .message.middle {
-                font-size: 9px;
-                padding: 3px 8px;
-            }
-            
-            #login-required .login-box {
-                padding: 24px 16px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KISAN CIRCLE · Chat Toggle</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    /* ---- reset & base ---- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* dummy background content */
+    .bg-placeholder {
+      color: rgba(255,255,255,0.1);
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      user-select: none;
+      text-align: center;
+    }
+
+    /* ========== FAB (floating action button) ========== */
+    #chat-fab-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .chat-fab {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+      color: white;
+      border: none;
+      box-shadow: 0 8px 28px rgba(108, 77, 255, 0.45);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .chat-fab:hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 36px rgba(108, 77, 255, 0.6);
+    }
+
+    .chat-fab i {
+      font-size: 28px;
+    }
+
+    /* small notification badge (hidden by default) */
+    .chat-fab .chat-notification {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #FF4444;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      animation: pulse-notification 2s infinite;
+    }
+    .chat-fab .chat-notification.active { display: flex; }
+
+    @keyframes pulse-notification {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    /* ========== MODAL OVERLAY ========== */
+    .chat-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: none;          /* hidden by default */
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .chat-modal-overlay.open {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; backdrop-filter: blur(0px); }
+      to { opacity: 1; backdrop-filter: blur(8px); }
+    }
+
+    .chat-modal {
+      width: 420px;
+      height: 580px;
+      max-width: 95vw;
+      max-height: 92vh;
+      background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
+      border-radius: 22px;
+      box-shadow: 0 24px 72px rgba(0,0,0,0.6);
+      overflow: hidden;
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.94); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ========== CHAT WIDGET (inside modal) ========== */
+    #chat-widget-container {
+      width: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background: transparent !important; /* inherited from modal */
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      position: relative !important;
+    }
+
+    /* header */
+    #chat-widget-container nav {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.15);
+      padding: 12px 16px;
+      flex-shrink: 0;
+      backdrop-filter: blur(4px);
+    }
+
+    #chat-widget-container h1 {
+      font-size: 1rem;
+      margin: 0;
+      flex: 1;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #user-count-container {
+      display: flex;
+      align-items: center;
+      margin-right: 8px;
+      padding: 3px 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+    }
+
+    #user-count-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #32CD32;
+      margin-right: 6px;
+    }
+
+    #user-count-text {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    /* X button — NOW closes modal and shows FAB */
+    #chat-widget-close {
+      background: none;
+      border: none;
+      font-size: 1.7rem;
+      line-height: 1;
+      color: white;
+      cursor: pointer;
+      padding: 0 6px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    #chat-widget-close:hover {
+      opacity: 1;
+    }
+
+    /* message area */
+    #chat-widget-container .container {
+      flex: 1;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(6px);
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #chat-widget-container .container::-webkit-scrollbar { width: 4px; }
+    #chat-widget-container .container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
+
+    /* message bubbles */
+    #chat-widget-container .message {
+      max-width: 80%;
+      padding: 0;
+      margin: 4px 0;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      clear: both;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    #chat-widget-container .right {
+      background: #DCF8C6;
+      color: #1a1a2e;
+      float: right;
+      align-self: flex-end;
+      border-bottom-right-radius: 3px;
+    }
+    #chat-widget-container .left {
+      background: #ffffff;
+      color: #1a1a2e;
+      float: left;
+      align-self: flex-start;
+      border-bottom-left-radius: 3px;
+    }
+
+    #chat-widget-container .message-body {
+      padding: 8px 12px 3px 12px;
+      font-size: 0.9rem;
+    }
+    #chat-widget-container .message-header {
+      padding: 0 12px 6px 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }
+    #chat-widget-container .message-name {
+      font-weight: 700;
+      color: #6C4DFF;
+      font-size: 0.7rem;
+    }
+    #chat-widget-container .message-info {
+      font-size: 0.6rem;
+      color: #888;
+      opacity: 0.6;
+    }
+    #chat-widget-container .right .message-header { display: none; }
+    #chat-widget-container .right .message-body { padding-bottom: 8px; }
+
+    /* system messages */
+    #chat-widget-container .message.middle {
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      background: rgba(0,0,0,0.12);
+      font-style: italic;
+      font-size: 10px;
+      padding: 4px 12px;
+      margin: 4px auto;
+      width: fit-content;
+      max-width: 80%;
+      align-self: center;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    /* image / audio */
+    #chat-widget-container .message-image {
+      max-width: 180px;
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    #chat-widget-container .message-body audio {
+      width: 100%;
+      min-width: 140px;
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    /* typing indicator */
+    #typing-indicator {
+      height: 22px;
+      padding: 0 14px 4px 14px;
+      font-size: 0.75rem;
+      font-style: italic;
+      color: rgba(255,255,255,0.85);
+      background: transparent;
+      min-height: 22px;
+    }
+
+    /* input area */
+    #chat-widget-container .send {
+      width: 100%;
+      display: flex;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.92);
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #send-container {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 6px;
+    }
+
+    #messageimp {
+      flex: 1;
+      padding: 8px 14px;
+      font-size: 13px;
+      border-radius: 24px;
+      border: 1px solid #ccc;
+      outline: none;
+      background: #f8f8f8;
+      transition: border-color 0.2s;
+    }
+    #messageimp:focus {
+      border-color: #6C4DFF;
+      background: white;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: #555;
+      cursor: pointer;
+      padding: 0 6px;
+      transition: color 0.2s;
+    }
+    .btn-icon:hover { color: #6C4DFF; }
+
+    .btn {
+      padding: 0;
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(108,77,255,0.35);
+    }
+    .btn i { font-size: 14px; }
+
+    #record-btn { display: none; }
+
+    /* login fallback (kept) */
+    #login-required {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+    }
+    #login-required .login-box {
+      background: white;
+      padding: 28px 20px;
+      border-radius: 18px;
+      text-align: center;
+      max-width: 260px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    #login-required .login-box h2 { color: #333; font-size: 1.1rem; }
+    #login-required .login-box p { color: #666; margin: 10px 0 18px; font-size: 0.85rem; }
+    #login-required .login-box .login-btn {
+      background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
+      color: white;
+      padding: 10px 28px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    /* hide FAB when modal is open */
+    .fab-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.8);
+    }
+
+    /* responsive */
+    @media (max-width: 480px) {
+      .chat-fab { width: 54px; height: 54px; }
+      .chat-fab i { font-size: 24px; }
+      .chat-modal { width: 96vw; height: 88vh; border-radius: 18px; }
+      #chat-widget-container nav { padding: 8px 12px; }
+      #chat-widget-container h1 { font-size: 0.85rem; }
+    }
+  </style>
 </head>
 <body>
-    <div id="chat-widget-container">
-        <!-- Header -->
-        <nav>
-            <h1>💬 KISAN CIRCLE</h1>
-            <div id="user-count-container">
-                <span id="user-count-dot"></span>
-                <span id="user-count-text">0 Online</span>
-            </div>
-            <button id="chat-widget-close" onclick="closeChatWidget()">&times;</button>
-        </nav>
 
-        <!-- Messages Area -->
-        <div class="container active" id="messageContainer"></div>
+  <!-- dummy background -->
+  <div class="bg-placeholder">🌾 KISAN · CHAT</div>
 
-        <!-- Typing Indicator -->
-        <div id="typing-indicator"></div>
+  <!-- ===== FLOATING CHAT ICON ===== -->
+  <div id="chat-fab-container">
+    <button id="chat-fab" class="chat-fab" aria-label="Open chat">
+      <i class="fas fa-comment-dots"></i>
+      <span class="chat-notification" id="chatNotification">1</span>
+    </button>
+  </div>
 
-        <!-- Message Input Area -->
-        <div class="send active" id="chat-input-area">
-            <input type="file" id="image-input" accept="image/*" style="display: none;">
-            <form id="send-container">
-                <button type="button" class="btn-icon" id="attach-file-btn">
-                    <i class="fa-solid fa-paperclip"></i>
-                </button>
-                <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-                <button class="btn" type="submit" id="send-btn">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-                <button type="button" class="btn" id="record-btn" style="display: none;">
-                    <i class="fa-solid fa-microphone"></i>
-                </button>
-            </form>
+  <!-- ===== CHAT MODAL ===== -->
+  <div id="chat-modal-overlay" class="chat-modal-overlay">
+    <div id="chat-modal" class="chat-modal" onclick="event.stopPropagation()">
+      <!-- the actual chat widget will be injected here -->
+      <div id="chat-modal-content" style="display:flex; flex:1; flex-direction:column; min-height:0; height:100%;">
+        <!-- loading state (hidden once chat loads) -->
+        <div id="chat-loading" class="chat-loading" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:rgba(255,255,255,0.05); backdrop-filter:blur(6px);">
+          <div class="spinner" style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+          <p style="color:rgba(255,255,255,0.8);">Loading chat…</p>
         </div>
+        <!-- the chat widget will be placed here -->
+        <div id="chat-widget-placeholder" style="display:none; flex:1; flex-direction:column; min-height:0; height:100%;"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Load Socket.IO -->
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    
-    <script>
-        // ========================================
-        // CLOSE CHAT WIDGET - Notify parent to close
-        // ========================================
-        function closeChatWidget() {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'close-chat'
-                }, '*');
-            } else {
-                window.close();
-            }
-        }
+  <!-- Socket.IO + chat logic -->
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script>
+    (function() {
+      "use strict";
 
-        // ========================================
-        // CHECK IF USER IS LOGGED IN
-        // ========================================
-        function getCurrentUser() {
-            try {
-                const keys = ['agriUser', 'user', 'userData', 'authUser'];
-                for (const key of keys) {
-                    const data = localStorage.getItem(key);
-                    if (data) {
-                        try {
-                            const user = JSON.parse(data);
-                            const userId = user.id || user.user_id || user.userId || user._id || null;
-                            if (userId) {
-                                return {
-                                    id: parseInt(userId),
-                                    email: user.email || null,
-                                    name: user.name || user.username || 'User'
-                                };
-                            }
-                        } catch (e) {}
-                    }
+      // ----- DOM refs -----
+      const fabContainer = document.getElementById('chat-fab-container');
+      const fab = document.getElementById('chat-fab');
+      const overlay = document.getElementById('chat-modal-overlay');
+      const modal = document.getElementById('chat-modal');
+      const placeholder = document.getElementById('chat-widget-placeholder');
+      const loadingEl = document.getElementById('chat-loading');
+
+      // ----- helper: get current user (mock) -----
+      function getCurrentUser() {
+        try {
+          const keys = ['agriUser', 'user', 'userData', 'authUser'];
+          for (const key of keys) {
+            const data = localStorage.getItem(key);
+            if (data) {
+              try {
+                const user = JSON.parse(data);
+                const userId = user.id || user.user_id || user.userId || user._id || null;
+                if (userId) {
+                  return {
+                    id: parseInt(userId),
+                    email: user.email || null,
+                    name: user.name || user.username || 'User'
+                  };
                 }
-                return null;
-            } catch (error) {
-                return null;
+              } catch (_) {}
             }
+          }
+          // fallback demo user (for testing toggle)
+          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
+        } catch (_) {
+          return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
         }
-        
-        // If not logged in, show login prompt
-        const user = getCurrentUser();
-        if (!user) {
-            document.getElementById('chat-widget-container').innerHTML = `
-                <nav>
-                    <h1>🔐 KISAN CIRCLE</h1>
-                    <button id="chat-widget-close" onclick="closeChatWidget()">&times;</button>
-                </nav>
-                <div id="login-required">
-                    <div class="login-box">
-                        <h2>🔐 Login Required</h2>
-                        <p>Please login to join the group chat</p>
-                        <a href="/login.html?redirect=/chat.html" class="login-btn" onclick="closeChatWidget()">
-                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
-                        </a>
-                    </div>
-                </div>
-            `;
-        } else {
-            // User is logged in, load the chat
-            console.log('✅ User logged in:', user);
+      }
+
+      const user = getCurrentUser();
+
+      // ----- build chat widget HTML (same as original) -----
+      function buildChatWidget() {
+        const container = document.createElement('div');
+        container.id = 'chat-widget-container';
+        container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
+
+        // header
+        const nav = document.createElement('nav');
+        nav.innerHTML = `
+          <h1>💬 KISAN CIRCLE</h1>
+          <div id="user-count-container">
+            <span id="user-count-dot"></span>
+            <span id="user-count-text">0 Online</span>
+          </div>
+          <button id="chat-widget-close" aria-label="Close chat">&times;</button>
+        `;
+        container.appendChild(nav);
+
+        // messages container
+        const msgContainer = document.createElement('div');
+        msgContainer.className = 'container active';
+        msgContainer.id = 'messageContainer';
+        container.appendChild(msgContainer);
+
+        // typing indicator
+        const typing = document.createElement('div');
+        typing.id = 'typing-indicator';
+        container.appendChild(typing);
+
+        // input area
+        const sendArea = document.createElement('div');
+        sendArea.className = 'send active';
+        sendArea.id = 'chat-input-area';
+        sendArea.innerHTML = `
+          <input type="file" id="image-input" accept="image/*" style="display:none;">
+          <form id="send-container">
+            <button type="button" class="btn-icon" id="attach-file-btn">
+              <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
+            <button class="btn" type="submit" id="send-btn">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+            <button type="button" class="btn" id="record-btn" style="display:none;">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+          </form>
+        `;
+        container.appendChild(sendArea);
+
+        // if user not logged in, show login box (but we keep demo fallback)
+        if (!user || !user.id) {
+          container.innerHTML = `
+            <nav>
+              <h1>🔐 KISAN CIRCLE</h1>
+              <button id="chat-widget-close">&times;</button>
+            </nav>
+            <div id="login-required">
+              <div class="login-box">
+                <h2>🔐 Login Required</h2>
+                <p>Please login to join the group chat</p>
+                <a href="/login.html?redirect=/chat.html" class="login-btn">
+                  <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                </a>
+              </div>
+            </div>
+          `;
+        }
+
+        // ----- attach close event to the X button (modal close) -----
+        const closeBtn = container.querySelector('#chat-widget-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeChat();
+          });
+        }
+
+        return container;
+      }
+
+      // ----- inject chat widget into modal -----
+      function injectChatWidget() {
+        // hide loading, show placeholder
+        loadingEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+        // clear placeholder and append fresh widget
+        placeholder.innerHTML = '';
+        const widget = buildChatWidget();
+        placeholder.appendChild(widget);
+
+        // If user is logged in, load chat.js (simulate real-time)
+        if (user && user.id) {
+          // check if chat script already loaded
+          if (!window._chatScriptLoaded) {
             const script = document.createElement('script');
-            script.src = '/js/chat.js';
+            script.src = '/js/chat.js'; // adjust path as needed
+            script.onload = function() {
+              console.log('✅ chat.js loaded');
+              // notify that user is logged in (if chat.js expects it)
+              if (window.initializeChat) {
+                window.initializeChat(user);
+              }
+            };
+            script.onerror = function() {
+              console.warn('⚠️ chat.js not found – using mock mode');
+              // fallback: show a mock message
+              const container = document.getElementById('messageContainer');
+              if (container) {
+                const mockMsg = document.createElement('div');
+                mockMsg.className = 'message middle';
+                mockMsg.textContent = '💬 Chat ready (mock mode)';
+                container.appendChild(mockMsg);
+              }
+            };
             document.body.appendChild(script);
+            window._chatScriptLoaded = true;
+          } else if (window.initializeChat) {
+            window.initializeChat(user);
+          }
         }
+      }
 
-        // Listen for messages from parent
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'close-chat') {
-                if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({
-                        type: 'close-chat-confirm'
-                    }, '*');
-                }
-            }
-        });
-    </script>
+      // ----- OPEN CHAT -----
+      function openChat() {
+        // hide FAB
+        fabContainer.classList.add('fab-hidden');
+        // show overlay
+        overlay.classList.add('open');
+        // inject widget if not already
+        if (placeholder.children.length === 0) {
+          injectChatWidget();
+        }
+        // ensure loading is hidden and placeholder visible
+        loadingEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+
+      // ----- CLOSE CHAT -----
+      window.closeChat = function(event) {
+        if (event && event.target !== event.currentTarget) return;
+        overlay.classList.remove('open');
+        fabContainer.classList.remove('fab-hidden');
+        // optional: reset notification
+        const notif = document.getElementById('chatNotification');
+        if (notif) notif.classList.remove('active');
+      };
+
+      // ----- toggleChat (called from FAB) -----
+      window.toggleChat = function() {
+        // if overlay is open, close it; else open
+        if (overlay.classList.contains('open')) {
+          closeChat();
+        } else {
+          openChat();
+        }
+      };
+
+      // ----- attach FAB click -----
+      fab.addEventListener('click', function(e) {
+        e.stopPropagation();
+        window.toggleChat();
+      });
+
+      // ----- close overlay when clicking outside modal -----
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          closeChat();
+        }
+      });
+
+      // ----- ESC key to close -----
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+          closeChat();
+        }
+      });
+
+      // ensure that the widget's X button uses closeChat (already attached inside buildChatWidget)
+      // also handle if the login fallback has X
+      // re-attach after injection
+
+      // For demo: auto-open after 1s? No, keep icon visible.
+      // but we want the icon to be shown initially.
+      fabContainer.classList.remove('fab-hidden');
+
+      // if chat.js defines its own toggle, we override with ours.
+      console.log('🔁 Chat toggle ready. Click the 💬 icon.');
+    })();
+  </script>
+
+  <!-- extra style for spinner -->
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* ensure modal content fills */
+    #chat-modal-content {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+    #chat-widget-placeholder {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+    #chat-loading {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .chat-modal-overlay.open {
+      display: flex;
+    }
+  </style>
 </body>
 </html>
