@@ -282,6 +282,16 @@ async function initializeDatabase() {
 }
 
 initializeDatabase();
+// At the top, after imports
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    },
+    transports: ['websocket', 'polling']
+});
+
 // ==================================================
 // SOCKET.IO - PRIVATE CHAT IMPLEMENTATION
 // ==================================================
@@ -498,8 +508,9 @@ io.on('connection', (socket) => {
     });
 });
 
-
-// ======== PRIVATE CHAT MESSAGES ROUTES ========
+// ==================================================
+// PRIVATE CHAT API ROUTES
+// ==================================================
 
 // Get conversation history between two users
 app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
@@ -555,12 +566,9 @@ app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
     }
 });
 
-// Send a private message
+// Send a private message (HTTP fallback)
 app.post('/api/chat/messages/send', async (req, res) => {
     const { sender_id, receiver_id, message, message_type } = req.body;
-    
-    // Security: Validate sender from authenticated session
-    // For now, we'll trust it but validate existence
     
     try {
         // Validate users
@@ -664,9 +672,6 @@ app.get('/api/chat/unread/:userId', async (req, res) => {
         });
     }
 });
-
-
-
 // --- HEALTH ENDPOINT ---
 app.get('/api/health', (req, res) => {
     res.json({
@@ -1985,5 +1990,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`💬 Chat available at: /chat`);
+    console.log(`💬 Private Chat available at: /chat`);
 });
