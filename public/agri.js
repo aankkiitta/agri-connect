@@ -3215,6 +3215,3 @@ window.addEventListener("scroll", () => {
 
 
 
-document.getElementById('viewMoreFarmers').addEventListener('click', function () {
-    window.location.href = 'farmer-listing.html';
-});
