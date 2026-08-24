@@ -12,38 +12,36 @@
       height: 100vh;
       overflow: hidden;
       font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-      background: #1a1a2e;
+      background: transparent;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .bg-placeholder {
-      color: rgba(255,255,255,0.08);
-      font-size: 2.8rem;
-      font-weight: 700;
-      letter-spacing: 6px;
-      user-select: none;
-      text-align: center;
-      padding: 0 1rem;
+      display: none;
     }
 
     /* ===== FLOATING ACTION BUTTON (FAB) ===== */
     #chat-fab-container {
       position: fixed;
-      bottom: 28px;
-      right: 28px;
+      bottom: 24px;
+      right: 24px;
       z-index: 9999;
       transition: opacity 0.25s ease, transform 0.25s ease;
+      width: 60px;
+      height: 60px;
     }
     @media (max-width: 480px) {
       #chat-fab-container {
-        bottom: 20px;
-        right: 20px;
+        bottom: 18px;
+        right: 18px;
+        width: 52px;
+        height: 52px;
       }
     }
     .chat-fab {
-      width: 62px;
-      height: 62px;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
       background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
       color: white;
@@ -55,9 +53,20 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      padding: 0;
+      line-height: 1;
     }
     .chat-fab:hover { transform: scale(1.06); box-shadow: 0 10px 36px rgba(108,77,255,0.6); }
-    .chat-fab i { font-size: 28px; }
+    .chat-fab i { 
+      font-size: 26px; 
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 480px) {
+      .chat-fab i { font-size: 22px; }
+    }
     .chat-fab .chat-notification {
       position: absolute;
       top: -4px;
@@ -444,15 +453,7 @@
     }
 
     @media (max-width: 480px) {
-      .chat-fab { width: 54px; height: 54px; }
-      .chat-fab i { font-size: 24px; }
-      #chat-widget-container nav { padding: 8px 12px; min-height: 48px; }
-      #chat-widget-container h1 { font-size: 0.85rem; }
-      #messageimp { font-size: 14px; padding: 8px 12px; min-height: 38px; }
-      .btn { width: 36px; height: 36px; }
-      .btn i { font-size: 13px; }
-      .btn-icon { width: 32px; height: 32px; }
-      #chat-widget-close { font-size: 1.5rem; width: 36px; height: 36px; }
+      .chat-fab i { font-size: 22px; }
     }
     @media (max-width: 360px) {
       #chat-widget-container nav { padding: 6px 10px; }
@@ -510,13 +511,37 @@
       pointer-events: auto !important;
       margin: 24px !important;
       box-shadow: 0 8px 28px rgba(108, 77, 255, 0.45) !important;
-      width: 62px !important;
-      height: 62px !important;
+      width: 60px !important;
+      height: 60px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       position: relative !important;
       z-index: 999999 !important;
+      border-radius: 50% !important;
+      flex-shrink: 0 !important;
+    }
+    
+    @media (max-width: 480px) {
+      .in-iframe #chat-fab-container .chat-fab {
+        width: 52px !important;
+        height: 52px !important;
+        margin: 18px !important;
+      }
+    }
+    
+    .in-iframe #chat-fab-container .chat-fab i {
+      font-size: 26px !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    @media (max-width: 480px) {
+      .in-iframe #chat-fab-container .chat-fab i {
+        font-size: 22px !important;
+      }
     }
     
     .in-iframe #chat-fab-container.fab-hidden {
@@ -565,6 +590,30 @@
         max-width: 96vw !important;
         height: 90vh !important;
         max-height: 90vh !important;
+      }
+    }
+
+    /* Ensure FAB is always a perfect circle */
+    .chat-fab,
+    .in-iframe .chat-fab {
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      aspect-ratio: 1/1 !important;
+      width: 60px !important;
+      height: 60px !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      max-height: none !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    @media (max-width: 480px) {
+      .chat-fab,
+      .in-iframe .chat-fab {
+        width: 52px !important;
+        height: 52px !important;
       }
     }
   </style>

@@ -7,10 +7,16 @@
     let isChatOpen = false;
 
     // Icon size (small floating button area)
-    const ICON_WIDTH = 72;
-    const ICON_HEIGHT = 72;
+    const ICON_WIDTH = 60;
+    const ICON_HEIGHT = 60;
     const ICON_BOTTOM = 24;
     const ICON_RIGHT = 24;
+
+    // Mobile icon size
+    const ICON_WIDTH_MOBILE = 52;
+    const ICON_HEIGHT_MOBILE = 52;
+    const ICON_BOTTOM_MOBILE = 18;
+    const ICON_RIGHT_MOBILE = 18;
 
     // Chat window sizes
     const CHAT_WIDTH_DESKTOP = 440;
@@ -20,6 +26,23 @@
 
     function isMobile() {
         return window.innerWidth <= 768;
+    }
+
+    function getIconDimensions() {
+        if (isMobile()) {
+            return {
+                width: ICON_WIDTH_MOBILE,
+                height: ICON_HEIGHT_MOBILE,
+                bottom: ICON_BOTTOM_MOBILE,
+                right: ICON_RIGHT_MOBILE
+            };
+        }
+        return {
+            width: ICON_WIDTH,
+            height: ICON_HEIGHT,
+            bottom: ICON_BOTTOM,
+            right: ICON_RIGHT
+        };
     }
 
     function getChatDimensions() {
@@ -51,16 +74,23 @@
             chatIframe.style.borderRadius = '16px';
             chatIframe.style.boxShadow = '0 10px 40px rgba(0,0,0,0.25)';
             chatIframe.style.pointerEvents = 'auto';
+            chatIframe.style.background = 'transparent';
+            chatIframe.style.border = 'none';
+            chatIframe.style.overflow = 'visible';
             isChatOpen = true;
         } else {
-            // Shrink to icon size
-            chatIframe.style.width = ICON_WIDTH + 'px';
-            chatIframe.style.height = ICON_HEIGHT + 'px';
-            chatIframe.style.bottom = ICON_BOTTOM + 'px';
-            chatIframe.style.right = ICON_RIGHT + 'px';
+            // Shrink to icon size - perfect circle
+            const dims = getIconDimensions();
+            chatIframe.style.width = dims.width + 'px';
+            chatIframe.style.height = dims.height + 'px';
+            chatIframe.style.bottom = dims.bottom + 'px';
+            chatIframe.style.right = dims.right + 'px';
             chatIframe.style.borderRadius = '50%';
             chatIframe.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
             chatIframe.style.pointerEvents = 'auto';
+            chatIframe.style.background = 'transparent';
+            chatIframe.style.border = 'none';
+            chatIframe.style.overflow = 'hidden';
             isChatOpen = false;
         }
     }
@@ -82,31 +112,41 @@
             position: fixed;
             bottom: 0;
             right: 0;
-            width: auto;
-            height: auto;
+            width: 0;
+            height: 0;
             pointer-events: none;
             z-index: 999999;
             overflow: visible;
+            margin: 0;
+            padding: 0;
         `;
 
         // Create iframe
         chatIframe = document.createElement('iframe');
         chatIframe.src = '/chat.html';
+        
+        const iconDims = getIconDimensions();
         chatIframe.style.cssText = `
             position: fixed;
-            bottom: ${ICON_BOTTOM}px;
-            right: ${ICON_RIGHT}px;
-            width: ${ICON_WIDTH}px;
-            height: ${ICON_HEIGHT}px;
+            bottom: ${iconDims.bottom}px;
+            right: ${iconDims.right}px;
+            width: ${iconDims.width}px;
+            height: ${iconDims.height}px;
             border: none;
             pointer-events: auto;
             z-index: 999999;
             background: transparent;
             border-radius: 50%;
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         `;
         chatIframe.allow = 'fullscreen';
+        chatIframe.scrolling = 'no';
+        chatIframe.frameBorder = '0';
 
         container.appendChild(chatIframe);
 
@@ -120,10 +160,23 @@
         });
 
         // Handle resize events to adjust chat dimensions on the fly (for mobile/desktop switch)
+        let resizeTimeout;
         window.addEventListener('resize', function() {
-            if (isChatOpen) {
-                setIframeSize(true);
-            }
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (isChatOpen) {
+                    setIframeSize(true);
+                } else {
+                    // Update icon size on resize
+                    const dims = getIconDimensions();
+                    if (chatIframe) {
+                        chatIframe.style.width = dims.width + 'px';
+                        chatIframe.style.height = dims.height + 'px';
+                        chatIframe.style.bottom = dims.bottom + 'px';
+                        chatIframe.style.right = dims.right + 'px';
+                    }
+                }
+            }, 150);
         });
 
         chatIframe.onload = function() {
