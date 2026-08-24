@@ -2,34 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KISAN CIRCLE · Chat Toggle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KISAN CIRCLE · Responsive Chat</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
-    /* ---- reset & base ---- */
+    /* ----- global reset & base ----- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       height: 100vh;
       overflow: hidden;
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
       background: #1a1a2e;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
-    /* dummy background content */
     .bg-placeholder {
-      color: rgba(255,255,255,0.1);
-      font-size: 3rem;
+      color: rgba(255,255,255,0.08);
+      font-size: 2.8rem;
       font-weight: 700;
-      letter-spacing: 4px;
+      letter-spacing: 6px;
       user-select: none;
       text-align: center;
+      padding: 0 1rem;
     }
 
-    /* ========== FAB (floating action button) ========== */
+    /* ===== FLOATING ACTION BUTTON (FAB) ===== */
     #chat-fab-container {
       position: fixed;
       bottom: 28px;
@@ -37,7 +35,13 @@
       z-index: 9999;
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
-
+    /* mobile adjustment: keep away from edge */
+    @media (max-width: 480px) {
+      #chat-fab-container {
+        bottom: 20px;
+        right: 20px;
+      }
+    }
     .chat-fab {
       width: 62px;
       height: 62px;
@@ -53,17 +57,8 @@
       justify-content: center;
       position: relative;
     }
-
-    .chat-fab:hover {
-      transform: scale(1.06);
-      box-shadow: 0 10px 36px rgba(108, 77, 255, 0.6);
-    }
-
-    .chat-fab i {
-      font-size: 28px;
-    }
-
-    /* small notification badge (hidden by default) */
+    .chat-fab:hover { transform: scale(1.06); box-shadow: 0 10px 36px rgba(108,77,255,0.6); }
+    .chat-fab i { font-size: 28px; }
     .chat-fab .chat-notification {
       position: absolute;
       top: -4px;
@@ -82,14 +77,13 @@
       animation: pulse-notification 2s infinite;
     }
     .chat-fab .chat-notification.active { display: flex; }
-
     @keyframes pulse-notification {
       0% { transform: scale(1); }
       50% { transform: scale(1.15); }
       100% { transform: scale(1); }
     }
 
-    /* ========== MODAL OVERLAY ========== */
+    /* ===== MODAL OVERLAY ===== */
     .chat-modal-overlay {
       position: fixed;
       top: 0;
@@ -98,29 +92,28 @@
       height: 100%;
       background: rgba(0, 0, 0, 0.55);
       backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 10000;
-      display: none;          /* hidden by default */
+      display: none;
       align-items: center;
       justify-content: center;
       animation: fadeIn 0.25s ease;
+      padding: 16px;
     }
-
-    .chat-modal-overlay.open {
-      display: flex;
-    }
-
+    .chat-modal-overlay.open { display: flex; }
     @keyframes fadeIn {
       from { opacity: 0; backdrop-filter: blur(0px); }
       to { opacity: 1; backdrop-filter: blur(8px); }
     }
 
+    /* ===== CHAT MODAL (the card) ===== */
     .chat-modal {
       width: 420px;
-      height: 580px;
-      max-width: 95vw;
+      height: 600px;
+      max-width: 96vw;
       max-height: 92vh;
       background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
-      border-radius: 22px;
+      border-radius: 24px;
       box-shadow: 0 24px 72px rgba(0,0,0,0.6);
       overflow: hidden;
       animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -128,26 +121,64 @@
       flex-direction: column;
       position: relative;
     }
-
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(40px) scale(0.94); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* ========== CHAT WIDGET (inside modal) ========== */
+    /* ----- desktop comfortable size ----- */
+    @media (min-width: 769px) {
+      .chat-modal {
+        width: 460px;
+        height: 620px;
+        max-width: 92vw;
+        max-height: 88vh;
+      }
+    }
+    /* ----- mobile optimization (320px – 768px) ----- */
+    @media (max-width: 768px) {
+      .chat-modal {
+        width: 94vw;
+        max-width: 94vw;
+        height: 88vh;
+        max-height: 88vh;
+        border-radius: 20px;
+      }
+    }
+    @media (max-width: 480px) {
+      .chat-modal {
+        width: 96vw;
+        max-width: 96vw;
+        height: 90vh;
+        max-height: 90vh;
+        border-radius: 18px;
+      }
+    }
+    /* extra small screens (320px) */
+    @media (max-width: 360px) {
+      .chat-modal {
+        width: 96vw;
+        max-width: 96vw;
+        height: 92vh;
+        max-height: 92vh;
+        border-radius: 16px;
+      }
+    }
+
+    /* ===== CHAT WIDGET (inside modal) ===== */
     #chat-widget-container {
       width: 100% !important;
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      background: transparent !important; /* inherited from modal */
+      background: transparent !important;
       border-radius: 0 !important;
       box-shadow: none !important;
       overflow: hidden !important;
       position: relative !important;
     }
 
-    /* header */
+    /* --- header --- */
     #chat-widget-container nav {
       display: flex;
       align-items: center;
@@ -155,8 +186,9 @@
       padding: 12px 16px;
       flex-shrink: 0;
       backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      min-height: 54px;
     }
-
     #chat-widget-container h1 {
       font-size: 1rem;
       margin: 0;
@@ -168,7 +200,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     #user-count-container {
       display: flex;
       align-items: center;
@@ -176,8 +207,8 @@
       padding: 3px 12px;
       background: rgba(0, 0, 0, 0.2);
       border-radius: 20px;
+      flex-shrink: 0;
     }
-
     #user-count-dot {
       width: 8px;
       height: 8px;
@@ -185,14 +216,11 @@
       background-color: #32CD32;
       margin-right: 6px;
     }
-
     #user-count-text {
       font-size: 0.7rem;
       font-weight: 600;
       color: white;
     }
-
-    /* X button — NOW closes modal and shows FAB */
     #chat-widget-close {
       background: none;
       border: none;
@@ -201,19 +229,24 @@
       color: white;
       cursor: pointer;
       padding: 0 6px;
-      opacity: 0.75;
+      opacity: 0.8;
       transition: opacity 0.2s;
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #chat-widget-close:hover {
-      opacity: 1;
-    }
+    #chat-widget-close:hover { opacity: 1; }
 
-    /* message area */
+    /* --- messages area --- */
     #chat-widget-container .container {
       flex: 1;
       width: 100%;
       background: rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       padding: 12px 14px;
       overflow-y: auto;
       display: flex;
@@ -223,7 +256,7 @@
     #chat-widget-container .container::-webkit-scrollbar { width: 4px; }
     #chat-widget-container .container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
 
-    /* message bubbles */
+    /* --- message bubbles --- */
     #chat-widget-container .message {
       max-width: 80%;
       padding: 0;
@@ -235,7 +268,6 @@
       clear: both;
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-
     #chat-widget-container .right {
       background: #DCF8C6;
       color: #1a1a2e;
@@ -250,11 +282,7 @@
       align-self: flex-start;
       border-bottom-left-radius: 3px;
     }
-
-    #chat-widget-container .message-body {
-      padding: 8px 12px 3px 12px;
-      font-size: 0.9rem;
-    }
+    #chat-widget-container .message-body { padding: 8px 12px 3px 12px; font-size: 0.9rem; }
     #chat-widget-container .message-header {
       padding: 0 12px 6px 12px;
       display: flex;
@@ -262,16 +290,8 @@
       gap: 8px;
       align-items: center;
     }
-    #chat-widget-container .message-name {
-      font-weight: 700;
-      color: #6C4DFF;
-      font-size: 0.7rem;
-    }
-    #chat-widget-container .message-info {
-      font-size: 0.6rem;
-      color: #888;
-      opacity: 0.6;
-    }
+    #chat-widget-container .message-name { font-weight: 700; color: #6C4DFF; font-size: 0.7rem; }
+    #chat-widget-container .message-info { font-size: 0.6rem; color: #888; opacity: 0.6; }
     #chat-widget-container .right .message-header { display: none; }
     #chat-widget-container .right .message-body { padding-bottom: 8px; }
 
@@ -315,9 +335,10 @@
       color: rgba(255,255,255,0.85);
       background: transparent;
       min-height: 22px;
+      flex-shrink: 0;
     }
 
-    /* input area */
+    /* --- input area --- */
     #chat-widget-container .send {
       width: 100%;
       display: flex;
@@ -325,15 +346,15 @@
       background: rgba(255,255,255,0.92);
       flex-shrink: 0;
       border-top: 1px solid rgba(255,255,255,0.1);
+      min-height: 56px;
+      align-items: center;
     }
-
     #send-container {
       display: flex;
       align-items: center;
       width: 100%;
       gap: 6px;
     }
-
     #messageimp {
       flex: 1;
       padding: 8px 14px;
@@ -343,11 +364,10 @@
       outline: none;
       background: #f8f8f8;
       transition: border-color 0.2s;
+      min-height: 40px;
+      width: 100%;
     }
-    #messageimp:focus {
-      border-color: #6C4DFF;
-      background: white;
-    }
+    #messageimp:focus { border-color: #6C4DFF; background: white; }
 
     .btn-icon {
       background: none;
@@ -357,13 +377,19 @@
       cursor: pointer;
       padding: 0 6px;
       transition: color 0.2s;
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .btn-icon:hover { color: #6C4DFF; }
 
     .btn {
       padding: 0;
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
       color: white;
       border: none;
@@ -375,15 +401,12 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(108,77,255,0.35);
-    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(108,77,255,0.35); }
     .btn i { font-size: 14px; }
 
     #record-btn { display: none; }
 
-    /* login fallback (kept) */
+    /* --- login fallback --- */
     #login-required {
       flex: 1;
       display: flex;
@@ -424,22 +447,33 @@
       transform: scale(0.8);
     }
 
-    /* responsive */
+    /* ----- extra small input tweaks ----- */
     @media (max-width: 480px) {
       .chat-fab { width: 54px; height: 54px; }
       .chat-fab i { font-size: 24px; }
-      .chat-modal { width: 96vw; height: 88vh; border-radius: 18px; }
-      #chat-widget-container nav { padding: 8px 12px; }
+      #chat-widget-container nav { padding: 8px 12px; min-height: 48px; }
       #chat-widget-container h1 { font-size: 0.85rem; }
+      #messageimp { font-size: 14px; padding: 8px 12px; min-height: 38px; }
+      .btn { width: 36px; height: 36px; }
+      .btn i { font-size: 13px; }
+      .btn-icon { width: 32px; height: 32px; }
+      #chat-widget-close { font-size: 1.5rem; width: 36px; height: 36px; }
+    }
+    @media (max-width: 360px) {
+      #chat-widget-container nav { padding: 6px 10px; }
+      #chat-widget-container h1 { font-size: 0.75rem; }
+      #user-count-text { font-size: 0.6rem; }
+      #user-count-container { padding: 2px 8px; }
+      #messageimp { font-size: 13px; padding: 6px 10px; }
+      .btn { width: 34px; height: 34px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- dummy background -->
   <div class="bg-placeholder">🌾 KISAN · CHAT</div>
 
-  <!-- ===== FLOATING CHAT ICON ===== -->
+  <!-- FAB -->
   <div id="chat-fab-container">
     <button id="chat-fab" class="chat-fab" aria-label="Open chat">
       <i class="fas fa-comment-dots"></i>
@@ -447,29 +481,25 @@
     </button>
   </div>
 
-  <!-- ===== CHAT MODAL ===== -->
+  <!-- MODAL -->
   <div id="chat-modal-overlay" class="chat-modal-overlay">
     <div id="chat-modal" class="chat-modal" onclick="event.stopPropagation()">
-      <!-- the actual chat widget will be injected here -->
       <div id="chat-modal-content" style="display:flex; flex:1; flex-direction:column; min-height:0; height:100%;">
-        <!-- loading state (hidden once chat loads) -->
-        <div id="chat-loading" class="chat-loading" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:rgba(255,255,255,0.05); backdrop-filter:blur(6px);">
-          <div class="spinner" style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+        <div id="chat-loading" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:rgba(255,255,255,0.05); backdrop-filter:blur(6px);">
+          <div style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
           <p style="color:rgba(255,255,255,0.8);">Loading chat…</p>
         </div>
-        <!-- the chat widget will be placed here -->
         <div id="chat-widget-placeholder" style="display:none; flex:1; flex-direction:column; min-height:0; height:100%;"></div>
       </div>
     </div>
   </div>
 
-  <!-- Socket.IO + chat logic -->
+  <!-- socket.io + chat logic -->
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
     (function() {
       "use strict";
 
-      // ----- DOM refs -----
       const fabContainer = document.getElementById('chat-fab-container');
       const fab = document.getElementById('chat-fab');
       const overlay = document.getElementById('chat-modal-overlay');
@@ -477,7 +507,7 @@
       const placeholder = document.getElementById('chat-widget-placeholder');
       const loadingEl = document.getElementById('chat-loading');
 
-      // ----- helper: get current user (mock) -----
+      // mock user
       function getCurrentUser() {
         try {
           const keys = ['agriUser', 'user', 'userData', 'authUser'];
@@ -497,22 +527,18 @@
               } catch (_) {}
             }
           }
-          // fallback demo user (for testing toggle)
           return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
         } catch (_) {
           return { id: 1, email: 'demo@kisan.in', name: 'Demo Farmer' };
         }
       }
-
       const user = getCurrentUser();
 
-      // ----- build chat widget HTML (same as original) -----
       function buildChatWidget() {
         const container = document.createElement('div');
         container.id = 'chat-widget-container';
         container.style.cssText = 'width:100%; height:100%; display:flex; flex-direction:column; background:transparent; overflow:hidden;';
 
-        // header
         const nav = document.createElement('nav');
         nav.innerHTML = `
           <h1>💬 KISAN CIRCLE</h1>
@@ -524,18 +550,15 @@
         `;
         container.appendChild(nav);
 
-        // messages container
         const msgContainer = document.createElement('div');
         msgContainer.className = 'container active';
         msgContainer.id = 'messageContainer';
         container.appendChild(msgContainer);
 
-        // typing indicator
         const typing = document.createElement('div');
         typing.id = 'typing-indicator';
         container.appendChild(typing);
 
-        // input area
         const sendArea = document.createElement('div');
         sendArea.className = 'send active';
         sendArea.id = 'chat-input-area';
@@ -556,7 +579,7 @@
         `;
         container.appendChild(sendArea);
 
-        // if user not logged in, show login box (but we keep demo fallback)
+        // login fallback if no user
         if (!user || !user.id) {
           container.innerHTML = `
             <nav>
@@ -575,7 +598,7 @@
           `;
         }
 
-        // ----- attach close event to the X button (modal close) -----
+        // close button
         const closeBtn = container.querySelector('#chat-widget-close');
         if (closeBtn) {
           closeBtn.addEventListener('click', function(e) {
@@ -587,38 +610,29 @@
         return container;
       }
 
-      // ----- inject chat widget into modal -----
       function injectChatWidget() {
-        // hide loading, show placeholder
         loadingEl.style.display = 'none';
         placeholder.style.display = 'flex';
-        // clear placeholder and append fresh widget
         placeholder.innerHTML = '';
         const widget = buildChatWidget();
         placeholder.appendChild(widget);
 
-        // If user is logged in, load chat.js (simulate real-time)
         if (user && user.id) {
-          // check if chat script already loaded
           if (!window._chatScriptLoaded) {
             const script = document.createElement('script');
-            script.src = '/js/chat.js'; // adjust path as needed
+            script.src = '/js/chat.js';
             script.onload = function() {
               console.log('✅ chat.js loaded');
-              // notify that user is logged in (if chat.js expects it)
-              if (window.initializeChat) {
-                window.initializeChat(user);
-              }
+              if (window.initializeChat) window.initializeChat(user);
             };
             script.onerror = function() {
-              console.warn('⚠️ chat.js not found – using mock mode');
-              // fallback: show a mock message
+              console.warn('⚠️ chat.js not found – mock mode');
               const container = document.getElementById('messageContainer');
               if (container) {
-                const mockMsg = document.createElement('div');
-                mockMsg.className = 'message middle';
-                mockMsg.textContent = '💬 Chat ready (mock mode)';
-                container.appendChild(mockMsg);
+                const mock = document.createElement('div');
+                mock.className = 'message middle';
+                mock.textContent = '💬 Chat ready (mock mode)';
+                container.appendChild(mock);
               }
             };
             document.body.appendChild(script);
@@ -629,34 +643,26 @@
         }
       }
 
-      // ----- OPEN CHAT -----
+      // ---- open / close ----
       function openChat() {
-        // hide FAB
         fabContainer.classList.add('fab-hidden');
-        // show overlay
         overlay.classList.add('open');
-        // inject widget if not already
         if (placeholder.children.length === 0) {
           injectChatWidget();
         }
-        // ensure loading is hidden and placeholder visible
         loadingEl.style.display = 'none';
         placeholder.style.display = 'flex';
       }
 
-      // ----- CLOSE CHAT -----
       window.closeChat = function(event) {
         if (event && event.target !== event.currentTarget) return;
         overlay.classList.remove('open');
         fabContainer.classList.remove('fab-hidden');
-        // optional: reset notification
         const notif = document.getElementById('chatNotification');
         if (notif) notif.classList.remove('active');
       };
 
-      // ----- toggleChat (called from FAB) -----
       window.toggleChat = function() {
-        // if overlay is open, close it; else open
         if (overlay.classList.contains('open')) {
           closeChat();
         } else {
@@ -664,70 +670,30 @@
         }
       };
 
-      // ----- attach FAB click -----
       fab.addEventListener('click', function(e) {
         e.stopPropagation();
         window.toggleChat();
       });
 
-      // ----- close overlay when clicking outside modal -----
       overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-          closeChat();
-        }
+        if (e.target === overlay) closeChat();
       });
 
-      // ----- ESC key to close -----
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) {
-          closeChat();
-        }
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closeChat();
       });
 
-      // ensure that the widget's X button uses closeChat (already attached inside buildChatWidget)
-      // also handle if the login fallback has X
-      // re-attach after injection
-
-      // For demo: auto-open after 1s? No, keep icon visible.
-      // but we want the icon to be shown initially.
+      // ensure FAB visible initially
       fabContainer.classList.remove('fab-hidden');
 
-      // if chat.js defines its own toggle, we override with ours.
-      console.log('🔁 Chat toggle ready. Click the 💬 icon.');
+      console.log('🔁 Responsive chat toggle ready.');
     })();
   </script>
-
-  <!-- extra style for spinner -->
   <style>
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    /* ensure modal content fills */
-    #chat-modal-content {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-      height: 100%;
-    }
-    #chat-widget-placeholder {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-      height: 100%;
-    }
-    #chat-loading {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-    .chat-modal-overlay.open {
-      display: flex;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #chat-modal-content { display:flex; flex:1; flex-direction:column; min-height:0; height:100%; }
+    #chat-widget-placeholder { display:none; flex:1; flex-direction:column; min-height:0; height:100%; }
+    .chat-modal-overlay.open { display:flex; }
   </style>
 </body>
 </html>
