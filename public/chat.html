@@ -18,23 +18,22 @@
             height: 100vh;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         #chat-widget-container {
-            width: 400px !important;
-            height: 550px !important;
-            max-width: 95vw !important;
-            max-height: 90vh !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
             background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
-            border-radius: 18px !important;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
             overflow: hidden !important;
             position: relative !important;
         }
@@ -94,7 +93,8 @@
             color: white;
             cursor: pointer;
             padding: 0 5px;
-            opacity: 0.7;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
         }
         
         #chat-widget-close:hover {
@@ -444,13 +444,6 @@
         
         /* Mobile Responsive */
         @media (max-width: 480px) {
-            #chat-widget-container {
-                width: 95vw !important;
-                height: 80vh !important;
-                max-height: 92vh !important;
-                border-radius: 14px !important;
-            }
-            
             #chat-widget-container nav {
                 padding: 8px 12px;
             }
@@ -536,252 +529,11 @@
             }
         }
 
-        /* ========== CHAT FAB (Floating Action Button) ========== */
-#chat-fab-container {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 9999;
-}
-
-.chat-fab {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6C4DFF, #8B5CFF);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 20px rgba(108, 77, 255, 0.4);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.chat-fab:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 30px rgba(108, 77, 255, 0.6);
-}
-
-.chat-fab:active {
-    transform: scale(0.95);
-}
-
-.chat-fab i {
-    font-size: 26px;
-}
-
-.chat-fab .chat-notification {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #FF4444;
-    color: white;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
-    animation: pulse-notification 2s infinite;
-    display: none;
-}
-
-.chat-fab .chat-notification.active {
-    display: flex;
-}
-
-@keyframes pulse-notification {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-}
-
-/* ========== CHAT MODAL ========== */
-.chat-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    z-index: 10000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-}
-
-.chat-modal-overlay.open {
-    display: flex;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        backdrop-filter: blur(0px);
-    }
-    to {
-        opacity: 1;
-        backdrop-filter: blur(8px);
-    }
-}
-
-.chat-modal {
-    width: 400px;
-    height: 560px;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-    animation: slideUp 0.35s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.chat-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.15);
-    flex-shrink: 0;
-}
-
-.chat-modal-header h2 {
-    font-size: 1rem;
-    color: white;
-    margin: 0;
-    font-weight: 600;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-}
-
-.chat-modal-close {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.6rem;
-    cursor: pointer;
-    padding: 0 8px;
-    opacity: 0.8;
-    transition: opacity 0.3s ease;
-    line-height: 1;
-}
-
-.chat-modal-close:hover {
-    opacity: 1;
-    transform: rotate(90deg);
-}
-
-.chat-modal-body {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.chat-modal-body iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: transparent;
-}
-
-/* Loading State */
-.chat-loading {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(6px);
-}
-
-.chat-loading .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.chat-loading p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
-    #chat-fab-container {
-        bottom: 20px;
-        right: 20px;
-    }
-    
-    .chat-fab {
-        width: 52px;
-        height: 52px;
-    }
-    
-    .chat-fab i {
-        font-size: 22px;
-    }
-    
-    .chat-modal {
-        width: 98vw;
-        height: 92vh;
-        max-height: 92vh;
-        border-radius: 16px;
-    }
-    
-    .chat-modal-header {
-        padding: 10px 14px;
-    }
-    
-    .chat-modal-header h2 {
-        font-size: 0.9rem;
-    }
-    
-    .chat-modal-close {
-        font-size: 1.4rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .chat-modal {
-        width: 95vw;
-        height: 85vh;
-    }
-}
-
+        /* ========== CHAT FAB (Floating Action Button) - Only for main page ========== */
+        /* These are only needed when chat.html is opened directly */
+        .chat-fab-only {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -793,7 +545,7 @@
                 <span id="user-count-dot"></span>
                 <span id="user-count-text">0 Online</span>
             </div>
-            <button id="chat-widget-close" onclick="window.close()">&times;</button>
+            <button id="chat-widget-close" onclick="closeChatModal()">&times;</button>
         </nav>
 
         <!-- Messages Area -->
@@ -819,32 +571,30 @@
             </form>
         </div>
     </div>
-<!-- Chat Button - Fixed at Bottom Right -->
-<div id="chat-fab-container">
-    <button id="chat-fab" class="chat-fab" onclick="toggleChat()">
-        <i class="fas fa-comment-dots"></i>
-        <span class="chat-notification" id="chatNotification">1</span>
-    </button>
-</div>
 
-<!-- Chat Modal Overlay -->
-<div id="chat-modal-overlay" class="chat-modal-overlay" onclick="closeChat(event)">
-    <div id="chat-modal" class="chat-modal" onclick="event.stopPropagation()">
-        <!-- Chat content will be loaded here -->
-        <div id="chat-modal-content">
-            <!-- Loading spinner -->
-            <div class="chat-loading">
-                <div class="spinner"></div>
-                <p>Loading chat...</p>
-            </div>
-        </div>
-    </div>
-</div>
     <!-- Load Socket.IO -->
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     
     <script>
-        // Check if user is logged in
+        // ========================================
+        // CLOSE CHAT MODAL (for iframe)
+        // ========================================
+        function closeChatModal() {
+            // Try to close from parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'close-chat'
+                }, '*');
+            }
+            // If not in iframe, close the window
+            else {
+                window.close();
+            }
+        }
+
+        // ========================================
+        // CHECK IF USER IS LOGGED IN
+        // ========================================
         function getCurrentUser() {
             try {
                 const keys = ['agriUser', 'user', 'userData', 'authUser'];
@@ -876,13 +626,13 @@
             document.getElementById('chat-widget-container').innerHTML = `
                 <nav>
                     <h1>🔐 KISAN CIRCLE</h1>
-                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                    <button id="chat-widget-close" onclick="closeChatModal()">&times;</button>
                 </nav>
                 <div id="login-required">
                     <div class="login-box">
                         <h2>🔐 Login Required</h2>
                         <p>Please login to join the group chat</p>
-                        <a href="/login.html?redirect=/chat.html" class="login-btn">
+                        <a href="/login.html?redirect=/chat.html" class="login-btn" onclick="closeChatModal()">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
                         </a>
                     </div>
@@ -897,120 +647,19 @@
             document.body.appendChild(script);
         }
 
-
-
         // ========================================
-// CHAT TOGGLE FUNCTIONS
-// ========================================
-
-function toggleChat() {
-    const overlay = document.getElementById('chat-modal-overlay');
-    const content = document.getElementById('chat-modal-content');
-    
-    if (overlay.classList.contains('open')) {
-        closeChatModal();
-    } else {
-        openChatModal();
-    }
-}
-
-function openChatModal() {
-    const overlay = document.getElementById('chat-modal-overlay');
-    const content = document.getElementById('chat-modal-content');
-    
-    // Load chat iframe if not already loaded
-    if (content.querySelector('iframe') === null) {
-        // Check if user is logged in
-        const user = getCurrentUser();
-        let chatUrl = '/chat.html';
-        
-        // If user is logged in, we can add params if needed
-        if (user && user.id) {
-            // You can optionally pass the user ID
-            // chatUrl = '/chat.html?userId=' + user.id;
-        }
-        
-        content.innerHTML = `
-            <iframe src="${chatUrl}" allow="microphone; camera" loading="lazy"></iframe>
-        `;
-    }
-    
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    
-    // Clear notification dot when opening chat
-    const notification = document.getElementById('chatNotification');
-    if (notification) {
-        notification.classList.remove('active');
-    }
-}
-
-function closeChatModal() {
-    const overlay = document.getElementById('chat-modal-overlay');
-    overlay.classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function closeChat(event) {
-    // Close only if clicking on the overlay (not the modal itself)
-    if (event.target === event.currentTarget) {
-        closeChatModal();
-    }
-}
-
-// Get current user from localStorage (same as chat.js)
-function getCurrentUser() {
-    try {
-        const keys = ['agriUser', 'user', 'userData', 'authUser'];
-        for (const key of keys) {
-            const data = localStorage.getItem(key);
-            if (data) {
-                try {
-                    const user = JSON.parse(data);
-                    const userId = user.id || user.user_id || user.userId || user._id || null;
-                    if (userId) {
-                        return {
-                            id: parseInt(userId),
-                            email: user.email || null,
-                            name: user.name || user.username || 'User'
-                        };
-                    }
-                } catch (e) {}
+        // LISTEN FOR CLOSE CHAT MESSAGE FROM PARENT
+        // ========================================
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'close-chat') {
+                // This is the close command from parent
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'close-chat-confirm'
+                    }, '*');
+                }
             }
-        }
-        return null;
-    } catch (error) {
-        return null;
-    }
-}
-
-// Keyboard shortcut: ESC to close chat
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const overlay = document.getElementById('chat-modal-overlay');
-        if (overlay && overlay.classList.contains('open')) {
-            closeChatModal();
-        }
-    }
-});
-
-// Handle messages from iframe (for notification badge)
-window.addEventListener('message', function(event) {
-    // Check if message is from chat iframe
-    if (event.data && event.data.type === 'chat-notification') {
-        const notification = document.getElementById('chatNotification');
-        if (notification && !document.getElementById('chat-modal-overlay').classList.contains('open')) {
-            notification.textContent = event.data.count || '1';
-            notification.classList.add('active');
-        }
-    }
-});
-
-// Initialize notification badge
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if there are unread messages
-    // You can add logic here to check for unread messages
-});
+        });
     </script>
 </body>
 </html>
