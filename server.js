@@ -76,6 +76,7 @@ const upload = multer({ storage: storage });
 // --- CORS CONFIGURATION ---
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    'https://agri-connect-2kik.onrender.com',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:3000',
@@ -83,21 +84,33 @@ const allowedOrigins = [
     'http://localhost:5000',
     'http://127.0.0.1:5000'
 ].filter(Boolean);
-
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        // Allow all origins in production for debugging
+        if (process.env.NODE_ENV === 'production') {
+            return callback(null, true);
+        }
+        if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             console.log('CORS blocked for origin:', origin);
-            callback(null, true); // Allow anyway for debugging
+            // In production, allow anyway for debugging
+            if (process.env.NODE_ENV === 'production') {
+                callback(null, true);
+            } else {
+                callback(null, true); // Allow anyway for debugging in dev
+            }
         }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
