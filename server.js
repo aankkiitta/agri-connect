@@ -84,33 +84,30 @@ const allowedOrigins = [
     'http://localhost:5000',
     'http://127.0.0.1:5000'
 ].filter(Boolean);
+
+// CORS middleware
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        // Allow all origins in production for debugging
+        
+        // In production, allow all origins for debugging
         if (process.env.NODE_ENV === 'production') {
             return callback(null, true);
         }
+        
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             console.log('CORS blocked for origin:', origin);
-            // In production, allow anyway for debugging
-            if (process.env.NODE_ENV === 'production') {
-                callback(null, true);
-            } else {
-                callback(null, true); // Allow anyway for debugging in dev
-            }
+            // Still allow for debugging
+            callback(null, true);
         }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
-
-// Add OPTIONS handling for preflight requests
-app.options('*', cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
