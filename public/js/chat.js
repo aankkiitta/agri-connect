@@ -14,7 +14,6 @@
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
-    let messageHistory = [];
     
     // ========================================
     // GET USER FROM localStorage
@@ -26,22 +25,19 @@
             
             for (const key of keys) {
                 const data = localStorage.getItem(key);
-                console.log(`📦 Checking key "${key}":`, data ? 'Found' : 'Not found');
                 if (data) {
                     try {
                         const user = JSON.parse(data);
-                        console.log(`✅ Found user in localStorage key: ${key}`, user);
-                        
                         const userId = user.id || user.user_id || user.userId || user._id || null;
                         const email = user.email || null;
                         const name = user.name || user.username || 'User';
                         
                         if (userId || email) {
-                            console.log(`✅ User: ${name} (ID: ${userId}, Email: ${email})`);
+                            console.log(`✅ Found user in localStorage key: ${key}`, { id: userId, email, name });
                             return { id: parseInt(userId), email, name };
                         }
                     } catch (e) {
-                        console.warn(`⚠️ Failed to parse data from key: ${key}`);
+                        // Continue to next key
                     }
                 }
             }
@@ -55,12 +51,40 @@
     }
     
     // ========================================
+    // SAVE USER TO localStorage
+    // ========================================
+    function saveUser(userData) {
+        try {
+            localStorage.setItem('agriUser', JSON.stringify(userData));
+            console.log('✅ User saved to localStorage');
+            return true;
+        } catch (error) {
+            console.error('Error saving user:', error);
+            return false;
+        }
+    }
+    
+    // ========================================
+    // CLEAR USER FROM localStorage (Logout)
+    // ========================================
+    function clearUser() {
+        try {
+            const keys = ['agriUser', 'user', 'userData', 'authUser'];
+            keys.forEach(key => localStorage.removeItem(key));
+            console.log('✅ User cleared from localStorage');
+            return true;
+        } catch (error) {
+            console.error('Error clearing user:', error);
+            return false;
+        }
+    }
+    
+    // ========================================
     // GET RECEIVER ID FROM URL
     // ========================================
     function getReceiverIdFromURL() {
         const params = new URLSearchParams(window.location.search);
         const id = params.get('userId') || params.get('receiverId') || params.get('id') || params.get('with');
-        console.log('📥 Receiver ID from URL:', id);
         if (id) {
             const parsedId = parseInt(id);
             if (!isNaN(parsedId) && parsedId > 0) {
@@ -68,14 +92,6 @@
             }
         }
         return null;
-    }
-    
-    // ========================================
-    // GET RECEIVER NAME FROM URL OR USER DATA
-    // ========================================
-    function getReceiverNameFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('name') || null;
     }
     
     // ========================================
@@ -94,29 +110,21 @@
             sendBtn: document.getElementById('send-btn'),
             recordBtn: document.getElementById('record-btn'),
             typingIndicator: document.getElementById('typing-indicator'),
-            headerTitle: document.querySelector('nav h1')
+            headerTitle: document.querySelector('nav h1'),
+            chatInputArea: document.getElementById('chat-input-area')
         };
-        
-        console.log('📋 DOM Elements found:', {
-            widget: !!elements.widget,
-            form: !!elements.form,
-            messageInput: !!elements.messageInput,
-            messageContainer: !!elements.messageContainer,
-            headerTitle: !!elements.headerTitle
-        });
         
         if (!elements.messageContainer) {
             elements.messageContainer = document.querySelector('.container');
-            console.log('📋 Using fallback .container');
         }
         
         return elements;
     }
     
     // ========================================
-    // SHOW LOGIN PROMPT
+    // SHOW LOGIN FORM
     // ========================================
-    function showLoginPrompt() {
+    function showLoginForm() {
         const container = document.getElementById('chat-widget-container');
         if (container) {
             container.innerHTML = `
@@ -126,9 +134,108 @@
                 </nav>
                 <div id="login-prompt">
                     <div class="login-box">
-                        <h2>🔐 LOGIN REQUIRED</h2>
-                        <p>Please login to access Kisan Circle chat.</p>
-                        <a href="/login">Go to Login</a>
+                        <h2>🔐 Welcome Back</h2>
+                        <p>Login to continue chatting</p>
+                        <form class="login-form" id="chat-login-form">
+                            <input type="email" id="login-email" placeholder="Email address" required>
+                            <input type="password" id="login-password" placeholder="Password" required>
+                            <button type="submit" class="login-btn" id="login-submit-btn">Login</button>
+                            <div class="error-message" id="login-error"></div>
+                            <div class="signup-link">
+                                Don't have an account? <a href="/signup" target="_blank">Sign Up</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            // Attach login handler
+            const loginForm = document.getElementById('chat-login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+        }
+    }
+    
+    // ========================================
+    // HANDLE LOGIN
+    // ========================================
+    async function handleLogin(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const errorDiv = document.getElementById('login-error');
+        const submitBtn = document.getElementById('login-submit-btn');
+        
+        if (!email || !password) {
+            errorDiv.textContent = 'Please fill in all fields';
+            return;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in...';
+        errorDiv.textContent = '';
+        
+        try {
+            const response = await fetch(`${SERVER_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.user) {
+                // Save user to localStorage
+                saveUser(data.user);
+                errorDiv.textContent = '';
+                errorDiv.style.color = '#27ae60';
+                errorDiv.textContent = '✅ Login successful!';
+                
+                // Reload the page to start chat
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                errorDiv.textContent = data.message || 'Invalid email or password';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            errorDiv.textContent = 'Server error. Please try again.';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Login';
+        }
+    }
+    
+    // ========================================
+    // SHOW NO RECEIVER PROMPT
+    // ========================================
+    function showNoReceiverPrompt() {
+        const container = document.getElementById('chat-widget-container');
+        if (container) {
+            container.innerHTML = `
+                <nav>
+                    <h1>💬 KISAN CIRCLE</h1>
+                    <div id="user-count-container">
+                        <span id="user-count-dot"></span>
+                        <span id="user-count-text">0</span>
+                    </div>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                </nav>
+                <div id="login-prompt">
+                    <div class="login-box">
+                        <h2>👤 SELECT A USER</h2>
+                        <p>Please specify who you want to chat with.</p>
+                        <p style="font-size:0.7rem;color:#999;margin-top:8px;">
+                            Example: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">/chat.html?userId=5</code>
+                        </p>
                     </div>
                 </div>
             `;
@@ -136,15 +243,46 @@
     }
     
     // ========================================
-    // SHOW LOADING STATE
+    // SHOW USER NOT FOUND
     // ========================================
-    function showLoadingState() {
+    function showUserNotFound(userId) {
         const container = document.getElementById('chat-widget-container');
         if (container) {
-            const headerTitle = container.querySelector('nav h1');
-            if (headerTitle) {
-                headerTitle.textContent = '⏳ Loading Chat...';
-            }
+            container.innerHTML = `
+                <nav>
+                    <h1>💬 KISAN CIRCLE</h1>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                </nav>
+                <div id="login-prompt">
+                    <div class="login-box">
+                        <h2>❌ USER NOT FOUND</h2>
+                        <p>User with ID ${userId} does not exist.</p>
+                        <button onclick="window.location.reload()" style="margin-top:12px;background:linear-gradient(135deg,#6C4DFF,#8B5CFF);color:white;border:none;padding:8px 20px;border-radius:10px;cursor:pointer;">Try Again</button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // ========================================
+    // SHOW SELF CHAT ERROR
+    // ========================================
+    function showSelfChatError() {
+        const container = document.getElementById('chat-widget-container');
+        if (container) {
+            container.innerHTML = `
+                <nav>
+                    <h1>💬 KISAN CIRCLE</h1>
+                    <button id="chat-widget-close" onclick="window.close()">&times;</button>
+                </nav>
+                <div id="login-prompt">
+                    <div class="login-box">
+                        <h2>😅 CAN'T CHAT WITH YOURSELF</h2>
+                        <p>Please select a different user to chat with.</p>
+                        <button onclick="window.location.href='/'" style="margin-top:12px;background:linear-gradient(135deg,#6C4DFF,#8B5CFF);color:white;border:none;padding:8px 20px;border-radius:10px;cursor:pointer;">Go Home</button>
+                    </div>
+                </div>
+            `;
         }
     }
     
@@ -169,8 +307,6 @@
             console.error('❌ No message container!');
             return;
         }
-        
-        console.log(`📝 Appending message: ${data.message} (${position})`);
         
         // Prevent duplicates
         const existingMessages = messageContainer.querySelectorAll('.message');
@@ -212,7 +348,6 @@
         
         messageContainer.append(messageElement);
         messageContainer.scrollTop = messageContainer.scrollHeight;
-        console.log('✅ Message appended to UI');
     }
     
     function appendSystemMessage(text, messageContainer) {
@@ -225,7 +360,7 @@
     }
     
     // ========================================
-    // UPDATE USER COUNT / ONLINE STATUS
+    // UPDATE ONLINE STATUS
     // ========================================
     function updateOnlineStatus(onlineUsers, elements, receiverId) {
         if (elements.userCountText) {
@@ -298,7 +433,6 @@
                 
                 return data.messages;
             } else {
-                console.log('📨 No messages found');
                 messageContainer.innerHTML = '';
                 appendSystemMessage('No messages yet. Start the conversation!', messageContainer);
                 return [];
@@ -317,15 +451,13 @@
     async function initializeChat() {
         console.log('🚀 Initializing KISAN CIRCLE Chat...');
         
-        // Show loading state
-        showLoadingState();
-        
         // Get current user
         currentUser = getCurrentUser();
         
+        // If no user, show login form
         if (!currentUser) {
-            console.log('❌ No user logged in');
-            showLoginPrompt();
+            console.log('❌ No user logged in - showing login form');
+            showLoginForm();
             return;
         }
         
@@ -336,46 +468,14 @@
         
         if (!currentReceiverId) {
             console.log('❌ No receiver ID in URL');
-            // Show a better message without the "use: /chat?userId=2" text
-            const container = document.getElementById('chat-widget-container');
-            if (container) {
-                container.innerHTML = `
-                    <nav>
-                        <h1>💬 KISAN CIRCLE</h1>
-                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                    </nav>
-                    <div id="login-prompt">
-                        <div class="login-box">
-                            <h2>👤 Select a User to Chat</h2>
-                            <p>Please specify which user you want to chat with.</p>
-                            <p style="font-size:0.8rem;color:#999;margin-top:8px;">
-                                Example: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">/chat.html?userId=5</code>
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
+            showNoReceiverPrompt();
             return;
         }
         
         // Prevent chatting with self
         if (currentUser.id === currentReceiverId) {
             console.log('❌ Cannot chat with self');
-            const container = document.getElementById('chat-widget-container');
-            if (container) {
-                container.innerHTML = `
-                    <nav>
-                        <h1>💬 KISAN CIRCLE</h1>
-                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                    </nav>
-                    <div id="login-prompt">
-                        <div class="login-box">
-                            <h2>😅 Can't Chat With Yourself</h2>
-                            <p>Please select a different user to chat with.</p>
-                        </div>
-                    </div>
-                `;
-            }
+            showSelfChatError();
             return;
         }
         
@@ -383,21 +483,7 @@
         const receiverDetails = await fetchUserDetails(currentReceiverId);
         if (!receiverDetails) {
             console.log('❌ Receiver not found');
-            const container = document.getElementById('chat-widget-container');
-            if (container) {
-                container.innerHTML = `
-                    <nav>
-                        <h1>💬 KISAN CIRCLE</h1>
-                        <button id="chat-widget-close" onclick="window.close()">&times;</button>
-                    </nav>
-                    <div id="login-prompt">
-                        <div class="login-box">
-                            <h2>❌ User Not Found</h2>
-                            <p>User with ID ${currentReceiverId} does not exist.</p>
-                        </div>
-                    </div>
-                `;
-            }
+            showUserNotFound(currentReceiverId);
             return;
         }
         
@@ -509,10 +595,6 @@
         // ========================================
         socket.on('message-sent', (data) => {
             console.log('✅ Message sent confirmation:', data);
-            if (data.success && data.message) {
-                // Update UI if needed (already added optimistically)
-                // Could update status from "Sent" to "Delivered/Read"
-            }
         });
         
         // ========================================
@@ -547,8 +629,6 @@
         // SEND MESSAGE
         // ========================================
         if (elements.form) {
-            console.log('📋 Setting up form handler...');
-            
             const form = document.getElementById('send-container');
             const messageInput = document.getElementById('messageimp');
             const sendBtn = document.getElementById('send-btn');
@@ -558,8 +638,6 @@
                 console.error('❌ Form or input not found!');
                 return;
             }
-            
-            console.log('✅ Form and input found');
             
             // Show send button when typing
             messageInput.addEventListener('input', function() {
@@ -577,21 +655,17 @@
                 e.stopPropagation();
                 
                 const message = messageInput.value.trim();
-                console.log('📤 Sending message:', message);
                 
                 if (!message) {
-                    console.log('❌ Empty message');
                     return false;
                 }
                 
                 if (!socket || !socket.connected) {
-                    console.log('❌ Socket not connected');
                     alert('Please wait, connecting to chat...');
                     return false;
                 }
                 
                 if (!currentUser || !currentReceiverId) {
-                    console.log('❌ Missing user IDs');
                     return false;
                 }
                 
@@ -626,7 +700,6 @@
                     message: message,
                     message_type: 'text'
                 });
-                console.log('📤 Message emitted to server');
                 
                 // Clear input
                 messageInput.value = '';
@@ -708,7 +781,6 @@
                             sender_email: currentUser.email
                         };
                         
-                        // Remove "No messages" system message if present
                         const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
                         systemMessages.forEach(el => {
                             if (el.innerText.includes('No messages yet')) {
@@ -790,7 +862,6 @@
                                 sender_email: currentUser.email
                             };
                             
-                            // Remove "No messages" system message if present
                             const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
                             systemMessages.forEach(el => {
                                 if (el.innerText.includes('No messages yet')) {
@@ -816,13 +887,11 @@
         }
         
         console.log('✅ KISAN CIRCLE Chat initialization complete');
-        console.log('📊 Waiting for messages...');
     }
     
     // ========================================
     // START
     // ========================================
-    console.log('📋 DOM ready state:', document.readyState);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeChat);
     } else {
