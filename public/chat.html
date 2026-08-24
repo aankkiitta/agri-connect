@@ -18,23 +18,22 @@
             height: 100vh;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         #chat-widget-container {
-            width: 400px !important;
-            height: 550px !important;
-            max-width: 95vw !important;
-            max-height: 90vh !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
             display: flex !important;
             flex-direction: column !important;
             background: linear-gradient(135deg, #ADA9E8, #434361, #00D4FF);
-            border-radius: 18px !important;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
             overflow: hidden !important;
             position: relative !important;
         }
@@ -445,13 +444,6 @@
         
         /* Mobile Responsive */
         @media (max-width: 480px) {
-            #chat-widget-container {
-                width: 95vw !important;
-                height: 80vh !important;
-                max-height: 92vh !important;
-                border-radius: 14px !important;
-            }
-            
             #chat-widget-container nav {
                 padding: 8px 12px;
             }
@@ -579,16 +571,14 @@
     
     <script>
         // ========================================
-        // CLOSE CHAT WIDGET (called from X button)
+        // CLOSE CHAT WIDGET - Notify parent to close
         // ========================================
         function closeChatWidget() {
-            // Notify parent page to close the modal
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
                     type: 'close-chat'
                 }, '*');
             } else {
-                // If not in iframe, just close the window
                 window.close();
             }
         }
@@ -642,18 +632,14 @@
         } else {
             // User is logged in, load the chat
             console.log('✅ User logged in:', user);
-            // Load chat.js dynamically
             const script = document.createElement('script');
             script.src = '/js/chat.js';
             document.body.appendChild(script);
         }
 
-        // ========================================
-        // LISTEN FOR MESSAGES FROM PARENT
-        // ========================================
+        // Listen for messages from parent
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'close-chat') {
-                // Parent wants to close the chat
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage({
                         type: 'close-chat-confirm'
