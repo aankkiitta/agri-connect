@@ -647,41 +647,70 @@ app.post('/api/chat/messages/read', async (req, res) => {
         });
     }
 });
-
-// Get unread count for a user
-app.get('/api/chat/unread/:userId', async (req, res) => {
-    const { userId } = req.params;
+// Get conversation history between two users
+app.get('/api/chat/messages/:userId/:otherUserId', async (req, res) => {
+    const { userId, otherUserId } = req.params;
     
     try {
-        const [result] = await db.query(`
-            SELECT sender_id, COUNT(*) as unread_count
-            FROM messages
-            WHERE receiver_id = ? AND is_read = FALSE
-            GROUP BY sender_id
-        `, [userId]);
+        const [messages] = await db.query(`
+            SELECT 
+                m.id,
+                m.sender_id,
+                m.receiver_id,
+                m.message,
+                m.message_type,
+                m.is_read,
+                m.read_at,
+                m.created_at,
+                s.name AS sender_name,
+                s.email AS sender_email,
+                r.name AS receiver_name,
+                r.email AS receiver_email
+            FROM messages m
+            LEFT JOIN users s ON m.sender_id = s.id
+            LEFT JOIN users r ON m.receiver_id = r.id
+            WHERE (m.sender_id = ? AND m.receiver_id = ?)
+               OR (m.sender_id = ? AND m.receiver_id = ?)
+            ORDER BY m.created_at ASC
+        `, [userId, otherUserId, otherUserId, userId]);
         
         res.json({
             success: true,
-            unread: result
+            messages: messages
         });
     } catch (error) {
-        console.error('Error fetching unread count:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get unread count'
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to load messages' 
         });
     }
 });
-// --- HEALTH ENDPOINT ---
-app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Agri Connect API is running',
-        environment: process.env.NODE_ENV || 'production',
-        timestamp: new Date().toISOString()
-    });
-});
 
+// Get user by ID
+app.get('/api/user/:id', async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT id, name, email, contact_number, location, years_experience, profile_picture_url 
+             FROM users 
+             WHERE id = ?`,
+            [req.params.id]
+        );
+
+        if (rows.length === 0) {
+            return res.json(null);
+        }
+
+        if (rows[0].profile_picture_url) {
+            rows[0].profile_picture_url = getPublicUrl(req, rows[0].profile_picture_url);
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('USER FETCH ERROR:', err);
+        res.status(500).json(null);
+    }
+});
 // --- DEBUG ENDPOINT (Public Data Counts Only) ---
 app.get('/api/debug/public-data', async (req, res) => {
     try {
