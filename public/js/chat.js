@@ -199,6 +199,7 @@
             }
         });
         
+        // Add message to UI immediately (optimistic update)
         appendMessage(tempMessage, 'right', elements.messageContainer);
         
         const sendData = {
@@ -215,12 +216,6 @@
         
         messageInput.value = '';
         messageInput.focus();
-        
-        // Update button visibility
-        const sendBtn = document.getElementById('send-btn');
-        const recordBtn = document.getElementById('record-btn');
-        if (sendBtn) sendBtn.style.display = 'none';
-        if (recordBtn) recordBtn.style.display = 'flex';
         
         return false;
     }
@@ -295,9 +290,19 @@
             appendSystemMessage(data.message || `${data.name} left the chat`, elements.messageContainer);
         });
         
+        // ========================================
+        // RECEIVE MESSAGE - FIXED DUPLICATE ISSUE
+        // ========================================
         socket.on('receive-message', (data) => {
             console.log('📨📨📨 New message received:', data);
-            const position = data.sender_id === currentUser.id ? 'right' : 'left';
+            
+            // IMPORTANT: Skip if the message is from the current user (already displayed optimistically)
+            if (data.sender_id === currentUser.id) {
+                console.log('⏭️ Skipping own message (already displayed from optimistic update)');
+                return;
+            }
+            
+            const position = 'left';
             appendMessage(data, position, elements.messageContainer);
         });
         
@@ -321,7 +326,7 @@
         });
         
         // ========================================
-        // SETUP SEND MESSAGE - FIXED
+        // SETUP SEND MESSAGE
         // ========================================
         const form = document.getElementById('send-container');
         const messageInput = document.getElementById('messageimp');
@@ -335,16 +340,9 @@
         
         console.log('✅ Form and input found, setting up handlers...');
         
-        // Show/hide send button when typing
-        messageInput.addEventListener('input', function() {
-            const hasText = this.value.trim() !== '';
-            if (sendBtn) {
-                sendBtn.style.display = hasText ? 'flex' : 'none';
-            }
-            if (recordBtn) {
-                recordBtn.style.display = hasText ? 'none' : 'flex';
-            }
-        });
+        // Hide record button, show send button
+        if (recordBtn) recordBtn.style.display = 'none';
+        if (sendBtn) sendBtn.style.display = 'flex';
         
         // Handle form submission (for Enter key)
         form.addEventListener('submit', function(e) {
