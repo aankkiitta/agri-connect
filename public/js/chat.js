@@ -156,6 +156,76 @@
     }
     
     // ========================================
+    // SEND MESSAGE FUNCTION
+    // ========================================
+    function sendMessage(messageInput, elements) {
+        const message = messageInput.value.trim();
+        console.log('📤 Attempting to send message:', message);
+        
+        if (!message) {
+            console.log('❌ Empty message');
+            return false;
+        }
+        
+        if (!socket || !socket.connected) {
+            console.log('❌ Socket not connected');
+            alert('Please wait, connecting to chat...');
+            return false;
+        }
+        
+        if (!currentUser) {
+            console.log('❌ No user');
+            return false;
+        }
+        
+        // Create temp message
+        const tempMessage = {
+            id: Date.now(),
+            sender_id: currentUser.id,
+            message: message,
+            message_type: 'text',
+            created_at: new Date().toISOString(),
+            sender_name: currentUser.name,
+            sender_email: currentUser.email
+        };
+        
+        console.log('📤 Temp message:', tempMessage);
+        
+        // Remove "No messages" system message
+        const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
+        systemMessages.forEach(el => {
+            if (el.innerText.includes('No messages yet')) {
+                el.remove();
+            }
+        });
+        
+        appendMessage(tempMessage, 'right', elements.messageContainer);
+        
+        const sendData = {
+            sender_id: currentUser.id,
+            sender_name: currentUser.name,
+            sender_email: currentUser.email,
+            message: message,
+            message_type: 'text'
+        };
+        console.log('📤 Sending to socket:', sendData);
+        
+        socket.emit('send-message', sendData);
+        console.log('📤 Message emitted to server');
+        
+        messageInput.value = '';
+        messageInput.focus();
+        
+        // Update button visibility
+        const sendBtn = document.getElementById('send-btn');
+        const recordBtn = document.getElementById('record-btn');
+        if (sendBtn) sendBtn.style.display = 'none';
+        if (recordBtn) recordBtn.style.display = 'flex';
+        
+        return false;
+    }
+    
+    // ========================================
     // INITIALIZE CHAT
     // ========================================
     function initializeChat() {
@@ -250,126 +320,149 @@
             }
         });
         
-        // Send message handler
-        if (elements.form) {
-            const form = document.getElementById('send-container');
-            const messageInput = document.getElementById('messageimp');
-            const sendBtn = document.getElementById('send-btn');
-            const recordBtn = document.getElementById('record-btn');
-            
-            if (form && messageInput) {
-                // Show/hide send button
-                messageInput.addEventListener('input', function() {
-                    if (this.value.trim() !== '') {
-                        if (sendBtn) sendBtn.style.display = 'flex';
-                        if (recordBtn) recordBtn.style.display = 'none';
-                    } else {
-                        if (sendBtn) sendBtn.style.display = 'none';
-                        if (recordBtn) recordBtn.style.display = 'flex';
-                    }
-                });
-                
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const message = messageInput.value.trim();
-                    console.log('📤 Attempting to send message:', message);
-                    
-                    if (!message) {
-                        console.log('❌ Empty message');
-                        return false;
-                    }
-                    
-                    if (!socket || !socket.connected) {
-                        console.log('❌ Socket not connected');
-                        alert('Please wait, connecting to chat...');
-                        return false;
-                    }
-                    
-                    if (!currentUser) {
-                        console.log('❌ No user');
-                        return false;
-                    }
-                    
-                    // Create temp message
-                    const tempMessage = {
-                        id: Date.now(),
-                        sender_id: currentUser.id,
-                        message: message,
-                        message_type: 'text',
-                        created_at: new Date().toISOString(),
-                        sender_name: currentUser.name,
-                        sender_email: currentUser.email
-                    };
-                    
-                    console.log('📤 Temp message:', tempMessage);
-                    
-                    // Remove "No messages" system message
-                    const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
-                    systemMessages.forEach(el => {
-                        if (el.innerText.includes('No messages yet')) {
-                            el.remove();
-                        }
-                    });
-                    
-                    appendMessage(tempMessage, 'right', elements.messageContainer);
-                    
-                    const sendData = {
-                        sender_id: currentUser.id,
-                        sender_name: currentUser.name,
-                        sender_email: currentUser.email,
-                        message: message,
-                        message_type: 'text'
-                    };
-                    console.log('📤 Sending to socket:', sendData);
-                    
-                    socket.emit('send-message', sendData);
-                    console.log('📤 Message emitted to server');
-                    
-                    messageInput.value = '';
-                    messageInput.focus();
-                    if (sendBtn) sendBtn.style.display = 'none';
-                    if (recordBtn) recordBtn.style.display = 'flex';
-                    
-                    return false;
-                });
-                
-                messageInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        form.dispatchEvent(new Event('submit'));
-                        return false;
-                    }
-                });
-            }
+        // ========================================
+        // SETUP SEND MESSAGE - FIXED
+        // ========================================
+        const form = document.getElementById('send-container');
+        const messageInput = document.getElementById('messageimp');
+        const sendBtn = document.getElementById('send-btn');
+        const recordBtn = document.getElementById('record-btn');
+        
+        if (!form || !messageInput) {
+            console.error('❌ Form or input not found!');
+            return;
         }
         
-        // Typing indicator
-        if (elements.messageInput) {
-            elements.messageInput.addEventListener('input', function() {
-                if (!isTyping && socket && currentUser) {
-                    isTyping = true;
-                    socket.emit('typing', {
+        console.log('✅ Form and input found, setting up handlers...');
+        
+        // Show/hide send button when typing
+        messageInput.addEventListener('input', function() {
+            const hasText = this.value.trim() !== '';
+            if (sendBtn) {
+                sendBtn.style.display = hasText ? 'flex' : 'none';
+            }
+            if (recordBtn) {
+                recordBtn.style.display = hasText ? 'none' : 'flex';
+            }
+        });
+        
+        // Handle form submission (for Enter key)
+        form.addEventListener('submit', function(e) {
+            console.log('📤 Form submit event triggered');
+            e.preventDefault();
+            e.stopPropagation();
+            sendMessage(messageInput, elements);
+            return false;
+        });
+        
+        // Handle Enter key directly
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                console.log('📤 Enter key pressed');
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage(messageInput, elements);
+                return false;
+            }
+        });
+        
+        // Handle Send button click directly
+        if (sendBtn) {
+            sendBtn.addEventListener('click', function(e) {
+                console.log('📤 Send button clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage(messageInput, elements);
+                return false;
+            });
+        }
+        
+        // ========================================
+        // TYPING INDICATOR
+        // ========================================
+        messageInput.addEventListener('input', function() {
+            if (!isTyping && socket && currentUser) {
+                isTyping = true;
+                socket.emit('typing', {
+                    userId: currentUser.id,
+                    name: currentUser.name
+                });
+            }
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                isTyping = false;
+                if (socket && currentUser) {
+                    socket.emit('stop-typing', {
                         userId: currentUser.id,
                         name: currentUser.name
                     });
                 }
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => {
-                    isTyping = false;
-                    if (socket && currentUser) {
-                        socket.emit('stop-typing', {
-                            userId: currentUser.id,
-                            name: currentUser.name
+            }, 2000);
+        });
+        
+        // ========================================
+        // IMAGE UPLOAD
+        // ========================================
+        const attachFileBtn = document.getElementById('attach-file-btn');
+        const imageInput = document.getElementById('image-input');
+        
+        if (attachFileBtn && imageInput) {
+            attachFileBtn.addEventListener('click', () => {
+                imageInput.click();
+            });
+            
+            imageInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file || !currentUser) return;
+                
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                try {
+                    const response = await fetch(`${SERVER_URL}/upload/image`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    
+                    if (data.filePath) {
+                        const tempMessage = {
+                            id: Date.now(),
+                            sender_id: currentUser.id,
+                            message: data.filePath,
+                            message_type: 'image',
+                            created_at: new Date().toISOString(),
+                            sender_name: currentUser.name,
+                            sender_email: currentUser.email
+                        };
+                        
+                        const systemMessages = elements.messageContainer.querySelectorAll('.message.middle');
+                        systemMessages.forEach(el => {
+                            if (el.innerText.includes('No messages yet')) {
+                                el.remove();
+                            }
+                        });
+                        
+                        appendMessage(tempMessage, 'right', elements.messageContainer);
+                        
+                        socket.emit('send-message', {
+                            sender_id: currentUser.id,
+                            sender_name: currentUser.name,
+                            sender_email: currentUser.email,
+                            message: data.filePath,
+                            message_type: 'image'
                         });
                     }
-                }, 2000);
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Failed to upload image');
+                }
+                e.target.value = null;
             });
         }
         
         console.log('✅ KISAN CIRCLE Group Chat ready!');
+        console.log('📤 Type a message and press Enter or click Send');
     }
     
     // Start chat

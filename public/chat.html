@@ -316,6 +316,11 @@
             font-size: 13px;
         }
         
+        /* Make Send Button Always Visible */
+        #send-btn {
+            display: flex !important;
+        }
+        
         /* Recording Animation */
         @keyframes pulse-record {
             0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
@@ -558,10 +563,10 @@
                     <i class="fa-solid fa-paperclip"></i>
                 </button>
                 <input type="text" name="messageimp" id="messageimp" placeholder="Type a message..." autocomplete="off">
-                <button class="btn" type="submit" id="send-btn" style="display: none;">
+                <button class="btn" type="submit" id="send-btn">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
-                <button type="button" class="btn" id="record-btn">
+                <button type="button" class="btn" id="record-btn" style="display: none;">
                     <i class="fa-solid fa-microphone"></i>
                 </button>
             </form>
@@ -624,25 +629,6 @@
             script.src = '/js/chat.js';
             document.body.appendChild(script);
         }
-    </script>
-    
-    <script>
-        // Debug: Prevent form submission from reloading page
-        document.addEventListener('submit', function(e) {
-            if (e.target && e.target.id === 'send-container') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'messageimp') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
     </script>
 </body>
 </html>
