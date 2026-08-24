@@ -467,6 +467,16 @@
     #chat-modal-content { display:flex; flex:1; flex-direction:column; min-height:0; height:100%; }
     #chat-widget-placeholder { display:none; flex:1; flex-direction:column; min-height:0; height:100%; }
     .chat-modal-overlay.open { display:flex; }
+      /* Ensure modal overlay is on top */
+    #chat-modal-overlay {
+        z-index: 10001 !important;
+    }
+    #chat-fab-container {
+        z-index: 10000 !important;
+    }
+    .chat-modal {
+        z-index: 10002 !important;
+    }
   </style>
 </head>
 <body>

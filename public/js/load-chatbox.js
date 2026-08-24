@@ -55,16 +55,32 @@
                     throw new Error('Could not find chat elements in chat.html');
                 }
 
-                // Setup container as fixed floating element
+                // CRITICAL FIX: Setup container to allow interaction
                 container.innerHTML = '';
                 container.style.position = 'fixed';
                 container.style.bottom = '0';
                 container.style.right = '0';
                 container.style.width = '100%';
                 container.style.height = '100%';
-                container.style.pointerEvents = 'none';
+                container.style.pointerEvents = 'none'; // Container doesn't block clicks
                 container.style.zIndex = '9999';
                 container.style.overflow = 'visible';
+
+                // CRITICAL FIX: Make FAB clickable by setting pointer-events: auto
+                fabContainer.style.pointerEvents = 'auto';
+                fabContainer.style.position = 'fixed';
+                fabContainer.style.bottom = '28px';
+                fabContainer.style.right = '28px';
+                fabContainer.style.zIndex = '10000';
+
+                // CRITICAL FIX: Modal overlay should also be clickable
+                modalOverlay.style.pointerEvents = 'auto';
+                modalOverlay.style.position = 'fixed';
+                modalOverlay.style.top = '0';
+                modalOverlay.style.left = '0';
+                modalOverlay.style.width = '100%';
+                modalOverlay.style.height = '100%';
+                modalOverlay.style.zIndex = '10001';
 
                 container.appendChild(fabContainer);
                 container.appendChild(modalOverlay);
@@ -121,6 +137,14 @@
                                     }
                                 };
                             }
+                            
+                            // After script executes, make sure FAB is visible
+                            setTimeout(function() {
+                                const fabContainer = document.getElementById('chat-fab-container');
+                                if (fabContainer) {
+                                    fabContainer.classList.remove('fab-hidden');
+                                }
+                            }, 100);
                         })();
                     `;
                     newScript.setAttribute('data-chat-loader', 'true');
