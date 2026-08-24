@@ -3211,3 +3211,10 @@ window.addEventListener("scroll", () => {
 
     lastScroll = current;
 });
+
+
+
+
+document.getElementById('viewMoreFarmers').addEventListener('click', function () {
+    window.location.href = 'farmer-listing.html';
+});
