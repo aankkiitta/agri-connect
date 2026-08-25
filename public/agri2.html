@@ -1362,7 +1362,30 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="Search for equipment (e.g., 'John Deere Tractor')">
                 </div>
-               
+                <div class="filter-options">
+                    <div class="filter-dropdown">
+                        <i class="fas fa-tags"></i>
+                        <select id="categoryFilter">
+                            <option value="all">All Categories</option>
+                            <option value="Tractor">Tractors</option>
+                            <option value="Soil Preparation">Soil Preparation</option>
+                            <option value="Irrigation">Irrigation</option>
+                            <option value="Harvesting">Harvesting</option>
+                            <option value="Planting & Seeding">Planting & Seeding</option>
+                            <option value="Sprayers">Sprayers</option>
+                            <option value="Transport">Transport</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <i class="fas fa-sort-amount-down"></i>
+                        <select id="sortFilter">
+                            <option value="default">Sort By</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="rating-desc">Rating: High to Low</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div id="productGrid" class="equipment-grid-container">
                 <!-- Equipment cards will be injected here -->
@@ -1394,7 +1417,23 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="schemeSearchInput" placeholder="Search for a scheme (e.g., 'PM-Kisan')">
                 </div>
-             
+                <div class="filter-options">
+                    <div class="filter-dropdown">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select id="stateFilter">
+                            <option value="all">All States</option>
+                            <option value="Central">Central Scheme</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown">
+                        <i class="fas fa-tags"></i>
+                        <select id="schemeCategoryFilter">
+                            <option value="all">All Categories</option>
+                            {/* Categories will be dynamically inserted here */}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Schemes Grid -->
