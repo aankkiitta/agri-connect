@@ -206,51 +206,14 @@ function showHelpModal() {
 
 function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-// ===== DYNAMIC API URL DETECTION =====
-function getApiUrl() {
-    const hostname = window.location.hostname;
-    // Production on Render
-    if (hostname === 'agri-connect-2kik.onrender.com') {
-        return window.location.origin + '/api';
-    }
-    // Local development
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:3000/api';
-    }
-    // Any other environment - use relative path
-    return '/api';
-}
-
-const API_BASE_URL = getApiUrl();
-console.log(`🔗 Scheme Viewer API URL: ${API_BASE_URL}`);
-
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     const schemeId = params.get("id");
     const card = document.getElementById("schemeCard");
 
-    if (!schemeId) {
-        card.innerHTML = '<p style="text-align:center; color: #dc2626;">No scheme ID provided.</p>';
-        return;
-    }
-
     try {
-        console.log(`📡 Fetching scheme ID: ${schemeId} from ${API_BASE_URL}/schemes`);
-        const res = await fetch(`${API_BASE_URL}/schemes`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
+        const res = await fetch("http://localhost:3000/api/schemes");
         const schemes = await res.json();
-        console.log(`📚 Loaded ${schemes.length} schemes`);
-        
         const scheme = schemes.find(s => s.id == schemeId);
 
         if (scheme) {
@@ -261,34 +224,34 @@ document.addEventListener("DOMContentLoaded", async () => {
             const steps = scheme.roadmap ? scheme.roadmap.split(",") : [];
 
             card.innerHTML = `
-                <span class="badge">${scheme.category || 'General'} | ${scheme.state || "Central"}</span>
-                <h1>${escapeHtml(scheme.name)}</h1>
+                <span class="badge">${scheme.category} | ${scheme.state || "Central"}</span>
+                <h1>${scheme.name}</h1>
 
                 <div class="section">
                     <h4><i class="fas fa-info-circle"></i> Description</h4>
-                    <p style="color:var(--slate); font-size: 13px; font-weight:500;">${escapeHtml(scheme.description || 'No description available.')}</p>
+                    <p style="color:var(--slate); font-size: 13px; font-weight:500;">${scheme.description}</p>
                 </div>
 
                 <div class="section">
                     <h4><i class="fas fa-clipboard-check"></i> Documents</h4>
                     <div class="content-box">
-                        ${docs.length > 0 ? docs.map(d => `<div class="list-item"><i class="fas fa-check-circle"></i> ${escapeHtml(d.trim())}</div>`).join("") : '<p style="color:var(--slate); font-size:13px;">No documents listed.</p>'}
+                        ${docs.map(d => `<div class="list-item"><i class="fas fa-check-circle"></i> ${d.trim()}</div>`).join("")}
                     </div>
                 </div>
 
                 <div class="section">
                     <h4><i class="fas fa-route"></i> Process</h4>
                     <div class="content-box">
-                        ${steps.length > 0 ? steps.map((s, i) => `
+                        ${steps.map((s, i) => `
                             <div class="step-item">
                                 <div class="step-number">${i + 1}</div>
-                                <div style="font-weight:600; font-size: 13px;">${escapeHtml(s.trim())}</div>
+                                <div style="font-weight:600; font-size: 13px;">${s.trim()}</div>
                             </div>
-                        `).join("") : '<p style="color:var(--slate); font-size:13px;">No process steps available.</p>'}
+                        `).join("")}
                     </div>
                 </div>
 
-                <a href="${scheme.link || '#'}" target="_blank" class="btn btn-apply" ${!scheme.link ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
+                <a href="${scheme.link}" target="_blank" class="btn btn-apply">
                     <i class="fas fa-external-link-alt"></i> Apply Now
                 </a>
 
@@ -299,35 +262,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 <a href="javascript:history.back()" class="back-link">← Marketplace</a>
             `;
-        } else {
-            card.innerHTML = `
-                <div style="text-align:center; padding:20px;">
-                    <p style="color: #dc2626; font-weight:600;">Scheme not found</p>
-                    <p style="color: var(--slate); font-size:13px;">The scheme you're looking for doesn't exist or has been removed.</p>
-                    <a href="agri2.html#schemes" style="color: var(--primary); font-weight:600; text-decoration:none; display:inline-block; margin-top:10px;">← Browse all schemes</a>
-                </div>
-            `;
         }
-    } catch (err) {
-        console.error('❌ Error loading scheme:', err);
-        card.innerHTML = `
-            <div style="text-align:center; padding:20px;">
-                <p style="color: #dc2626; font-weight:600;">Error loading scheme</p>
-                <p style="color: var(--slate); font-size:13px;">${escapeHtml(err.message || 'Please check server connection.')}</p>
-                <p style="color: #94a3b8; font-size:12px; margin-top:8px;">API URL: ${escapeHtml(API_BASE_URL)}</p>
-                <button onclick="location.reload()" style="background: var(--primary); color:white; border:none; padding:8px 20px; border-radius:40px; margin-top:15px; cursor:pointer;">↻ Retry</button>
-            </div>
-        `;
-    }
+    } catch (err) { card.innerHTML = "<p>Error loading scheme.</p>"; }
 });
-
-// Helper function to escape HTML
-function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
 </script>
 </body>
 </html>
